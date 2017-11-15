@@ -28,7 +28,7 @@ TEST(Matrix, ConstructorWithData)
 TEST(Matrix, CopyConstructor)
 {
     auto orig = Matrix<int>(2,2);
-    orig.setValue(2); orig(1,1) = 5;
+    orig.fill(2); orig(1,1) = 5;
 
     auto cpy = orig;
     ASSERT_TRUE( orig.compare(cpy) );
@@ -66,7 +66,7 @@ TEST(Matrix, SetElementsToSameValue)
     size_t nRows = 5; size_t nCols = 10; int val = 99;
 
     MatrixISP mat( new Matrix<int>(nRows,nCols) );
-    mat->setValue(val);
+    mat->fill(val);
 
     for( size_t m = 0; m < nRows; m++ )
         for( size_t n = 0; n < nCols; n++ )
@@ -77,7 +77,7 @@ TEST(Matrix, SetElementsToSameValue)
 TEST(Matrix, Identity)
 {
     size_t s = 5;
-    Matrix<int> eyeM = Matrix<int>::eye(s);
+    Matrix<int> eyeM = Matrix<int>::identity(s);
 
     for(size_t m = 0; m < s; m++)
         for(size_t n = 0; n < s; n++)
@@ -85,11 +85,15 @@ TEST(Matrix, Identity)
                 ASSERT_EQ(eyeM(m,n), 1);
             else
                 ASSERT_EQ(eyeM(m,n), 0);
+
+    auto secondEye = Matrix<int>(s,s);
+    secondEye.setToIdentity();
+    ASSERT_TRUE(secondEye.compare(eyeM));
 }
 
 TEST(Matrix, Row)
 {
-    auto mat = Matrix<int>::eye(3);
+    auto mat = Matrix<int>::identity(3);
 
     auto r3 = mat.row(2); // r3 -> 0,0,1
 
@@ -101,7 +105,7 @@ TEST(Matrix, Row)
 
 TEST(Matrix, Column)
 {
-    auto mat = Matrix<int>::eye(3);
+    auto mat = Matrix<int>::identity(3);
 
     auto r3 = mat.column(2); // r3 -> 0;0;1
 

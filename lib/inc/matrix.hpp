@@ -46,7 +46,7 @@ public:
      * Sets each element to the value val.
      * @param val Value
      */
-    void setValue( T val );
+    void fill(T val);
 
     /**
      * Set the value at position m, n.
@@ -54,7 +54,7 @@ public:
      * @param n Column
      * @param val Value
      */
-    void setValue( size_t m, size_t n, T val);
+    inline void setValue( size_t m, size_t n, T val);
 
     /**
      * Gets the value at position m, n.
@@ -127,7 +127,13 @@ public:
      * @param m Matrix size.
      * @return Identity matrix.
      */
-    static Matrix<T> eye(size_t m);
+    static Matrix<T> identity(size_t m);
+
+    /**
+     * Set the elements of the matrix
+     * to be identity.
+     */
+    void setToIdentity();
 
 protected:
     /**
@@ -207,7 +213,7 @@ size_t Matrix<T>::getNbrOfElements() const
 }
 
 template <class T>
-void Matrix<T>::setValue( T val )
+void Matrix<T>::fill(T val)
 {
     T* dataPtr = data();
     for( size_t i = 0; i < m_nbrOfElements; i++ )
@@ -215,7 +221,7 @@ void Matrix<T>::setValue( T val )
 }
 
 template <class T>
-void Matrix<T>::setValue( size_t m, size_t n, T val)
+inline void Matrix<T>::setValue( size_t m, size_t n, T val)
 {
     data()[m*cols() + n] = val;
 }
@@ -237,8 +243,7 @@ Matrix<T> Matrix<T>::row(size_t m) const
 
     Matrix<T> ret(1,cols());
     size_t offset = m * cols();
-    for(size_t i = 0; i < cols(); i++)
-        ret.data()[i] = this->data()[offset+i];
+    std::copy(data()+offset, data()+offset+cols(), ret.data());
 
     return ret;
 }
@@ -273,16 +278,27 @@ T& Matrix<T>::operator() (size_t m, size_t n)
 }
 
 template <class T>
-Matrix<T> Matrix<T>::eye(size_t m)
+Matrix<T> Matrix<T>::identity(size_t m)
 {
     Matrix<T> ident = Matrix<T>(m,m);
-    ident.setValue(0);
-    for(size_t i = 0; i < m; i++)
+    ident.setToIdentity();
+    return ident;
+}
+
+template <class T>
+void Matrix<T>::setToIdentity()
+{
+    if( rows() != cols() )
     {
-        ident(i,i) = 1;
+        std::cout << "Not a square matrix";
+        std::exit(-1);
     }
 
-    return ident;
+    this->fill(0);
+    for(size_t i = 0; i < rows(); i++)
+    {
+        this->setValue(i,i, 1);
+    }
 }
 
 template <class T>
@@ -320,14 +336,25 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
 
     Matrix<T> res(this->rows(), mat.cols());
 
+    //Create a lookup table of the right matrix split to column vector
+    // -> this is helpful because this way the column vector is in a
+    //    continous memory block.
+    std::vector<Matrix<T>> lookup;
+    for(size_t k = 0; k < mat.cols(); k++)
+        lookup.push_back(mat.column(k));
+
     for( size_t n = 0; n < mat.cols(); n++)
     {
         for( size_t m = 0; m < this->rows(); m++)
         {
+            // get column mat -> continous memory block
+            const T* matColNPtr = lookup.at(n).data();
+            const T* thisRowPtr = data()+m*cols(); // this is fast
+
             T accum = 0;
             for(size_t a = 0; a < this->cols(); a++)
             {
-                accum = accum + (this->getValue(m,a) * mat(a,n));
+                accum +=  thisRowPtr[a] * matColNPtr[a];
             }
             res(m,n) = accum;
         }

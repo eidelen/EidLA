@@ -9,8 +9,8 @@ TEST(Matrix, Addition)
     auto m1 = Matrix<int>(nRows,nCols);
     auto m2 = Matrix<int>(nRows,nCols);
 
-    m1.setValue(2);
-    m2.setValue(4);
+    m1.fill(2);
+    m2.fill(4);
 
 
     auto res = m1 + m2;
@@ -32,8 +32,8 @@ TEST(Matrix, Subtraction)
     auto m1 = Matrix<int>(nRows,nCols);
     auto m2 = Matrix<int>(nRows,nCols);
 
-    m1.setValue(2);
-    m2.setValue(4);
+    m1.fill(2);
+    m2.fill(4);
 
     auto res = m1 - m2;
     for(size_t m = 0; m < nRows; m++)
@@ -48,8 +48,8 @@ TEST(Matrix, Subtraction)
 
 TEST(Matrix, Comparisson)
 {
-    auto m0 = Matrix<int>::eye(4);
-    auto m1 = Matrix<int>::eye(4);
+    auto m0 = Matrix<int>::identity(4);
+    auto m1 = Matrix<int>::identity(4);
 
     ASSERT_TRUE(m0.compare(m1));
     ASSERT_TRUE(m1.compare(m0));
@@ -60,8 +60,8 @@ TEST(Matrix, Comparisson)
     ASSERT_FALSE(m1.compare(m0));
 
 
-    auto f0 = Matrix<double>::eye(4);
-    auto f1 = Matrix<double>::eye(4);
+    auto f0 = Matrix<double>::identity(4);
+    auto f1 = Matrix<double>::identity(4);
 
     ASSERT_TRUE(f0.compare(f1,0.05));
     ASSERT_TRUE(f1.compare(f0,0.05));
