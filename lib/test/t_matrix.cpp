@@ -14,6 +14,32 @@ TEST(Matrix, InitializationCheckSizes)
     ASSERT_EQ(m->getNbrOfElements(), nElements);
 }
 
+TEST(Matrix, ConstructorWithData)
+{
+    int src[] = {1,2,3,4};
+    auto mat = Matrix<int>(2,2,src);
+
+    ASSERT_EQ( mat(0,0),1 );
+    ASSERT_EQ( mat(0,1),2 );
+    ASSERT_EQ( mat(1,0),3 );
+    ASSERT_EQ( mat(1,1),4 );
+}
+
+TEST(Matrix, CopyConstructor)
+{
+    auto orig = Matrix<int>(2,2);
+    orig.setValue(2); orig(1,1) = 5;
+
+    auto cpy = orig;
+    ASSERT_TRUE( orig.compare(cpy) );
+
+    cpy(0,0) = 3;
+    ASSERT_FALSE( orig.compare(cpy) );
+
+    orig(0,0) = 3;
+    ASSERT_TRUE( orig.compare(cpy) );
+}
+
 TEST(Matrix, SetGetSingleValue)
 {
     size_t nRows = 5; size_t nCols = 10; int currentVal = 2;

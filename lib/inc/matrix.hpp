@@ -10,7 +10,30 @@ template <class T>
 class Matrix
 {
 public:
+
+    /**
+     * Constructor
+     * @param rows number of rows
+     * @param cols number of columns
+     */
     Matrix( size_t rows, size_t cols );
+
+    /**
+     * Copy constructor.
+     * @param mat Matrix from which to copy
+     */
+    Matrix(const Matrix<T>& mat);
+
+    /**
+     * Constructs a m x n matrix and assigns
+     * the values taken from the data array
+     * in row direction.
+     * @param rows number of rows
+     * @param cols number of columns
+     * @param data Pointer to data
+     */
+    Matrix(size_t rows, size_t cols, const T* data);
+
     virtual ~Matrix();
 
     size_t rows() const;
@@ -129,6 +152,23 @@ Matrix<T>::Matrix(size_t rows, size_t cols)
         : m_rows(rows), m_cols(cols), m_nbrOfElements(rows*cols)
 {
     m_data.reset( new T[m_nbrOfElements] );
+}
+
+template <class T>
+Matrix<T>::Matrix(const Matrix<T>& mat)
+        : Matrix<T>(mat.rows(), mat.cols())
+{
+    const T* src = mat.data();
+    T* dst = this->data();
+    std::copy(src, src+mat.getNbrOfElements(), dst);
+}
+
+template <class T>
+Matrix<T>::Matrix(size_t rows, size_t cols, const T* data)
+        : Matrix<T>(rows, cols)
+{
+    T* dst = this->data();
+    std::copy(data, data+this->getNbrOfElements(), this->data());
 }
 
 template <class T>
