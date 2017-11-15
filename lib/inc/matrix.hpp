@@ -287,7 +287,7 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
             T accum = 0;
             for(size_t a = 0; a < this->cols(); a++)
             {
-                accum = accum + (this->getValue(m,a) * mat(a,m));
+                accum = accum + (this->getValue(m,a) * mat(a,n));
             }
             res(m,n) = accum;
         }

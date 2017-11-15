@@ -18,31 +18,24 @@ TEST(MatMul, Scalar)
     ASSERT_TRUE(res2.compare(soll1));
 }
 
-/*
+
 TEST(MatMul, MatrixMatrixSquare)
 {
-    size_t s = 4;
+    auto m1 = Matrix<int>(2,2); m1.setValue(2);
+    auto m2 = Matrix<int>(2,2); m2.setValue(3);
 
-    auto m1 = Matrix<int>(s,s); m1.setValue(2);
-    auto m2 = Matrix<int>(s,s); m2.setValue(3);
+    auto res1 = m1 * m2; // 2*3*2 = 12
 
-    auto res1 = m1 * m2; // 2*3*s = 24
-
-    auto soll1 = Matrix<int>(s,s); soll1.setValue(24);
+    auto soll1 = Matrix<int>(2,2); soll1.setValue(12);
     ASSERT_TRUE(res1.compare(soll1));
 
+    m2(1,1) = 1;
+    auto res2 = m1 * m2; // 2*3*2 = 12 and res2(:,1) = 2*3 + 1*2 = 8;
 
-    m2(3,3) = 1;
-    auto res2 = m1 * m2; // 2*3*s = 24 and res2(3,3) = 2*3*3 + 1*2 = 20;
-    std::cout << m1;
-    std::cout << m2;
-    std::cout << res2;
+    auto soll2 = Matrix<int>(2,2); soll2.setValue(12); soll2(0,1) = 8; soll2(1,1) = 8;
 
-    auto soll2 = Matrix<int>(s,s); soll2.setValue(24); soll2(0,3) = 20; soll2(1,3) = 20; soll2(2,3) = 20; soll2(3,3) = 20;
     ASSERT_TRUE(res2.compare(soll2));
-
-    std::cout << res2;
-}*/
+}
 
 
 
