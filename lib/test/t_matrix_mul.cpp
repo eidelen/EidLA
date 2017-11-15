@@ -37,6 +37,20 @@ TEST(MatMul, MatrixMatrixSquare)
     ASSERT_TRUE(res2.compare(soll2));
 }
 
+TEST(MatMul, VectorVector)
+{
+    auto v1 = Matrix<int>(1,3); v1.setValue(2);
+    auto v2 = Matrix<int>(3,1); v2.setValue(5); v2(2,0) = 1;
+
+    // 2*5 * 2  + 2*1 = 22
+
+    auto res = v1 * v2;
+
+    ASSERT_EQ(res.cols() , 1);
+    ASSERT_EQ(res.rows() , 1);
+    ASSERT_EQ(res(0,0) , 22);
+}
+
 
 
 
