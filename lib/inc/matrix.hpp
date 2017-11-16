@@ -6,6 +6,8 @@
 #include <iostream>
 #include <cmath>
 
+#include <smmintrin.h>  // SSE4
+
 template <class T>
 class Matrix
 {
@@ -144,6 +146,8 @@ protected:
      */
     static bool equalDimension( const Matrix<T> m1, const Matrix<T> m2);
 
+    T elementwiseMultiplyAndSum(const T *arr1, const T *arr2, size_t length) const;
+
 protected:
     const size_t m_rows;
     const size_t m_cols;
@@ -151,6 +155,15 @@ protected:
     std::shared_ptr<T> m_data;
     const size_t m_nbrOfElements;
 };
+
+
+template <>
+inline int Matrix<int>::elementwiseMultiplyAndSum(const int* arr1, const int* arr2, size_t length) const;
+
+/*
+template <>
+inline double Matrix<double>::elementwiseMultiplyAndSum(const double* arr1, const double* arr2, size_t length) const;
+ */
 
 
 template <class T>
@@ -336,7 +349,7 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
 
     Matrix<T> res(this->rows(), mat.cols());
 
-    //Create a lookup table of the right matrix split to column vector
+    //Create a lookup table of the right matrix split to column vectors
     // -> this is helpful because this way the column vector is in a
     //    continous memory block.
     std::vector<Matrix<T>> lookup;
@@ -351,12 +364,7 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
             const T* matColNPtr = lookup.at(n).data();
             const T* thisRowPtr = data()+m*cols(); // this is fast
 
-            T accum = 0;
-            for(size_t a = 0; a < this->cols(); a++)
-            {
-                accum +=  thisRowPtr[a] * matColNPtr[a];
-            }
-            res(m,n) = accum;
+            res(m,n) = elementwiseMultiplyAndSum(thisRowPtr, matColNPtr, this->cols() );
         }
     }
 
@@ -438,6 +446,85 @@ bool Matrix<T>::compare(const Matrix<T>& mat, double epsilon) const
     return true;
 
 }
+
+template <class T>
+T Matrix<T>::elementwiseMultiplyAndSum(const T *arr1, const T *arr2, size_t length) const
+{
+    T accum = 0;
+    for( size_t a = 0; a < length; a++ )
+        accum += arr1[a] * arr2[a];
+
+    return accum;
+}
+
+template <>
+inline int Matrix<int>::elementwiseMultiplyAndSum(const int* arr1, const int* arr2, size_t length) const
+{
+    __m128i* arr_1_ptr = (__m128i*) arr1;
+    __m128i* arr_2_ptr = (__m128i*) arr2;
+
+    int accum = 0;
+    size_t simdLoops = length / 4;
+    size_t singleLoops = length - 4*simdLoops;
+
+    for( size_t simd = 0; simd < simdLoops; simd++ )
+    {
+        __m128i reg_1_SSE = _mm_load_si128(arr_1_ptr);
+        __m128i reg_2_SSE = _mm_load_si128(arr_2_ptr);
+        __m128i mulRes = _mm_mullo_epi32 (reg_1_SSE, reg_2_SSE);
+        __m128i sumRes = _mm_hadd_epi32(mulRes,mulRes);
+                sumRes = _mm_hadd_epi32(sumRes,sumRes);
+
+        accum += _mm_extract_epi32(sumRes, 0);
+
+        arr_1_ptr++;
+        arr_2_ptr++;
+    }
+
+    const int* offset1 = arr1 + 4*simdLoops;
+    const int* offset2 = arr2 + 4*simdLoops;
+    for(size_t a = 0; a < singleLoops; a++)
+    {
+        accum += offset1[a]* offset2[a];
+    }
+
+    return accum;
+}
+
+/*
+template <>
+inline double Matrix<double>::elementwiseMultiplyAndSum(const double* arr1, const double* arr2, size_t length) const
+{
+    const double* arr_1_ptr = arr1;
+    const double* arr_2_ptr = arr2;
+
+    int accum = 0;
+    size_t simdLoops = length / 2;
+    size_t singleLoops = length - 2*simdLoops;
+
+    const int mask = 0x31;
+    for( size_t simd = 0; simd < simdLoops; simd++ )
+    {
+        __m128d reg_1_SSE = _mm_load_pd(arr_1_ptr);
+        __m128d reg_2_SSE = _mm_load_pd(arr_2_ptr);
+        __m128d res = _mm_dp_pd(reg_1_SSE, reg_2_SSE, mask);
+
+        accum += _mm_cvtsd_f64(res);
+
+        arr_1_ptr+=2;
+        arr_2_ptr+=2;
+    }
+
+    const double* offset1 = arr1 + 2*simdLoops;
+    const double* offset2 = arr2 + 2*simdLoops;
+    for(size_t a = 0; a < singleLoops; a++)
+    {
+        accum += offset1[a]* offset2[a];
+    }
+
+    return accum;
+}
+*/
 
 // Predefined Matrix Types
 typedef std::shared_ptr<Matrix<int>> MatrixISP;

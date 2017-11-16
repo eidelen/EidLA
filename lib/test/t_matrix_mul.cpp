@@ -65,6 +65,8 @@ TEST(MatMul, BigMatrix)
 
     // Debug: 22 s Release: 1.3 s
     // Debug: 4.2 s Release: 1.1 s  -> lookup table for column vector
+    // Debug: 2.7 s Release: 0.95 s -> iMac
+    // Debug: 2.4 s Release: 0.42 s -> SSE
 
     ASSERT_TRUE(res.compare(v1, 0.001));
 }
