@@ -40,6 +40,17 @@ TEST(Matrix, CopyConstructor)
     ASSERT_TRUE( orig.compare(cpy) );
 }
 
+TEST(Matrix, CopyConstructorInt2Double)
+{
+    auto in_int = Matrix<int>(2,2);
+    in_int.setToIdentity();
+
+    auto copy_double = Matrix<double>(in_int);
+    auto soll = Matrix<double>::identity(2);
+
+    ASSERT_TRUE( soll.compare(in_int) );
+}
+
 TEST(Matrix, SetGetSingleValue)
 {
     size_t nRows = 5; size_t nCols = 10; int currentVal = 2;

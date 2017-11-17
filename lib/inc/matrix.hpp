@@ -26,7 +26,8 @@ public:
      * Copy constructor.
      * @param mat Matrix from which to copy
      */
-    Matrix(const Matrix<T>& mat);
+    template<class R>
+    Matrix(const Matrix<R>& mat);
 
     /**
      * Constructs a m x n matrix and assigns
@@ -189,13 +190,34 @@ Matrix<T>::Matrix(size_t rows, size_t cols)
     m_data.reset( new T[m_nbrOfElements] );
 }
 
+//** Specific copy transformations - to be extended
 template <class T>
-Matrix<T>::Matrix(const Matrix<T>& mat)
+void copyMatData(const Matrix<T>& src, Matrix<T> dst )
+{
+    const T* srcPtr = src.data();
+    T* dstPtr = dst.data();
+    std::copy(srcPtr, srcPtr+src.getNbrOfElements(), dstPtr);
+}
+
+inline void copyMatData(const Matrix<int>& src, Matrix<double> dst )
+{
+    const int* srcPtr = src.data();
+    double* dstPtr = dst.data();
+
+    for( size_t i = 0; i < src.getNbrOfElements(); i++ )
+        dstPtr[i] = double(srcPtr[i]);
+}
+
+//**
+
+template <class T>
+template <class R>
+Matrix<T>::Matrix(const Matrix<R>& mat)
         : Matrix<T>(mat.rows(), mat.cols())
 {
-    const T* src = mat.data();
-    T* dst = this->data();
-    std::copy(src, src+mat.getNbrOfElements(), dst);
+    // if you have a compile error here, you have to extend the
+    // copyMatData function with the particular types.
+    copyMatData(mat, *this);
 }
 
 template <class T>
