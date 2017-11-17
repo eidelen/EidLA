@@ -34,10 +34,6 @@ TEST(Matrix, CopyConstructor)
     ASSERT_TRUE( orig.compare(cpy) );
 
     cpy(0,0) = 3;
-
-    std::cout << orig << std::endl;
-    std::cout << cpy << std::endl;
-
     ASSERT_FALSE( orig.compare(cpy) );
 
     orig(0,0) = 3;
@@ -137,6 +133,21 @@ TEST(Matrix, Swap)
 
     int sollData[9] = {1,0,0,  0,0,1,  0,1,0};
     auto soll = Matrix<int>(3,3,sollData);
+
+    ASSERT_TRUE(soll.compare(mat));
+}
+
+TEST(Matrix, SetRow)
+{
+    auto soll = Matrix<int>::identity(3);
+    soll.swapRows(1,2);
+
+    auto mat = Matrix<int>::identity(3);
+    auto r1 = mat.row(1);
+    auto r2 = mat.row(2);
+
+    mat.setRow(1, r2);
+    mat.setRow(2, r1);
 
     ASSERT_TRUE(soll.compare(mat));
 }

@@ -163,6 +163,13 @@ public:
      */
     void swapRows( size_t m1, size_t m2 );
 
+    /**
+     * Sets the row rowIdx to values in row.
+     * @param rowIdx
+     * @param row
+     */
+    void setRow( size_t rowIdx, const Matrix<T>& row);
+
 protected:
     /**
      * Check if the dimensions of the two passed matrix are equal.
@@ -651,6 +658,28 @@ void Matrix<T>::swapRows(size_t m1, size_t m2)
     {
         std::swap(row1[i],row2[i]);
     }
+}
+
+template <class T>
+void Matrix<T>::setRow(size_t rowIdx, const Matrix<T>& row)
+{
+    if (rowIdx >= rows())
+    {
+        std::cout << "row index exceeds matrix size";
+        std::exit(-1);
+    }
+
+    if( row.cols() != cols() )
+    {
+        std::cout << "mismatching matrix size";
+        std::exit(-1);
+    }
+
+    T* dstPtr = getRowPtr(rowIdx);
+    const T* srcPtr = row.data();
+    for( size_t i = 0; i < row.cols(); i++ )
+        dstPtr[i] = srcPtr[i];
+
 }
 
 // Predefined Matrix Types
