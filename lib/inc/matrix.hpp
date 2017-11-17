@@ -5,6 +5,8 @@
 #include <memory>
 #include <iostream>
 #include <cmath>
+#include <tuple>
+#include <limits>
 
 #include <smmintrin.h>  // SSE4
 
@@ -136,6 +138,20 @@ public:
      * to be identity.
      */
     void setToIdentity();
+
+    /**
+     * Get the position and value of the maximum element. If there
+     * are two or more maximums, the first one is returned.
+     * @return Position and value of maximum
+     */
+    std::tuple<size_t, size_t, T> max() const;
+
+    /**
+     * Get the position and value of the minimum element. If there
+     * are two or more minimums, the first one is returned.
+     * @return Position and value of minimum
+     */
+    std::tuple<size_t, size_t, T> min() const;
 
 protected:
     /**
@@ -525,6 +541,51 @@ inline double Matrix<double>::elementwiseMultiplyAndSum(const double* arr1, cons
     return accum;
 }
 */
+
+
+template <class T>
+std::tuple<size_t, size_t, T> Matrix<T>::max() const
+{
+    T maxVal = std::numeric_limits<T>::min();
+    size_t maxPos = 0;
+    const T* matData = data();
+
+    for( size_t i = 0; i < getNbrOfElements(); i++ )
+    {
+        if( maxVal <  matData[i] )
+        {
+            maxPos = i;
+            maxVal = matData[i];
+        }
+    }
+
+    size_t m = maxPos / cols();
+    size_t n = maxPos - (m*cols());
+
+    return std::make_tuple(m,n,maxVal);
+}
+
+template <class T>
+std::tuple<size_t, size_t, T> Matrix<T>::min() const
+{
+    T minVal = std::numeric_limits<T>::max();
+    size_t minPos = 0;
+    const T* matData = data();
+
+    for( size_t i = 0; i < getNbrOfElements(); i++ )
+    {
+        if( minVal >  matData[i] )
+        {
+            minPos = i;
+            minVal = matData[i];
+        }
+    }
+
+    size_t m = minPos / cols();
+    size_t n = minPos - (m*cols());
+
+    return std::make_tuple(m,n,minVal);
+}
 
 // Predefined Matrix Types
 typedef std::shared_ptr<Matrix<int>> MatrixISP;

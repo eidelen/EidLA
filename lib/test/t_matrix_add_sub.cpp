@@ -71,5 +71,34 @@ TEST(Matrix, Comparisson)
 
     ASSERT_FALSE(f0.compare(f1));
     ASSERT_FALSE(f1.compare(f0));
+}
 
+TEST(Matrix, MaxElement)
+{
+    int inData[6] = {1,3,4,  3,2,2}; // max is 4 at pos 0,2
+    Matrix<int> in(2,3, inData);
+
+    auto max = in.max();
+    size_t m = std::get<0>(max);
+    size_t n = std::get<1>(max);
+    int val = std::get<2>(max);
+
+    ASSERT_EQ(m,   0);
+    ASSERT_EQ(n,   2);
+    ASSERT_EQ(val, 4);
+}
+
+TEST(Matrix, MinElement)
+{
+    int inData[6] = {1,3,4,  -5,2,2}; // max is -5 at pos 1,0
+    Matrix<int> in(2,3, inData);
+
+    auto min = in.min();
+    size_t m = std::get<0>(min);
+    size_t n = std::get<1>(min);
+    int val = std::get<2>(min);
+
+    ASSERT_EQ(m,   1);
+    ASSERT_EQ(n,   0);
+    ASSERT_EQ(val, -5);
 }
