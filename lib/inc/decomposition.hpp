@@ -8,12 +8,12 @@ class Decomposition
 public:
 
     template <class T>
-    static std::pair<Matrix<double>, Matrix<double>> luDecomposition(const Matrix<T> mat);
+    static std::pair<Matrix<double>, Matrix<double>> luDecomposition(const Matrix<T>& mat);
 };
 
 
 template <class T>
-std::pair<Matrix<double>, Matrix<double>> Decomposition::luDecomposition(const Matrix<T> mat)
+std::pair<Matrix<double>, Matrix<double>> Decomposition::luDecomposition(const Matrix<T>& mat)
 {
 
 }

@@ -57,16 +57,20 @@ TEST(MatMul, VectorVector)
     ASSERT_EQ(res(0,0) , 22);
 }
 
-TEST(MatMul, BigMatrix)
+TEST(MatMul, BigMatrixDouble)
 {
-    auto v1 = Matrix<double>(1000,1000);
+    auto v1 = Matrix<double>(500,500);
     v1.setToIdentity();
     auto res = v1 * v1;
 
-    // Debug: 22 s Release: 1.3 s
-    // Debug: 4.2 s Release: 1.1 s  -> lookup table for column vector
-    // Debug: 2.7 s Release: 0.95 s -> iMac
-    // Debug: 2.4 s Release: 0.42 s -> SSE
+    ASSERT_TRUE(res.compare(v1, 0.001));
+}
+
+TEST(MatMul, BigMatrixInt)
+{
+    auto v1 = Matrix<int>(500,500);
+    v1.setToIdentity();
+    auto res = v1 * v1;
 
     ASSERT_TRUE(res.compare(v1, 0.001));
 }
