@@ -29,6 +29,8 @@ public:
     template<class R>
     Matrix(const Matrix<R>& mat);
 
+    Matrix(const Matrix<T>& mat);
+
     /**
      * Constructs a m x n matrix and assigns
      * the values taken from the data array
@@ -154,6 +156,13 @@ public:
      */
     std::tuple<size_t, size_t, T> min() const;
 
+    /**
+     * Swap rows m1 and m2
+     * @param m1
+     * @param m2
+     */
+    void swapRows( size_t m1, size_t m2 );
+
 protected:
     /**
      * Check if the dimensions of the two passed matrix are equal.
@@ -164,6 +173,8 @@ protected:
     static bool equalDimension( const Matrix<T> m1, const Matrix<T> m2);
 
     T elementwiseMultiplyAndSum(const T *arr1, const T *arr2, size_t length) const;
+
+    T* getRowPtr(size_t row);
 
 protected:
     const size_t m_rows;
@@ -192,14 +203,14 @@ Matrix<T>::Matrix(size_t rows, size_t cols)
 
 //** Specific copy transformations - to be extended
 template <class T>
-void copyMatData(const Matrix<T>& src, Matrix<T> dst )
+void copyMatData(const Matrix<T>& src, Matrix<T>& dst )
 {
     const T* srcPtr = src.data();
     T* dstPtr = dst.data();
     std::copy(srcPtr, srcPtr+src.getNbrOfElements(), dstPtr);
 }
 
-inline void copyMatData(const Matrix<int>& src, Matrix<double> dst )
+inline void copyMatData(const Matrix<int>& src, Matrix<double>& dst )
 {
     const int* srcPtr = src.data();
     double* dstPtr = dst.data();
@@ -213,6 +224,15 @@ inline void copyMatData(const Matrix<int>& src, Matrix<double> dst )
 template <class T>
 template <class R>
 Matrix<T>::Matrix(const Matrix<R>& mat)
+        : Matrix<T>(mat.rows(), mat.cols())
+{
+    // if you have a compile error here, you have to extend the
+    // copyMatData function with the particular types.
+    copyMatData(mat, *this);
+}
+
+template <class T>
+Matrix<T>::Matrix(const Matrix<T>& mat)
         : Matrix<T>(mat.rows(), mat.cols())
 {
     // if you have a compile error here, you have to extend the
@@ -607,6 +627,30 @@ std::tuple<size_t, size_t, T> Matrix<T>::min() const
     size_t n = minPos - (m*cols());
 
     return std::make_tuple(m,n,minVal);
+}
+
+template <class T>
+T* Matrix<T>::getRowPtr(size_t row)
+{
+    return data() + row*cols();
+}
+
+template <class T>
+void Matrix<T>::swapRows(size_t m1, size_t m2)
+{
+    if (std::max(m1, m2) >= rows())
+    {
+        std::cout << "row index exceeds matrix size";
+        std::exit(-1);
+    }
+
+    T* row1 = getRowPtr(m1);
+    T* row2 = getRowPtr(m2);
+
+    for (size_t i = 0; i < cols(); i++)
+    {
+        std::swap(row1[i],row2[i]);
+    }
 }
 
 // Predefined Matrix Types
