@@ -170,6 +170,14 @@ public:
      */
     void setRow( size_t rowIdx, const Matrix<T>& row);
 
+    /**
+     * Compute the rank of the matrix, the number of
+     * linearly independant rows.
+     * http://stattrek.com/matrix-algebra/matrix-rank.aspx
+     * @return Rank.
+     */
+    size_t getRank() const;
+
 protected:
     /**
      * Check if the dimensions of the two passed matrix are equal.
@@ -685,5 +693,32 @@ void Matrix<T>::setRow(size_t rowIdx, const Matrix<T>& row)
 // Predefined Matrix Types
 typedef std::shared_ptr<Matrix<int>> MatrixISP;
 typedef std::shared_ptr<Matrix<double>> MatrixDSP;
+
+
+#include "transformation.hpp"
+
+template <class T>
+size_t Matrix<T>::getRank() const
+{
+    Matrix<double> echelonMat = Transformation::echelon(*this);
+
+    // count numbers of non zero rows
+    Matrix<double> zeroRow(1, cols());
+    zeroRow.fill(0.0);
+
+    size_t rank = 0;
+    for(size_t i = 0; i < rows(); i++)
+    {
+        Matrix<double> cRow = echelonMat.row(i);
+        if( cRow.compare(zeroRow, std::numeric_limits<double>::min()) )
+            break;
+        else
+            rank++;
+    }
+
+    return rank;
+}
+
+
 
 #endif //MY_MATRIX_H

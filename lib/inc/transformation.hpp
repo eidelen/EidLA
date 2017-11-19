@@ -10,8 +10,6 @@ public:
     template <class T>
     static Matrix<double> echelon(const Matrix<T>& mat);
 
-    template <class T>
-    static Matrix<double> echelonReduced(const Matrix<T>& mat);
 };
 
 
@@ -63,13 +61,6 @@ Matrix<double> Transformation::echelon(const Matrix<T>& mat)
 
     return ret;
 }
-
-template <class T>
-Matrix<double> Transformation::echelonReduced(const Matrix<T>& mat)
-{
-
-}
-
 
 
 #endif //MY_TRANSFORMATION_H
