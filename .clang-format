@@ -1,0 +1,66 @@
+AccessModifierOffset: -4
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignEscapedNewlinesLeft: true
+AlignOperands: true
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+#AlwaysBreakBeforeMultilineStrings: true # TODO activate later
+AlwaysBreakTemplateDeclarations: true
+#BinPackArguments: false # TODO activate later
+#BinPackParameters: false # TODO activate later
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Allman
+#BreakBeforeInheritanceComma: false # TODO not known (yet, llvm 3.8)
+BreakBeforeTernaryOperators: false # TODO breaks function definition lines in two, why ?
+BreakConstructorInitializersBeforeComma: true
+#BreakStringLiterals: false # TODO not known
+ColumnLimit: 0
+CommentPragmas: ''
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 0
+ContinuationIndentWidth: 0
+Cpp11BracedListStyle: true
+DerivePointerAlignment: false
+DerivePointerBinding: false
+#FixNamespaceComments: true # TODO not know (but active per default)
+#IncludeCategories: # FIXME do this.
+IndentCaseLabels: true
+IndentFunctionDeclarationAfterType: false # TODO not in the documentation !?
+IndentWidth: 4
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+Language: Cpp
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: All
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyBreakComment: 100
+PenaltyBreakFirstLessLess: 0
+PenaltyBreakString: 100
+PenaltyExcessCharacter: 1
+PenaltyReturnTypeOnItsOwnLine: 100
+PointerAlignment: Left
+PointerBindsToType: true # legacy option ?
+ReflowComments: false
+SortIncludes: false # TODO change this
+#SpaceAfterCStyleCast: true # TODO use only to check whether some C-style casts are still present.
+#SpaceAfterTemplateKeyword: false # TODO not know
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: Cpp11
+TabWidth: 4
+UseTab: Never

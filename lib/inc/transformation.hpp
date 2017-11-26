@@ -13,7 +13,6 @@ public:
 };
 
 
-
 // Algorithm described in
 // http://stattrek.com/matrix-algebra/echelon-transform.aspx#MatrixA
 
