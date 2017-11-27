@@ -143,6 +143,12 @@ public:
     void setToIdentity();
 
     /**
+     * Return the transpose of this matrix.
+     * @return Matrix transpose.
+     */
+    Matrix<T> transpose() const;
+
+    /**
      * Get the position and value of the maximum element. If there
      * are two or more maximums, the first one is returned.
      * @return Position and value of maximum
@@ -385,6 +391,21 @@ void Matrix<T>::setToIdentity()
     {
         this->setValue(i,i, 1);
     }
+}
+
+template <class T>
+Matrix<T> Matrix<T>::transpose() const
+{
+    Matrix<T> ret( cols(), rows() );
+    for( size_t m = 0; m < rows(); m++ )
+    {
+        for( size_t n = 0; n < cols(); n++ )
+        {
+            ret(n,m) = getValue(m,n);
+        }
+    }
+
+    return ret;
 }
 
 template <class T>
