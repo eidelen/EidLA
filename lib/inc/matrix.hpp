@@ -90,7 +90,7 @@ public:
      * @param epsilon The allowed tolerance.
      * @return True if all elements are within the tolerance. Otherwise false.
      */
-    bool compare( const Matrix<T>& mat, double epsilon = 0.0 ) const;
+    bool compare( const Matrix<T>& mat, double epsilon = std::numeric_limits<double>::min() ) const;
 
     /**
      * Gets the value at position m, n.
@@ -564,7 +564,7 @@ inline int Matrix<int>::elementwiseMultiplyAndSum(const int* arr1, const int* ar
     return accum;
 }
 
-/* Makes it slower
+/* Makes the multiplication slower
 template <>
 inline double Matrix<double>::elementwiseMultiplyAndSum(const double* arr1, const double* arr2, size_t length) const
 {

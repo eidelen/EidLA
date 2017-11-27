@@ -65,7 +65,7 @@ TEST(MatMul, BigMatrixDouble)
     v1.setToIdentity();
     auto res = v1 * v1;
 
-    ASSERT_TRUE(res.compare(v1, 0.001));
+    ASSERT_TRUE(res.compare(v1, std::numeric_limits<double>::min()));
 }
 
 TEST(MatMul, BigMatrixInt)
@@ -74,5 +74,5 @@ TEST(MatMul, BigMatrixInt)
     v1.setToIdentity();
     auto res = v1 * v1;
 
-    ASSERT_TRUE(res.compare(v1, 0.001));
+    ASSERT_TRUE(res.compare(v1, std::numeric_limits<double>::min()));
 }
