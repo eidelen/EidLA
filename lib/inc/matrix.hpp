@@ -143,10 +143,23 @@ public:
     void setToIdentity();
 
     /**
-     * Return the transpose of this matrix.
+     * Returns the transpose of this matrix.
      * @return Matrix transpose.
      */
     Matrix<T> transpose() const;
+
+    /**
+     * Returns all elements on the central
+     * diagonal as a column vector.
+     * @return Diagonal as column vector.
+     */
+    Matrix<T> diagonal() const;
+
+    /**
+     * Sum of all elements in the matrix.
+     * @return sum
+     */
+    T sum() const;
 
     /**
      * Get the position and value of the maximum element. If there
@@ -404,6 +417,33 @@ Matrix<T> Matrix<T>::transpose() const
             ret(n,m) = getValue(m,n);
         }
     }
+
+    return ret;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::diagonal() const
+{
+    size_t diagLength = std::min(rows(), cols());
+    Matrix<T> ret(diagLength, 1);
+
+    for( size_t i = 0; i < diagLength; i++ )
+    {
+        ret(i,0) = getValue(i,i);
+    }
+
+    return ret;
+}
+
+template <class T>
+T Matrix<T>::sum() const
+{
+    T ret = 0;
+
+    const T* ptr = data();
+    size_t nElem = getNbrOfElements();
+    for( size_t i = 0; i < nElem; i++)
+        ret += ptr[i];
 
     return ret;
 }

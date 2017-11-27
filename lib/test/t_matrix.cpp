@@ -161,13 +161,32 @@ TEST(Matrix, SetRow)
 
 TEST(Matrix, Transpose)
 {
-    int inData[9] = {1, 1, 1,  3, 3, 3};
+    int inData[6] = {1, 1, 1,  3, 3, 3};
     auto in = Matrix<int>(2, 3, inData);
 
-    int sollData[9] = {1,3,  1,3,   1,3};
+    int sollData[6] = {1,3,  1,3,   1,3};
     auto soll = Matrix<int>(3, 2, sollData);
 
     auto inTranspose = in.transpose();
 
     ASSERT_TRUE(inTranspose.compare(soll));
+}
+
+TEST(Matrix, Diagonal)
+{
+    int inData[9] = {1, 1, 1,   3, 3, 3,   5, 5, 5};
+    auto in = Matrix<int>(3, 3, inData);
+
+    int diagData[3] = {1,3,5};
+    auto diagSoll = Matrix<int>(3, 1, diagData);
+
+    ASSERT_TRUE(diagSoll.compare(in.diagonal()));
+}
+
+TEST(Matrix, Sum)
+{
+    int inData[9] = {1, 1, 1,   3, 3, 3,   5, 5, 5};
+    auto in = Matrix<int>(3, 3, inData);
+
+    ASSERT_EQ( in.sum(), 27 );
 }
