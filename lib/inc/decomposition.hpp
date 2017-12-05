@@ -22,6 +22,9 @@ public:
 };
 
 
+// Infos from:
+//  http://mathonline.wikidot.com/the-algorithm-for-doolittle-s-method-for-lu-decompositions
+
 template <class T>
 Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
 {
