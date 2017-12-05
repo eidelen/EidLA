@@ -31,46 +31,57 @@ Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
         std::exit(-1);
     }
 
-    size_t s = mat.rows();
+    size_t n = mat.rows();
 
-    Matrix<double> l = Matrix<double>(s,s);
-    Matrix<double> u = Matrix<double>(s,s);
+    Matrix<double> a(mat);
+    Matrix<double> l = Matrix<double>(n,n);
+    Matrix<double> u = Matrix<double>(n,n);
 
-    l.fill(0.0); u.fill(0.0);
+    l.setToIdentity(); u.fill(0.0);
 
-    u(0,0) = mat(0,0);
-    l.setToIdentity();
-
-    for( size_t m = 0; m < s; m++ )
+    for( size_t k = 0; k < n; k++ )
     {
-        for(size_t n = 0; n < s; m++ )
+        for( size_t m = k; m < n; m++ )
         {
-            // compute l_mn
-            if( m > n )
+            // compute u(k,m)
+            double pSum = 0;
+
+            if( k > 0 )
             {
-                double accum = 0;
-                for (size_t p = 0; p < n - 1; p++) {
-                    accum += l(m, p) * u(p, n);
+                for (size_t j = 0; j < (k-1); j++ )
+                {
+                    pSum += l(k,j)*u(j,m);
+                }
+            }
+
+            u(k,m) = mat(k,m) - pSum;
+        }
+
+        for( size_t i = k; i < n; i++ )
+        {
+            // compute l(i,k)
+            if( k == i )
+            {
+                l(i,k) = 1.0;
+            }
+            else
+            {
+                double pSum = 0;
+
+                if( k > 0 )
+                {
+                    for (size_t j = 0; j < (k-1); j++ )
+                    {
+                        pSum += l(i,j)*u(j,k);
+                    }
                 }
 
-
-                l(m, n) = (mat(m, n) - accum) / u(n, n);
+                l(i,k) = (a(i,k) - pSum) / u(k,k);
             }
-
-
-
-            double accum = 0;
-            for( size_t p = 0; p < m-1; p++ )
-            {
-                accum += l(m,p)*u(p,n);
-            }
-
-            u(m,n) = mat(m,n) - accum;
-
         }
     }
 
-
+    std::cout << l << std::endl << u;
 
     LUResult ret(l,u);
 
