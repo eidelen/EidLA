@@ -20,3 +20,28 @@ TEST(Decomposition, LU)
     ASSERT_TRUE(soll_L.compare(res.L, 0.000001));
     ASSERT_TRUE(soll_U.compare(res.U, 0.000001));
 }
+
+TEST(Decomposition, LU3x3)
+{
+    // https://en.wikipedia.org/wiki/LU_decomposition
+
+    double m_data[9] = {4.0, 1.0, 7.0,     3.0, 5.0, 10.0,     1.0, -4.0, 2.0};
+    auto m = Matrix<double>(3, 3, m_data);
+
+    Decomposition::LUResult res = Decomposition::luDecomposition(m);
+
+    ASSERT_TRUE(m.compare(res.L*res.U, 0.000001));
+}
+
+TEST(Decomposition, LUIdent)
+{
+    // https://en.wikipedia.org/wiki/LU_decomposition
+    auto in = Matrix<double>(6,6);
+    in.setToIdentity();
+
+    Decomposition::LUResult res = Decomposition::luDecomposition(in);
+
+    // Both should be identity
+    ASSERT_TRUE(in.compare(res.L, 0.000001));
+    ASSERT_TRUE(in.compare(res.U, 0.000001));
+}

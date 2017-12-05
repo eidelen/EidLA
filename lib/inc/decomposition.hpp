@@ -51,16 +51,15 @@ Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
 
             if( k > 0 )
             {
-                for (size_t j = 0; j < (k-1); j++ )
+                for (size_t j = 0; j < k; j++ )
                 {
                     pSum += l(k,j)*u(j,m);
                 }
             }
-
-            u(k,m) = mat(k,m) - pSum;
+            u(k,m) = a(k,m) - pSum;
         }
 
-        for( size_t i = k; i < n; i++ )
+        for( size_t i = k+1; i < n; i++ )
         {
             // compute l(i,k)
             if( k == i )
@@ -73,21 +72,17 @@ Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
 
                 if( k > 0 )
                 {
-                    for (size_t j = 0; j < (k-1); j++ )
+                    for (size_t j = 0; j < k; j++ )
                     {
                         pSum += l(i,j)*u(j,k);
                     }
                 }
-
                 l(i,k) = (a(i,k) - pSum) / u(k,k);
             }
         }
     }
 
-    std::cout << l << std::endl << u;
-
     LUResult ret(l,u);
-
     return ret;
 }
 
