@@ -19,6 +19,11 @@ public:
 
     template <class T>
     static LUResult luDecomposition(const Matrix<T>& mat);
+
+private:
+
+    static LUResult doolittle(const Matrix<double>& a);
+
 };
 
 
@@ -34,9 +39,13 @@ Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
         std::exit(-1);
     }
 
-    size_t n = mat.rows();
-
     Matrix<double> a(mat);
+    return doolittle(a);
+}
+
+Decomposition::LUResult Decomposition::doolittle(const Matrix<double>& a)
+{
+    size_t n = a.rows();
     Matrix<double> l = Matrix<double>(n,n);
     Matrix<double> u = Matrix<double>(n,n);
 
