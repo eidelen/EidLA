@@ -10,6 +10,8 @@ public:
     template <class T>
     static Matrix<double> echelon(const Matrix<T>& mat);
 
+    template <class T>
+    static Matrix<double> reduced_echelon(const Matrix<T>& mat);
 };
 
 
@@ -64,6 +66,51 @@ Matrix<double> Transformation::echelon(const Matrix<T>& mat)
     }
 
     return ret;
+}
+
+template <class T>
+Matrix<double> Transformation::reduced_echelon(const Matrix<T>& mat)
+{
+    Matrix<double> echMat = Transformation::echelon(mat);
+
+    if( echMat.rows() < 2 )
+    {
+        return echMat;
+    }
+
+    // going from down up
+    size_t processingRow = echMat.rows()-1; // rows is min = 2!
+    while( processingRow > 0 ) // when processing row is 1, the last row edited is 0 (first row)
+    {
+        // find first non-zero entry searching from left to right in row processingRow
+        // nonZeroCol will be the kinda pivot element
+        size_t nonZeroCol = 0; bool nonZeroEntryFound = false;
+        for( size_t i = 0; i < echMat.cols(); i++ )
+        {
+            if( std::abs(echMat(processingRow,i)) > 0.0 )
+            {
+                nonZeroCol = i;
+                nonZeroEntryFound = true;
+                break;
+            }
+        }
+
+        if( nonZeroEntryFound )
+        {
+            // modify rows above
+            double pivotElement = echMat(processingRow, nonZeroCol);
+
+            for( size_t m = 0; m < processingRow; m++ )
+            {
+                double rowFactor = - echMat(m, nonZeroCol) / pivotElement;
+                echMat.setRow(m,  echMat.row(m) + (echMat.row(processingRow) * rowFactor)  );
+            }
+        }
+
+        processingRow--;
+    }
+
+    return echMat;
 }
 
 
