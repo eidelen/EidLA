@@ -64,6 +64,27 @@ TEST(Transformation, ReducedEchelon2)
     ASSERT_TRUE(soll.compare(redEch));
 }
 
+// http://stattrek.com/matrix-algebra/how-to-find-inverse.aspx
+TEST(Transformation, ReducedEchelonRowOps)
+{
+    double inData[] = {1,2,2,  2,2,2,  2,2,1};
+    auto mat = Matrix<double>(3,3,inData);
+
+    double e1Data[] = {1,0,0,  -2,1,0,  0,0,1};
+    auto e1 = Matrix<double>(3,3,e1Data);
+
+    auto redEch = Matrix<double>(3,3);
+    redEch.setToIdentity();
+
+    std::vector<Matrix<double>> rowOps;
+    auto computedRedEch = Transformation::reduced_echelon(mat,rowOps);
+
+    ASSERT_TRUE(computedRedEch.compare(redEch)); //should be identity
+
+    // check row operations
+   // ASSERT_TRUE(e1.compare(rowOps.at(0)));
+}
+
 TEST(Transformation, MatrixRank)
 {
     double         inData[9] = {0, 1, 2, 1, 2, 1, 2, 7, 8};
@@ -88,7 +109,7 @@ TEST(Transformation, MatrixRank0) {
 }
 
 /*
-
+// inverse: http://stattrek.com/matrix-algebra/how-to-find-inverse.aspx
 //https://math.dartmouth.edu/archive/m23s06/public_html/handouts/row_reduction_examples.pdf
 TEST(Transformation, GaussElimination)
 {
