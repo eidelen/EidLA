@@ -52,7 +52,6 @@ To be extended....
 
 License
 -------
-Feel free to do whatever you want with this code!
-
+MIT license: To my understanding, you can do whatever you wish to do with the code. However, no warranty is given that the written code is correct.
 
 
