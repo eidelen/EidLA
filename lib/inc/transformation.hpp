@@ -2,6 +2,7 @@
 #define MY_TRANSFORMATION_H
 
 #include "matrix.hpp"
+#include "multiplier.hpp"
 
 class Transformation
 {
@@ -83,6 +84,8 @@ Matrix<double> Transformation::echelon(const Matrix<T>& mat, std::vector<Matrix<
             if( pivotRow > processingRow )
             {
                 ret.swapRows(processingRow, pivotRow); // move pivot up
+
+                rowOperations.push_back(Multiplier::swapRow(ret,processingRow,pivotRow));
             }
 
             // adapt pivot line
@@ -90,15 +93,18 @@ Matrix<double> Transformation::echelon(const Matrix<T>& mat, std::vector<Matrix<
             auto pivotRow = ret.row(processingRow);
             auto scaledPivotRow = pivotRow*(1/pivotElement);
             ret.setRow(processingRow, scaledPivotRow);
+            rowOperations.push_back( Multiplier::multiplyRow(ret,1.0/pivotElement,processingRow) );
 
+            double scaledPivotElement = ret(processingRow,n); // should be always 1.0
 
             // add scaled pivot line to below rows so that elements in column n become zero
             for( size_t q = processingRow+1; q < ret.rows(); q++ )
             {
                 double localPivotElement = ret(q,n);
-                double localPivotFactor = localPivotElement / pivotElement * (-1);
-                auto newLocalRow = ( pivotRow*localPivotFactor) + ret.row(q);
+                double localPivotFactor = localPivotElement / scaledPivotElement * (-1);
+                auto newLocalRow = ( scaledPivotRow*localPivotFactor) + ret.row(q);
                 ret.setRow(q, newLocalRow);
+                rowOperations.push_back( Multiplier::addProductOfRow(ret,localPivotFactor,processingRow,q) );
             }
 
             processingRow++;
@@ -153,6 +159,8 @@ Matrix<double> Transformation::reduced_echelon(const Matrix<T>& mat, std::vector
             {
                 double rowFactor = - echMat(m, nonZeroCol) / pivotElement;
                 echMat.setRow(m,  echMat.row(m) + (echMat.row(processingRow) * rowFactor)  );
+
+                rowOperations.push_back( Multiplier::addProductOfRow(echMat,rowFactor,processingRow,m));
             }
         }
 

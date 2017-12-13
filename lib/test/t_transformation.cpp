@@ -81,8 +81,20 @@ TEST(Transformation, ReducedEchelonRowOps)
 
     ASSERT_TRUE(computedRedEch.compare(redEch)); //should be identity
 
-    // check row operations
-   // ASSERT_TRUE(e1.compare(rowOps.at(0)));
+    // product of all operators should lead also to the reduced echelon form
+    auto stepwiseEchelon = mat;
+    for( auto i : rowOps )
+    {
+        auto currentMat = i * stepwiseEchelon;
+
+        // copy matrix to inter -> make copy operator.
+        for( size_t k = 0; k < currentMat.rows(); k++)
+        {
+            stepwiseEchelon.setRow( k, currentMat.row(k) );
+        }
+    }
+
+    ASSERT_TRUE( computedRedEch.compare(stepwiseEchelon) );
 }
 
 TEST(Transformation, MatrixRank)
