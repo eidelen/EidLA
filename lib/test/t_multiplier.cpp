@@ -28,3 +28,34 @@ TEST(Multiplier, SwapNonSymetric)
 
     ASSERT_TRUE(soll.compare(swapRes));
 }
+
+TEST(Multiplier, MulAdd)
+{
+    auto mat = Matrix<int>(4,4);
+    mat.setToIdentity();
+
+    // add 9*row 2 to row 3.
+    auto soll = mat;
+    soll.setRow(3, soll.row(3) + (mat.row(2) * 9) );
+
+    auto res = Multiplier::addProductOfRow(mat,9,2,3) * mat;
+
+    ASSERT_TRUE(soll.compare(res));
+}
+
+
+TEST(Multiplier, MulAddNonSymetric)
+{
+    int matData[] = {1,2,  3,4,  5,6};
+    auto mat = Matrix<int>(3,2,matData);
+
+    // add -8*row 0 to row 2.
+    auto soll = mat;
+    soll.setRow(2, soll.row(2) + (mat.row(0) * (-8)) );
+
+    auto res = Multiplier::addProductOfRow(mat,-8,0,2) * mat;
+
+    std::cout << Multiplier::addProductOfRow(mat,-8,0,2);
+
+    ASSERT_TRUE(soll.compare(res));
+}
