@@ -190,3 +190,16 @@ TEST(Matrix, Sum)
 
     ASSERT_EQ( in.sum(), 27 );
 }
+
+TEST(Matrix, AssignmentOperator)
+{
+    auto mat = Matrix<int>(3,3);
+    mat.setToIdentity();
+
+    auto newMat = Matrix<int>(2,2);
+    newMat.fill(5);
+
+    mat = newMat;
+
+    ASSERT_TRUE(mat.compare(newMat));
+}

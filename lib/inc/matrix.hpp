@@ -41,6 +41,13 @@ public:
      */
     Matrix(size_t rows, size_t cols, const T* data);
 
+    /**
+     * Asignment operator: overwrite content of this matrix.
+     * @param other
+     * @return
+     */
+    Matrix<T>& operator=(const Matrix<T>& other);
+
     virtual ~Matrix();
 
     size_t rows() const;
@@ -211,11 +218,11 @@ protected:
     T* getRowPtr(size_t row);
 
 protected:
-    const size_t m_rows;
-    const size_t m_cols;
+    size_t m_rows;
+    size_t m_cols;
 
     std::shared_ptr<T> m_data;
-    const size_t m_nbrOfElements;
+    size_t m_nbrOfElements;
 };
 
 
@@ -280,6 +287,24 @@ Matrix<T>::Matrix(size_t rows, size_t cols, const T* data)
 {
     T* dst = this->data();
     std::copy(data, data+this->getNbrOfElements(), this->data());
+}
+
+template <class T>
+Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other)
+{
+    if (this != &other) // self-assignment check expected
+    {
+        // reinit matrix
+        m_rows = other.rows();
+        m_cols = other.cols();
+        m_nbrOfElements = m_rows * m_cols;
+        m_data.reset( new T[m_nbrOfElements] );
+
+        // copy data
+        copyMatData(other, *this);
+    }
+
+    return *this;
 }
 
 template <class T>

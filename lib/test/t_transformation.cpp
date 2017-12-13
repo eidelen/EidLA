@@ -85,13 +85,7 @@ TEST(Transformation, ReducedEchelonRowOps)
     auto stepwiseEchelon = mat;
     for( auto i : rowOps )
     {
-        auto currentMat = i * stepwiseEchelon;
-
-        // copy matrix to inter -> make copy operator.
-        for( size_t k = 0; k < currentMat.rows(); k++)
-        {
-            stepwiseEchelon.setRow( k, currentMat.row(k) );
-        }
+        stepwiseEchelon = i * stepwiseEchelon;
     }
 
     ASSERT_TRUE( computedRedEch.compare(stepwiseEchelon) );
