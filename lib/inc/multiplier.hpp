@@ -30,6 +30,17 @@ public:
      */
     template <class T>
     static Matrix<T> addProductOfRow(const Matrix<T>& mat, T factor, size_t r0, size_t r1);
+
+    /**
+     * Get the matrix L-multiplier, which multiplies the row r1 by factor.
+     * @tparam T
+     * @param mat
+     * @param factor
+     * @param r
+     * @return Multiplier matrix.
+     */
+    template <class T>
+    static Matrix<T> multiplyRow(const Matrix<T>& mat, T factor, size_t r);
 };
 
 
@@ -68,11 +79,27 @@ Matrix<T> Multiplier::addProductOfRow(const Matrix<T>& mat, T factor, size_t r0,
         std::exit(-1);
     }
 
-    Matrix<T> swapOp(mat.rows(), mat.rows());
-    swapOp.setToIdentity();
-    swapOp(r1,r0) = factor;
+    Matrix<T> addProdOp(mat.rows(), mat.rows());
+    addProdOp.setToIdentity();
+    addProdOp(r1,r0) = factor;
 
-    return swapOp;
+    return addProdOp;
+}
+
+template <class T>
+Matrix<T> Multiplier::multiplyRow(const Matrix<T>& mat, T factor, size_t r)
+{
+    if (r >= mat.rows())
+    {
+        std::cout << "row index exceeds matrix size";
+        std::exit(-1);
+    }
+
+    Matrix<T> mulOp(mat.rows(), mat.rows());
+    mulOp.setToIdentity();
+    mulOp(r,r) = factor;
+
+    return mulOp;
 }
 
 #endif //MY_MULTIPLIER_H

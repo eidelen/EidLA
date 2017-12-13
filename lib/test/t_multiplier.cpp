@@ -55,7 +55,20 @@ TEST(Multiplier, MulAddNonSymetric)
 
     auto res = Multiplier::addProductOfRow(mat,-8,0,2) * mat;
 
-    std::cout << Multiplier::addProductOfRow(mat,-8,0,2);
+    ASSERT_TRUE(soll.compare(res));
+}
+
+TEST(Multiplier, MultiplyRow)
+{
+    int matData[] = {1,2,  3,4,  5,6};
+    auto mat = Matrix<int>(3,2,matData);
+
+    // row 1 x 6
+    auto soll = mat;
+    soll.setRow(1, soll.row(1) * 6 );
+
+    auto res = Multiplier::multiplyRow(mat,6,1) * mat;
 
     ASSERT_TRUE(soll.compare(res));
 }
+
