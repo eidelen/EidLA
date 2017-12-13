@@ -16,9 +16,11 @@ TEST(Decomposition, LU)
     auto soll_U = Matrix<double>(2, 2, soll_U_data);
 
     Decomposition::LUResult res = Decomposition::luDecomposition(m);
+    Matrix<double> lowerTriangle = res.L;
+    Matrix<double> upperTriangle = res.U;
 
-    ASSERT_TRUE(soll_L.compare(res.L, 0.000001));
-    ASSERT_TRUE(soll_U.compare(res.U, 0.000001));
+    ASSERT_TRUE(soll_L.compare(lowerTriangle, 0.000001));
+    ASSERT_TRUE(soll_U.compare(upperTriangle, 0.000001));
 }
 
 TEST(Decomposition, LU3x3)
