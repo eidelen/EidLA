@@ -203,3 +203,36 @@ TEST(Matrix, AssignmentOperator)
 
     ASSERT_TRUE(mat.compare(newMat));
 }
+
+// http://stattrek.com/matrix-algebra/how-to-find-inverse.aspx
+TEST(Matrix, Inverse)
+{
+    double inData[] = {1,2,2,  2,2,2,  2,2,1};
+    auto mat = Matrix<double>(3,3,inData);
+
+    double sollData[] = {-1,1,0,  1,-1.5,1,  0,1,-1};
+    auto soll = Matrix<double>(3,3,sollData);
+
+    bool successfull = false;
+    auto computedInverse = mat.inverted(&successfull);
+
+    ASSERT_TRUE(soll.compare(computedInverse));
+    ASSERT_TRUE(successfull);
+
+
+    // inv(mat) * mat = identity
+    auto identRes = computedInverse * mat;
+    auto sollIdent = Matrix<double>::identity(3);
+    ASSERT_TRUE(sollIdent.compare(identRes));
+}
+
+TEST(Matrix, NonInvertable)
+{
+    double inData[] = {1,2,2,  2,2,2};
+    auto mat = Matrix<double>(3,2,inData);
+
+    bool successfull = true;
+    auto computedInverse = mat.inverted(&successfull);
+
+    ASSERT_FALSE(successfull);
+}

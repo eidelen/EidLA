@@ -204,6 +204,13 @@ public:
      */
     size_t getRank() const;
 
+    /**
+     * Returns the inverse of this matrix.
+     * @param invertable On return, this is true if successfull
+     * @return Inverse of this matrix
+     */
+    Matrix<double> inverted(bool* invertable) const;
+
 protected:
     /**
      * Check if the dimensions of the two passed matrix are equal.
@@ -803,6 +810,38 @@ size_t Matrix<T>::getRank() const
     }
 
     return rank;
+}
+
+template <class T>
+Matrix<double> Matrix<T>::inverted(bool* invertable) const
+{
+    // needs to be square matrix
+    if( m_rows != m_cols )
+    {
+        std::cout << "Needs to be square matrix" << std::endl;
+        *invertable = false;
+        return *this;
+    }
+
+    // todo: check that determinant not = 0
+
+    *invertable = true;
+
+    std::vector<Matrix<double>> ops;
+    Transformation::reduced_echelon(*this, ops);
+
+    Matrix<double> inv = Matrix<double>(m_rows, m_cols);
+    inv.setToIdentity();
+
+    // multiply Echelon operators in reverse order
+    // http://stattrek.com/matrix-algebra/how-to-find-inverse.aspx
+    while( !ops.empty() )
+    {
+        inv = inv*ops.back();
+        ops.pop_back();
+    }
+
+    return inv;
 }
 
 
