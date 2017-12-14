@@ -45,7 +45,8 @@ public:
 
 private:
 
-    static LUResult doolittle(const Matrix<double>& a);
+    template <class T>
+    static LUResult doolittle(const Matrix<T>& a);
 
 };
 
@@ -66,7 +67,8 @@ Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
     return doolittle(a);
 }
 
-Decomposition::LUResult Decomposition::doolittle(const Matrix<double>& a)
+template <class T>
+Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& a)
 {
     size_t n = a.rows();
     Matrix<double> l = Matrix<double>(n,n);
@@ -85,9 +87,16 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<double>& a)
             {
                 for (size_t j = 0; j < k; j++ )
                 {
+                    double lkj = l(k,j);
+                    double ujm = u(j,m);
                     pSum += l(k,j)*u(j,m);
                 }
             }
+
+            // debug
+            double akm = a(k,m);
+            double ukm = a(k,m) - pSum;
+
             u(k,m) = a(k,m) - pSum;
         }
 
@@ -109,7 +118,18 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<double>& a)
                         pSum += l(i,j)*u(j,k);
                     }
                 }
-                l(i,k) = (a(i,k) - pSum) / u(k,k);
+
+                double ukk = u(k,k);
+                if( std::abs(ukk) > std::numeric_limits<double>::min() ) // check if divider > 0
+                {
+                    l(i, k) = (a(i, k) - pSum) / ukk;
+                }
+                else
+                {
+                    // this is a singular matrix, therefore l(i,k) can be freely chosen -> lu decomposition is not unique
+                    // info: https://math.stackexchange.com/questions/2010470/doolittle-transformation-is-non-unique-for-singular-matrices
+                    l(i,k) = 0;
+                }
             }
         }
     }
