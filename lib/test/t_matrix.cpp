@@ -236,3 +236,55 @@ TEST(Matrix, NonInvertable)
 
     ASSERT_FALSE(successfull);
 }
+
+TEST(Matrix, InvertSingularMatrix)
+{
+    auto mat = Matrix<int>(3,3);
+    mat.fill(2);
+
+    bool successfull = true;
+    auto computedInverse = mat.inverted(&successfull);
+
+    ASSERT_FALSE(successfull);
+}
+
+// checked with octave
+TEST(Matrix, Determinant1)
+{
+    double inData[] = {1,2,2,  2,0,-1,  -2,1,3};
+    auto mat = Matrix<double>(3,3,inData);
+
+    bool ok;
+    double det = mat.determinant(&ok);
+
+    ASSERT_NEAR(det, -3.0, 0.00001);
+    ASSERT_TRUE(ok);
+}
+
+// example from https://www.mathsisfun.com/algebra/matrix-determinant.html
+TEST(Matrix, Determinant2)
+{
+    double inData[] = {6,1,1,  4,-2,5,  2,8,7};
+    auto mat = Matrix<double>(3,3,inData);
+
+    bool ok;
+    double det = mat.determinant(&ok);
+
+    ASSERT_NEAR(det, -306.0, 0.00001);
+    ASSERT_TRUE(ok);
+}
+
+TEST(Matrix, DeterminantIdent)
+{
+    auto mat = Matrix<double>::identity(10);
+    bool ok;
+    ASSERT_NEAR(mat.determinant(&ok), 1.0, 0.00001);
+}
+
+TEST(Matrix, DeterminantSingularMatrix)
+{
+    auto mat = Matrix<int>(3,3);
+    mat.fill(2);
+    bool ok;
+    ASSERT_NEAR(mat.determinant(&ok), 0.0, 0.00001);
+}

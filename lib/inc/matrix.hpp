@@ -228,10 +228,17 @@ public:
 
     /**
      * Returns the inverse of this matrix.
-     * @param invertable On return, this is true if successfull
+     * @param invertable On return, this is true if successful
      * @return Inverse of this matrix
      */
     Matrix<double> inverted(bool* invertable) const;
+
+    /**
+     * Returns the determinant of this matrix.
+     * @param successful On return, this is true if successful
+     * @return Determinant of this matrix
+     */
+    double determinant(bool* successful) const;
 
 protected:
     /**
@@ -254,6 +261,9 @@ protected:
     size_t m_nbrOfElements;
 };
 
+#include "decomposition.hpp"
+#include "transformation.hpp"
+#include "multiplier.hpp"
 
 template <>
 inline int Matrix<int>::elementwiseMultiplyAndSum(const int* arr1, const int* arr2, size_t length) const;
@@ -810,8 +820,6 @@ typedef std::shared_ptr<Matrix<int>> MatrixISP;
 typedef std::shared_ptr<Matrix<double>> MatrixDSP;
 
 
-#include "transformation.hpp"
-
 template <class T>
 size_t Matrix<T>::getRank() const
 {
@@ -845,7 +853,15 @@ Matrix<double> Matrix<T>::inverted(bool* invertable) const
         return *this;
     }
 
-    // todo: check that determinant not = 0
+    bool detOk;
+    double det = determinant(&detOk);
+
+    if( detOk && std::abs(det) < std::numeric_limits<double>::min() )
+    {
+        std::cout << "No inverse for singular matrix: Det = 0" << std::endl;
+        *invertable = false;
+        return *this;
+    }
 
     *invertable = true;
 
@@ -864,6 +880,43 @@ Matrix<double> Matrix<T>::inverted(bool* invertable) const
     }
 
     return inv;
+}
+
+template <class T>
+double Matrix<T>::determinant(bool* successful) const
+{
+    // compute determinant by using LU decomposition
+    // infos: https://s-mat-pcs.oulu.fi/~mpa/matreng/eem3_4-3.htm
+    //        -> the example is wrong!
+
+    double det = 0.0;
+
+    // needs to be square matrix
+    if( m_rows != m_cols )
+    {
+        std::cout << "Needs to be square matrix" << std::endl;
+        *successful = false;
+        return det;
+    }
+
+    Decomposition::LUResult lu = Decomposition::luDecomposition(*this);
+    Matrix<double> lDiag = lu.L.diagonal();
+    Matrix<double> uDiag = lu.U.diagonal();
+
+    // build diagonal products
+    double lProd = 1.0;
+    double uProd = 1.0;
+
+    for(size_t i = 0; i < lDiag.rows(); i++)
+    {
+        lProd = lProd * lDiag(i,0);
+        uProd = uProd * uDiag(i,0);
+    }
+
+    det = lProd * uProd;
+    *successful = true;
+
+    return det;
 }
 
 

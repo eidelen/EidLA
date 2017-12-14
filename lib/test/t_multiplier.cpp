@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include "matrix.hpp"
-#include "multiplier.hpp"
 
 TEST(Multiplier, Swap)
 {
