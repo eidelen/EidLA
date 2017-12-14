@@ -1,4 +1,5 @@
-# My own C++ linear algebra library
+Own C++ linear algebra library
+==============================
 
 This is a C++ implementation of common linear algebra operations and data types.
 The main motivation behind this project is to refresh and deepen my knowledge in numerics and matrix operations.
