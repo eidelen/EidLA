@@ -333,11 +333,15 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other)
 {
     if (this != &other) // self-assignment check expected
     {
-        // reinit matrix
+        if( m_nbrOfElements != other.getNbrOfElements() )
+        {
+            // reallocate data array
+            m_data.reset( new T[other.getNbrOfElements()] );
+        }
+
         m_rows = other.rows();
         m_cols = other.cols();
         m_nbrOfElements = m_rows * m_cols;
-        m_data.reset( new T[m_nbrOfElements] );
 
         // copy data
         copyMatData(other, *this);

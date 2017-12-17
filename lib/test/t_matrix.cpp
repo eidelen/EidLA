@@ -195,13 +195,32 @@ TEST(Matrix, AssignmentOperator)
 {
     auto mat = Matrix<int>(3,3);
     mat.setToIdentity();
+    int* addressAllocOrigin = mat.data();
 
     auto newMat = Matrix<int>(2,2);
     newMat.fill(5);
 
     mat = newMat;
+    int* addressAllocNew = mat.data();
 
     ASSERT_TRUE(mat.compare(newMat));
+    ASSERT_TRUE(addressAllocNew != addressAllocOrigin); // different number of elements -> new alloc -> different address
+}
+
+TEST(Matrix, AssignmentOperatorSameNbrElement)
+{
+    auto mat = Matrix<int>(3,3);
+    mat.setToIdentity();
+    int* addrOriginal = mat.data();
+
+    auto newMat = Matrix<int>(1,9);
+    newMat.fill(5);
+
+    mat = newMat;
+    int* addrAfterAssignt = mat.data();
+
+    ASSERT_TRUE(mat.compare(newMat));
+    ASSERT_TRUE(addrOriginal==addrAfterAssignt); // should be same, since same number of elements
 }
 
 // http://stattrek.com/matrix-algebra/how-to-find-inverse.aspx
