@@ -29,6 +29,7 @@
 #include <cmath>
 #include <tuple>
 #include <limits>
+#include <random>
 
 #include <smmintrin.h>  // SSE4
 
@@ -157,6 +158,18 @@ public:
      * @return Resulting matrix.
      */
     Matrix<T> operator- (const Matrix<T>& mat) const;
+
+    /**
+     * Creates a matrix of the size m x n filled with random
+     * values in the range of lower to upper.
+     * @param m
+     * @param
+     * @param lower
+     * @param upper
+     * @return Matrix filled with random values
+     */
+    static Matrix<T> random(size_t m, size_t n, T lower, T upper);
+
 
     /**
      * Creates a m x m identity matrix
@@ -448,6 +461,39 @@ template <class T>
 T& Matrix<T>::operator() (size_t m, size_t n)
 {
     return data()[m*cols() + n];
+}
+
+
+template <class T>
+Matrix<T> Matrix<T>::random(size_t m, size_t n, T lower, T upper)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(lower, upper);
+
+    Matrix<T> rand = Matrix<T>(m,n);
+    for( size_t i = 0; i < rand.getNbrOfElements(); i++ )
+    {
+        rand.data()[i] = static_cast<T>(dis(gen));
+    }
+
+    return rand;
+}
+
+template <>
+inline Matrix<int> Matrix<int>::random(size_t m, size_t n, int lower, int upper)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(lower, upper);
+
+    Matrix<int> rand = Matrix<int>(m,n);
+    for( size_t i = 0; i < rand.getNbrOfElements(); i++ )
+    {
+        rand.data()[i] = dis(gen);
+    }
+
+    return rand;
 }
 
 template <class T>
