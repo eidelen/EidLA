@@ -225,11 +225,18 @@ public:
     void swapRows( size_t m1, size_t m2 );
 
     /**
-     * Sets the row rowIdx to values in row.
+     * Sets the row rowIdx to values from row.
      * @param rowIdx
      * @param row
      */
     void setRow( size_t rowIdx, const Matrix<T>& row);
+
+    /**
+     * Sets the column colIdx to values from col.
+     * @param colIdx
+     * @param col
+     */
+    void setColumn( size_t colIdx, const Matrix<T>& col );
 
     /**
      * Compute the rank of the matrix, the number of
@@ -252,6 +259,12 @@ public:
      * @return Determinant of this matrix
      */
     double determinant(bool* successful) const;
+
+    /**
+     * Returns a matrix consisting of normalized column vectors.
+     * @return
+     */
+    Matrix<double> normalizeColumns() const;
 
 protected:
     /**
@@ -862,7 +875,25 @@ void Matrix<T>::setRow(size_t rowIdx, const Matrix<T>& row)
     const T* srcPtr = row.data();
     for( size_t i = 0; i < row.cols(); i++ )
         dstPtr[i] = srcPtr[i];
+}
 
+template <class T>
+void Matrix<T>::setColumn( size_t colIdx, const Matrix<T>& col )
+{
+    if (colIdx >= cols())
+    {
+        std::cout << "col index exceeds matrix size";
+        std::exit(-1);
+    }
+
+    if( col.rows() != rows() )
+    {
+        std::cout << "mismatching matrix size";
+        std::exit(-1);
+    }
+
+    for( size_t i = 0; i < col.rows(); i++ )
+        setValue(i,colIdx,col(i,0));
 }
 
 // Predefined Matrix Types
@@ -967,6 +998,25 @@ double Matrix<T>::determinant(bool* successful) const
     *successful = true;
 
     return det;
+}
+
+template <class T>
+Matrix<double> Matrix<T>::normalizeColumns() const
+{
+    Matrix<double> retMat = Matrix<double>(m_rows, m_cols);
+
+
+    for( size_t n = 0; n < m_cols; n++ )
+    {
+        Matrix<double> c = column(n);
+
+        // square and add
+        double cLengthSqr = static_cast<double>((c.transpose() * c)(0,0));
+
+        retMat.setColumn(n,  c * (1.0/std::sqrt(cLengthSqr)));
+    }
+
+    return retMat;
 }
 
 

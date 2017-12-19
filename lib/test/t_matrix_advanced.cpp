@@ -85,3 +85,11 @@ TEST(MatAdvanced, DeterminantSingularMatrix)
     bool ok;
     ASSERT_NEAR(mat.determinant(&ok), 0.0, 0.00001);
 }
+
+TEST(MatAdvanced, ColumnNormalization)
+{
+    auto mat = Matrix<int>(1,1);
+    mat(0,0) = 4;
+
+    ASSERT_DOUBLE_EQ(1.0, mat.normalizeColumns()(0,0));
+}

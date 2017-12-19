@@ -159,6 +159,20 @@ TEST(Matrix, SetRow)
     ASSERT_TRUE(soll.compare(mat));
 }
 
+TEST(Matrix, SetColumn)
+{
+    int  inData[] = {1, 0,   1, 0};
+    auto in = Matrix<int>(2,2,inData);
+
+    auto soll = Matrix<int>(2,2);
+    soll.fill(1);
+
+    auto cpy = in.column(0);
+    in.setColumn(1, cpy);
+
+    ASSERT_TRUE(soll.compare(in));
+}
+
 TEST(Matrix, Transpose)
 {
     int inData[6] = {1, 1, 1,  3, 3, 3};
