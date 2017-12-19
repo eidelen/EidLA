@@ -93,3 +93,14 @@ TEST(MatAdvanced, ColumnNormalization)
 
     ASSERT_DOUBLE_EQ(1.0, mat.normalizeColumns()(0,0));
 }
+
+TEST(MatAdvanced, ColumnNormalization2)
+{
+    auto mat = Matrix<int>(3,2);
+    mat.fill(2);
+
+    auto soll = Matrix<double>(3,2);
+    soll.fill( 2.0/std::sqrt(12.0));
+
+    ASSERT_TRUE(soll.compare(mat.normalizeColumns()));
+}

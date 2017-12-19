@@ -18,8 +18,8 @@ TEST(Decomposition, LU)
     Matrix<double> lowerTriangle = res.L;
     Matrix<double> upperTriangle = res.U;
 
-    ASSERT_TRUE(soll_L.compare(lowerTriangle, 0.000001));
-    ASSERT_TRUE(soll_U.compare(upperTriangle, 0.000001));
+    ASSERT_TRUE(soll_L.compare(lowerTriangle));
+    ASSERT_TRUE(soll_U.compare(upperTriangle));
 }
 
 TEST(Decomposition, LU3x3)
@@ -31,7 +31,7 @@ TEST(Decomposition, LU3x3)
 
     Decomposition::LUResult res = Decomposition::luDecomposition(m);
 
-    ASSERT_TRUE(m.compare(res.L*res.U, 0.000001));
+    ASSERT_TRUE(m.compare(res.L*res.U));
 }
 
 TEST(Decomposition, LUIdent)
@@ -43,6 +43,29 @@ TEST(Decomposition, LUIdent)
     Decomposition::LUResult res = Decomposition::luDecomposition(in);
 
     // Both should be identity
-    ASSERT_TRUE(in.compare(res.L, 0.000001));
-    ASSERT_TRUE(in.compare(res.U, 0.000001));
+    ASSERT_TRUE(in.compare(res.L));
+    ASSERT_TRUE(in.compare(res.U));
+}
+
+TEST(Decomposition, Eigenvalue)
+{
+    double in_data[] = {1,2,  2,4};
+    auto in = Matrix<double>(2,2,in_data);
+
+    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(in);
+
+    ASSERT_GE(eig.size(), 1);
+    Decomposition::EigenPair fEig = eig.at(0);
+
+    ASSERT_DOUBLE_EQ(5.0, fEig.L);
+
+    double soll_data[] = {1,2};
+    auto soll = Matrix<double>(2,1,soll_data);
+    auto sollN = soll.normalizeColumns();
+
+    std::cout << sollN << fEig.V ;
+
+    // Depending on initialization, Eigenvector can point in opposite direction too.
+    ASSERT_TRUE( sollN.compare(fEig.V)  ||  sollN.compare( (fEig.V)*(-1)) );
+
 }

@@ -61,8 +61,8 @@ TEST(Matrix, Comparisson)
     auto f0 = Matrix<double>::identity(4);
     auto f1 = Matrix<double>::identity(4);
 
-    ASSERT_TRUE(f0.compare(f1, 0.05));
-    ASSERT_TRUE(f1.compare(f0, 0.05));
+    ASSERT_TRUE(f0.compare(f1));
+    ASSERT_TRUE(f1.compare(f0));
 
     f0(0, 0) = 1.01;
 
@@ -128,6 +128,4 @@ TEST(Matrix, RandomDouble)
         ASSERT_GE( val, 0.0 );
         ASSERT_LE( val, 1.0);
     }
-
-    std::cout << rand;
 }

@@ -120,7 +120,7 @@ public:
      * @param epsilon The allowed tolerance.
      * @return True if all elements are within the tolerance. Otherwise false.
      */
-    bool compare( const Matrix<T>& mat, double epsilon = std::numeric_limits<double>::min() ) const;
+    bool compare( const Matrix<T>& mat ) const;
 
     /**
      * Gets the value at position m, n.
@@ -144,6 +144,13 @@ public:
      * @return Product of two matrix
      */
     Matrix<T> operator* (const Matrix<T>& mat) const;
+
+    /**
+     * Elementwise division
+     * @param mat
+     * @return Resulting matrix
+     */
+    Matrix<T> operator/ (const Matrix<T>& mat) const;
 
     /**
      * Elementwise addition of two matrix.
@@ -287,10 +294,6 @@ protected:
     size_t m_nbrOfElements;
 };
 
-#include "decomposition.hpp"
-#include "transformation.hpp"
-#include "multiplier.hpp"
-
 template <>
 inline int Matrix<int>::elementwiseMultiplyAndSum(const int* arr1, const int* arr2, size_t length) const;
 
@@ -322,7 +325,7 @@ inline void copyMatData(const Matrix<int>& src, Matrix<double>& dst )
     double* dstPtr = dst.data();
 
     for( size_t i = 0; i < src.getNbrOfElements(); i++ )
-        dstPtr[i] = double(srcPtr[i]);
+        dstPtr[i] = static_cast<double>(srcPtr[i]);
 }
 
 //**
@@ -633,6 +636,24 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
 }
 
 template <class T>
+Matrix<T> Matrix<T>::operator/ (const Matrix<T>& mat) const
+{
+    // check dimension
+    if(!equalDimension(*this, mat))
+    {
+        std::cout << "mismatching matrix size";
+        std::exit(-1);
+    }
+
+    Matrix<T> res = Matrix<T>(rows(),cols());
+    T* resD = res.data(); const T* thisData = data(); const T* matD = mat.data();
+    for(size_t i = 0; i < getNbrOfElements(); i++)
+        resD[i] = thisData[i] / matD[i];
+
+    return res;
+}
+
+template <class T>
 Matrix<T> Matrix<T>::operator+ (const Matrix<T>& mat) const
 {
     // check dimension
@@ -687,8 +708,19 @@ std::ostream& operator<<(std::ostream& os, Matrix<T> const& mat)
     return os;
 }
 
+
+// from http://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+inline bool almost_equal(double x, double y)
+{
+    // the machine epsilon has to be scaled to the magnitude of the values used
+    // and multiplied by the desired precision in ULPs (units in the last place)
+    return std::abs(x-y) <= std::numeric_limits<double>::epsilon() * std::abs(x+y) * 2
+           || std::abs(x-y) < std::numeric_limits<double>::min();
+}
+
+
 template <class T>
-bool Matrix<T>::compare(const Matrix<T>& mat, double epsilon) const
+bool Matrix<T>::compare(const Matrix<T>& mat) const
 {
     if(!equalDimension(*this, mat))
     {
@@ -699,13 +731,14 @@ bool Matrix<T>::compare(const Matrix<T>& mat, double epsilon) const
     const T* thisData = data(); const T* matD = mat.data();
     for(size_t i = 0; i < getNbrOfElements(); i++)
     {
-        double diff = thisData[i] - matD[i];
-        if( std::fabs(diff) > epsilon )
+        T x = thisData[i];
+        T y = matD[i];
+
+        if( std::abs(x-y) > std::numeric_limits<double>::epsilon() * std::abs(x+y) * 2 )
             return false;
     }
 
     return true;
-
 }
 
 template <class T>
@@ -900,6 +933,7 @@ void Matrix<T>::setColumn( size_t colIdx, const Matrix<T>& col )
 typedef std::shared_ptr<Matrix<int>> MatrixISP;
 typedef std::shared_ptr<Matrix<double>> MatrixDSP;
 
+#include "transformation.hpp"
 
 template <class T>
 size_t Matrix<T>::getRank() const
@@ -914,7 +948,7 @@ size_t Matrix<T>::getRank() const
     for(size_t i = 0; i < rows(); i++)
     {
         Matrix<double> cRow = echelonMat.row(i);
-        if( cRow.compare(zeroRow, std::numeric_limits<double>::min()) )
+        if( cRow.compare(zeroRow) )
             break;
         else
             rank++;
@@ -963,6 +997,8 @@ Matrix<double> Matrix<T>::inverted(bool* invertable) const
     return inv;
 }
 
+#include "decomposition.hpp"
+
 template <class T>
 double Matrix<T>::determinant(bool* successful) const
 {
@@ -1005,15 +1041,15 @@ Matrix<double> Matrix<T>::normalizeColumns() const
 {
     Matrix<double> retMat = Matrix<double>(m_rows, m_cols);
 
-
     for( size_t n = 0; n < m_cols; n++ )
     {
         Matrix<double> c = column(n);
 
-        // square and add
-        double cLengthSqr = static_cast<double>((c.transpose() * c)(0,0));
+        // root(square and add) -> length
+        double length = std::sqrt( static_cast<double>((c.transpose() * c)(0,0)) );
 
-        retMat.setColumn(n,  c * (1.0/std::sqrt(cLengthSqr)));
+        // scale column and copy it to the return matrix
+        retMat.setColumn(n,  c * (1.0/length));
     }
 
     return retMat;

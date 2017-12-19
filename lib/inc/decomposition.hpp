@@ -34,14 +34,35 @@ public:
     {
         LUResult(Matrix<double> l, Matrix<double> u) :
                 L(l), U(u) {}
-        const Matrix<double> L;
-        const Matrix<double> U;
+        const Matrix<double> L; // Lower triangle matrix
+        const Matrix<double> U; // Upper triangle matrix
+    };
+
+    struct EigenPair
+    {
+        EigenPair(Matrix<double> v, double l) :
+                V(v), L(l) {}
+        const Matrix<double> V; // Eigen vector
+        const double L; // Eigen value
     };
 
 public:
 
+    /**
+     * LU decomposition of the matrix mat.
+     * @param mat
+     * @return LUResult
+     */
     template <class T>
     static LUResult luDecomposition(const Matrix<T>& mat);
+
+    /**
+     * Eigen decomposition of the matrix mat.
+     * @param mat
+     * @return
+     */
+    template<class T>
+    static std::vector<EigenPair> eigen(const Matrix<T>& mat);
 
 private:
 
@@ -135,6 +156,36 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& a)
     }
 
     LUResult ret(l,u);
+    return ret;
+}
+
+template <class T>
+std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
+{
+    std::vector<EigenPair> ret;
+
+
+    // Power iteration : https://en.wikipedia.org/wiki/Power_iteration
+    // Find biggest eigenvalue
+    Matrix<double> matD = mat;
+    double initRange = 1.0/std::sqrt(mat.cols());
+    Matrix<double> ev = Matrix<double>::random(matD.cols(), 1, -initRange, initRange);
+    Matrix<double> ev_before = ev;
+
+    bool go = true;
+    while( go )
+    {
+        Matrix<double> prod = matD * ev;
+        ev = prod.normalizeColumns();
+
+        // check stopping criteria -> stop if all entries almost equal
+        go = !(ev.compare(ev_before));
+        ev_before = ev;
+    }
+
+    double eigenVal = ((matD*ev)/ev)(0,0);
+    ret.push_back( EigenPair( ev, eigenVal ) );
+
     return ret;
 }
 

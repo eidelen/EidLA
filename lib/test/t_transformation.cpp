@@ -14,14 +14,14 @@ TEST(Transformation, EchelonForm)
 
     Matrix<double> res = Transformation::echelon(in);
 
-    ASSERT_TRUE(soll.compare(res, 0.01));
+    ASSERT_TRUE(soll.compare(res));
 }
 
 TEST(Transformation, EchelonFormIdent)
 {
     auto in  = Matrix<double>::identity(4);
     auto ech = Transformation::echelon(in);
-    ASSERT_TRUE(in.compare(ech, std::numeric_limits<double>::min()));
+    ASSERT_TRUE(in.compare(ech));
 }
 
 TEST(Transformation, Echelon0)
@@ -29,7 +29,7 @@ TEST(Transformation, Echelon0)
     auto in  = Matrix<double>(5,5);
     in.fill(0.0);
     auto ech = Transformation::echelon(in);
-    ASSERT_TRUE(ech.compare(in, std::numeric_limits<double>::min()));
+    ASSERT_TRUE(ech.compare(in));
 }
 
 TEST(Transformation, ReducedEchelon)
@@ -45,7 +45,7 @@ TEST(Transformation, ReducedEchelon)
 
     Matrix<double> res = Transformation::reduced_echelon(in);
 
-    ASSERT_TRUE(soll.compare(res, 0.01));
+    ASSERT_TRUE(soll.compare(res));
 }
 
 

@@ -65,7 +65,7 @@ TEST(MatMul, BigMatrixDouble)
     v1.setToIdentity();
     auto res = v1 * v1;
 
-    ASSERT_TRUE(res.compare(v1, std::numeric_limits<double>::min()));
+    ASSERT_TRUE(res.compare(v1));
 }
 
 TEST(MatMul, BigMatrixInt)
@@ -74,5 +74,21 @@ TEST(MatMul, BigMatrixInt)
     v1.setToIdentity();
     auto res = v1 * v1;
 
-    ASSERT_TRUE(res.compare(v1, std::numeric_limits<double>::min()));
+    ASSERT_TRUE(res.compare(v1));
+}
+
+TEST(MatMul, Division)
+{
+    auto m = Matrix<double>(5,5);
+    m.fill(6.0);
+
+    auto d = Matrix<double>(5,5);
+    d.fill(12.0);
+
+    auto soll = Matrix<double>(5,5);
+    soll.fill(0.5);
+
+    auto res = m / d;
+
+    ASSERT_TRUE(res.compare(soll));
 }
