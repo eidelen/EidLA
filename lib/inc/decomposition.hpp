@@ -59,10 +59,21 @@ public:
     /**
      * Eigen decomposition of the matrix mat.
      * @param mat
-     * @return
+     * @return Eigen pairs in desending eigenvalue order.
      */
     template<class T>
     static std::vector<EigenPair> eigen(const Matrix<T>& mat);
+
+    /**
+     * Compute Rayleigh quotient of a matrix and a vector. This can be
+     * used to find the Eigenvalue to a corresponding Eigenvector and
+     * matrix.
+     * @param mat
+     * @param vec
+     * @return Rayleigh quotient
+     */
+    template<class T>
+    static double rayleighQuotient(const Matrix<T>& mat, const Matrix<T> vec);
 
 private:
 
@@ -164,7 +175,6 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
 {
     std::vector<EigenPair> ret;
 
-
     // Power iteration : https://en.wikipedia.org/wiki/Power_iteration
     // Find biggest eigenvalue
     Matrix<double> matD = mat;
@@ -183,10 +193,18 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
         ev_before = ev;
     }
 
-    double eigenVal = ((matD*ev)/ev)(0,0);
+    double eigenVal = rayleighQuotient(matD,ev);
     ret.push_back( EigenPair( ev, eigenVal ) );
 
     return ret;
+}
+
+// info: https://www.mathematik.uni-wuerzburg.de/~borzi/RQGradient_Chapter_10.pdf
+template <class T>
+double Decomposition::rayleighQuotient(const Matrix<T>& m, const Matrix<T> v)
+{
+    Matrix<T> vT = v.transpose();
+    return static_cast<double>( (vT*m*v)(0,0) ) / static_cast<double>( (vT*v)(0,0) );
 }
 
 #endif //MY_DECOMPOSITION_H

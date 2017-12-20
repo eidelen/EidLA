@@ -49,23 +49,19 @@ TEST(Decomposition, LUIdent)
 
 TEST(Decomposition, Eigenvalue)
 {
-    double in_data[] = {1,2,  2,4};
-    auto in = Matrix<double>(2,2,in_data);
+    auto m = Matrix<double>::identity(4);
+    for( size_t s = 0; s < 4; s++ )
+        m(s,s) = static_cast<double>(s+1);
 
-    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(in);
+    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
 
-    ASSERT_GE(eig.size(), 1);
-    Decomposition::EigenPair fEig = eig.at(0);
+    // eigenvalues on diagonal of m
 
-    ASSERT_DOUBLE_EQ(5.0, fEig.L);
+    for( const Decomposition::EigenPair ep : eig )
+    {
+        std::cout << "Eigenvalue: " << ep.L << std::endl;
+        std::cout << "Eigenvector: " << ep.V.transpose() << "------" << std::endl;
+    }
 
-    double soll_data[] = {1,2};
-    auto soll = Matrix<double>(2,1,soll_data);
-    auto sollN = soll.normalizeColumns();
-
-    std::cout << sollN << fEig.V ;
-
-    // Depending on initialization, Eigenvector can point in opposite direction too.
-    ASSERT_TRUE( sollN.compare(fEig.V)  ||  sollN.compare( (fEig.V)*(-1)) );
 
 }
