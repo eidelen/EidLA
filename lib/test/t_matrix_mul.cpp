@@ -79,13 +79,13 @@ TEST(MatMul, BigMatrixInt)
 
 TEST(MatMul, Division)
 {
-    auto m = Matrix<double>(5,5);
+    auto m = Matrix<double>(5, 5);
     m.fill(6.0);
 
-    auto d = Matrix<double>(5,5);
+    auto d = Matrix<double>(5, 5);
     d.fill(12.0);
 
-    auto soll = Matrix<double>(5,5);
+    auto soll = Matrix<double>(5, 5);
     soll.fill(0.5);
 
     auto res = m / d;

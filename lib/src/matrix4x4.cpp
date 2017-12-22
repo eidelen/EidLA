@@ -23,9 +23,7 @@
 
 #include "matrix4x4.hpp"
 
-Matrix4x4::Matrix4x4() : Matrix<double>(4,4)
+Matrix4x4::Matrix4x4()
+: Matrix<double>(4, 4)
 {
 }
-
-
-

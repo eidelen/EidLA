@@ -31,25 +31,24 @@
 #include <limits>
 #include <random>
 
-#include <smmintrin.h>  // SSE4
+#include <smmintrin.h> // SSE4
 
 template <class T>
 class Matrix
 {
 public:
-
     /**
      * Constructor
      * @param rows number of rows
      * @param cols number of columns
      */
-    Matrix( size_t rows, size_t cols );
+    Matrix(size_t rows, size_t cols);
 
     /**
      * Copy constructor.
      * @param mat Matrix from which to copy
      */
-    template<class R>
+    template <class R>
     Matrix(const Matrix<R>& mat);
 
     Matrix(const Matrix<T>& mat);
@@ -73,10 +72,10 @@ public:
 
     virtual ~Matrix();
 
-    size_t rows() const;
-    size_t cols() const;
-    size_t getNbrOfElements() const;
-    inline T*     data();
+    size_t          rows() const;
+    size_t          cols() const;
+    size_t          getNbrOfElements() const;
+    inline T*       data();
     inline const T* data() const;
 
     /**
@@ -91,7 +90,7 @@ public:
      * @param n Column
      * @param val Value
      */
-    inline void setValue( size_t m, size_t n, T val);
+    inline void setValue(size_t m, size_t n, T val);
 
     /**
      * Gets the value at position m, n.
@@ -99,7 +98,7 @@ public:
      * @param n Column
      * @return Value
      */
-    inline T getValue( size_t m, size_t n ) const;
+    inline T getValue(size_t m, size_t n) const;
 
     /**
      * Returns the row at position m
@@ -120,7 +119,7 @@ public:
      * @param epsilon The allowed tolerance.
      * @return True if all elements are within the tolerance. Otherwise false.
      */
-    bool compare( const Matrix<T>& mat ) const;
+    bool compare(const Matrix<T>& mat) const;
 
     /**
      * Gets the value at position m, n.
@@ -128,43 +127,43 @@ public:
      * @param n
      * @return
      */
-    const T operator() (size_t m, size_t n) const;
-    T& operator() (size_t m, size_t n);
+    const T operator()(size_t m, size_t n) const;
+    T& operator()(size_t m, size_t n);
 
     /**
      * Multiplication of a matrix with a scalar.
      * @param scale Scalar
      * @return Matrix
      */
-    Matrix<T> operator* (T scale) const;
+    Matrix<T> operator*(T scale) const;
 
     /**
      * Matrix multiplication
      * @param mat
      * @return Product of two matrix
      */
-    Matrix<T> operator* (const Matrix<T>& mat) const;
+    Matrix<T> operator*(const Matrix<T>& mat) const;
 
     /**
      * Elementwise division
      * @param mat
      * @return Resulting matrix
      */
-    Matrix<T> operator/ (const Matrix<T>& mat) const;
+    Matrix<T> operator/(const Matrix<T>& mat) const;
 
     /**
      * Elementwise addition of two matrix.
      * @param mat
      * @return Resulting matrix.
      */
-    Matrix<T> operator+ (const Matrix<T>& mat) const;
+    Matrix<T> operator+(const Matrix<T>& mat) const;
 
     /**
      * Elementwise subtraction of two matrix.
      * @param mat
      * @return Resulting matrix.
      */
-    Matrix<T> operator- (const Matrix<T>& mat) const;
+    Matrix<T> operator-(const Matrix<T>& mat) const;
 
     /**
      * Creates a matrix of the size m x n filled with random
@@ -176,7 +175,6 @@ public:
      * @return Matrix filled with random values
      */
     static Matrix<T> random(size_t m, size_t n, T lower, T upper);
-
 
     /**
      * Creates a m x m identity matrix
@@ -229,21 +227,21 @@ public:
      * @param m1
      * @param m2
      */
-    void swapRows( size_t m1, size_t m2 );
+    void swapRows(size_t m1, size_t m2);
 
     /**
      * Sets the row rowIdx to values from row.
      * @param rowIdx
      * @param row
      */
-    void setRow( size_t rowIdx, const Matrix<T>& row);
+    void setRow(size_t rowIdx, const Matrix<T>& row);
 
     /**
      * Sets the column colIdx to values from col.
      * @param colIdx
      * @param col
      */
-    void setColumn( size_t colIdx, const Matrix<T>& col );
+    void setColumn(size_t colIdx, const Matrix<T>& col);
 
     /**
      * Compute the rank of the matrix, the number of
@@ -280,9 +278,9 @@ protected:
      * @param m2 Mat 2
      * @return True if equal dimension.
      */
-    static bool equalDimension( const Matrix<T> m1, const Matrix<T> m2);
+    static bool equalDimension(const Matrix<T> m1, const Matrix<T> m2);
 
-    T elementwiseMultiplyAndSum(const T *arr1, const T *arr2, size_t length) const;
+    T elementwiseMultiplyAndSum(const T* arr1, const T* arr2, size_t length) const;
 
     T* getRowPtr(size_t row);
 
@@ -291,7 +289,7 @@ protected:
     size_t m_cols;
 
     std::shared_ptr<T> m_data;
-    size_t m_nbrOfElements;
+    size_t             m_nbrOfElements;
 };
 
 template <>
@@ -302,29 +300,28 @@ template <>
 inline double Matrix<double>::elementwiseMultiplyAndSum(const double* arr1, const double* arr2, size_t length) const;
  */
 
-
 template <class T>
 Matrix<T>::Matrix(size_t rows, size_t cols)
-        : m_rows(rows), m_cols(cols), m_nbrOfElements(rows*cols)
+: m_rows(rows), m_cols(cols), m_nbrOfElements(rows * cols)
 {
-    m_data.reset( new T[m_nbrOfElements] );
+    m_data.reset(new T[m_nbrOfElements]);
 }
 
 //** Specific copy transformations - to be extended
 template <class T>
-void copyMatData(const Matrix<T>& src, Matrix<T>& dst )
+void copyMatData(const Matrix<T>& src, Matrix<T>& dst)
 {
     const T* srcPtr = src.data();
-    T* dstPtr = dst.data();
-    std::copy(srcPtr, srcPtr+src.getNbrOfElements(), dstPtr);
+    T*       dstPtr = dst.data();
+    std::copy(srcPtr, srcPtr + src.getNbrOfElements(), dstPtr);
 }
 
-inline void copyMatData(const Matrix<int>& src, Matrix<double>& dst )
+inline void copyMatData(const Matrix<int>& src, Matrix<double>& dst)
 {
     const int* srcPtr = src.data();
-    double* dstPtr = dst.data();
+    double*    dstPtr = dst.data();
 
-    for( size_t i = 0; i < src.getNbrOfElements(); i++ )
+    for (size_t i = 0; i < src.getNbrOfElements(); i++)
         dstPtr[i] = static_cast<double>(srcPtr[i]);
 }
 
@@ -333,7 +330,7 @@ inline void copyMatData(const Matrix<int>& src, Matrix<double>& dst )
 template <class T>
 template <class R>
 Matrix<T>::Matrix(const Matrix<R>& mat)
-        : Matrix<T>(mat.rows(), mat.cols())
+: Matrix<T>(mat.rows(), mat.cols())
 {
     // if you have a compile error here, you have to extend the
     // copyMatData function with the particular types.
@@ -342,7 +339,7 @@ Matrix<T>::Matrix(const Matrix<R>& mat)
 
 template <class T>
 Matrix<T>::Matrix(const Matrix<T>& mat)
-        : Matrix<T>(mat.rows(), mat.cols())
+: Matrix<T>(mat.rows(), mat.cols())
 {
     // if you have a compile error here, you have to extend the
     // copyMatData function with the particular types.
@@ -351,10 +348,10 @@ Matrix<T>::Matrix(const Matrix<T>& mat)
 
 template <class T>
 Matrix<T>::Matrix(size_t rows, size_t cols, const T* data)
-        : Matrix<T>(rows, cols)
+: Matrix<T>(rows, cols)
 {
     T* dst = this->data();
-    std::copy(data, data+this->getNbrOfElements(), this->data());
+    std::copy(data, data + this->getNbrOfElements(), this->data());
 }
 
 template <class T>
@@ -362,14 +359,14 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other)
 {
     if (this != &other) // self-assignment check expected
     {
-        if( m_nbrOfElements != other.getNbrOfElements() )
+        if (m_nbrOfElements != other.getNbrOfElements())
         {
             // reallocate data array
-            m_data.reset( new T[other.getNbrOfElements()] );
+            m_data.reset(new T[other.getNbrOfElements()]);
         }
 
-        m_rows = other.rows();
-        m_cols = other.cols();
+        m_rows          = other.rows();
+        m_cols          = other.cols();
         m_nbrOfElements = m_rows * m_cols;
 
         // copy data
@@ -418,34 +415,34 @@ template <class T>
 void Matrix<T>::fill(T val)
 {
     T* dataPtr = data();
-    for( size_t i = 0; i < m_nbrOfElements; i++ )
+    for (size_t i  = 0; i < m_nbrOfElements; i++)
         dataPtr[i] = val;
 }
 
 template <class T>
-inline void Matrix<T>::setValue( size_t m, size_t n, T val)
+inline void Matrix<T>::setValue(size_t m, size_t n, T val)
 {
-    data()[m*cols() + n] = val;
+    data()[m * cols() + n] = val;
 }
 
 template <class T>
-inline T Matrix<T>::getValue( size_t m, size_t n ) const
+inline T Matrix<T>::getValue(size_t m, size_t n) const
 {
-    return data()[m*cols() + n];
+    return data()[m * cols() + n];
 }
 
 template <class T>
 Matrix<T> Matrix<T>::row(size_t m) const
 {
-    if( m >= rows() )
+    if (m >= rows())
     {
         std::cout << "Row access not possible. " << m << ", max " << rows();
         std::exit(-1);
     }
 
-    Matrix<T> ret(1,cols());
-    size_t offset = m * cols();
-    std::copy(data()+offset, data()+offset+cols(), ret.data());
+    Matrix<T> ret(1, cols());
+    size_t    offset = m * cols();
+    std::copy(data() + offset, data() + offset + cols(), ret.data());
 
     return ret;
 }
@@ -453,42 +450,40 @@ Matrix<T> Matrix<T>::row(size_t m) const
 template <class T>
 Matrix<T> Matrix<T>::column(size_t n) const
 {
-    if( n >= cols() )
+    if (n >= cols())
     {
         std::cout << "Column access not possible. " << n << ", max " << cols();
         std::exit(-1);
     }
 
-    Matrix<T> ret(rows(),1);
-    for(size_t i = 0; i < rows(); i++)
-        ret(i,0) = this->getValue(i,n);
+    Matrix<T> ret(rows(), 1);
+    for (size_t i = 0; i < rows(); i++)
+        ret(i, 0) = this->getValue(i, n);
 
     return ret;
 }
 
-
 template <class T>
-const T Matrix<T>::operator() (size_t m, size_t n) const
+const T Matrix<T>::operator()(size_t m, size_t n) const
 {
-    return data()[m*cols() + n];
+    return data()[m * cols() + n];
 }
 
 template <class T>
-T& Matrix<T>::operator() (size_t m, size_t n)
+T& Matrix<T>::operator()(size_t m, size_t n)
 {
-    return data()[m*cols() + n];
+    return data()[m * cols() + n];
 }
-
 
 template <class T>
 Matrix<T> Matrix<T>::random(size_t m, size_t n, T lower, T upper)
 {
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::random_device               rd;
+    std::mt19937                     gen(rd());
     std::uniform_real_distribution<> dis(lower, upper);
 
-    Matrix<T> rand = Matrix<T>(m,n);
-    for( size_t i = 0; i < rand.getNbrOfElements(); i++ )
+    Matrix<T> rand = Matrix<T>(m, n);
+    for (size_t i = 0; i < rand.getNbrOfElements(); i++)
     {
         rand.data()[i] = static_cast<T>(dis(gen));
     }
@@ -499,12 +494,12 @@ Matrix<T> Matrix<T>::random(size_t m, size_t n, T lower, T upper)
 template <>
 inline Matrix<int> Matrix<int>::random(size_t m, size_t n, int lower, int upper)
 {
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::random_device              rd;
+    std::mt19937                    gen(rd());
     std::uniform_int_distribution<> dis(lower, upper);
 
-    Matrix<int> rand = Matrix<int>(m,n);
-    for( size_t i = 0; i < rand.getNbrOfElements(); i++ )
+    Matrix<int> rand = Matrix<int>(m, n);
+    for (size_t i = 0; i < rand.getNbrOfElements(); i++)
     {
         rand.data()[i] = dis(gen);
     }
@@ -515,7 +510,7 @@ inline Matrix<int> Matrix<int>::random(size_t m, size_t n, int lower, int upper)
 template <class T>
 Matrix<T> Matrix<T>::identity(size_t m)
 {
-    Matrix<T> ident = Matrix<T>(m,m);
+    Matrix<T> ident = Matrix<T>(m, m);
     ident.setToIdentity();
     return ident;
 }
@@ -523,28 +518,28 @@ Matrix<T> Matrix<T>::identity(size_t m)
 template <class T>
 void Matrix<T>::setToIdentity()
 {
-    if( rows() != cols() )
+    if (rows() != cols())
     {
         std::cout << "Not a square matrix";
         std::exit(-1);
     }
 
     this->fill(0);
-    for(size_t i = 0; i < rows(); i++)
+    for (size_t i = 0; i < rows(); i++)
     {
-        this->setValue(i,i, 1);
+        this->setValue(i, i, 1);
     }
 }
 
 template <class T>
 Matrix<T> Matrix<T>::transpose() const
 {
-    Matrix<T> ret( cols(), rows() );
-    for( size_t m = 0; m < rows(); m++ )
+    Matrix<T> ret(cols(), rows());
+    for (size_t m = 0; m < rows(); m++)
     {
-        for( size_t n = 0; n < cols(); n++ )
+        for (size_t n = 0; n < cols(); n++)
         {
-            ret(n,m) = getValue(m,n);
+            ret(n, m) = getValue(m, n);
         }
     }
 
@@ -554,12 +549,12 @@ Matrix<T> Matrix<T>::transpose() const
 template <class T>
 Matrix<T> Matrix<T>::diagonal() const
 {
-    size_t diagLength = std::min(rows(), cols());
+    size_t    diagLength = std::min(rows(), cols());
     Matrix<T> ret(diagLength, 1);
 
-    for( size_t i = 0; i < diagLength; i++ )
+    for (size_t i = 0; i < diagLength; i++)
     {
-        ret(i,0) = getValue(i,i);
+        ret(i, 0) = getValue(i, i);
     }
 
     return ret;
@@ -570,28 +565,28 @@ T Matrix<T>::sum() const
 {
     T ret = 0;
 
-    const T* ptr = data();
-    size_t nElem = getNbrOfElements();
-    for( size_t i = 0; i < nElem; i++)
+    const T* ptr   = data();
+    size_t   nElem = getNbrOfElements();
+    for (size_t i = 0; i < nElem; i++)
         ret += ptr[i];
 
     return ret;
 }
 
 template <class T>
-bool Matrix<T>::equalDimension( const Matrix<T> m1, const Matrix<T> m2)
+bool Matrix<T>::equalDimension(const Matrix<T> m1, const Matrix<T> m2)
 {
-    return m1.cols()==m2.cols() && m1.rows()==m2.rows();
+    return m1.cols() == m2.cols() && m1.rows() == m2.rows();
 }
 
 template <class T>
-Matrix<T> Matrix<T>::operator* (T scale) const
+Matrix<T> Matrix<T>::operator*(T scale) const
 {
     Matrix<T> res(this->rows(), this->cols());
-    T* resD = res.data();
-    const T* dataD = this->data();
-    for(size_t i = 0; i < this->getNbrOfElements(); i++)
-        resD[i] = dataD[i] * scale;
+    T*        resD  = res.data();
+    const T*  dataD = this->data();
+    for (size_t i = 0; i < this->getNbrOfElements(); i++)
+        resD[i]   = dataD[i] * scale;
 
     return res;
 }
@@ -603,9 +598,9 @@ Matrix<T> operator*(T scale, const Matrix<T>& mat)
 }
 
 template <class T>
-Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
+Matrix<T> Matrix<T>::operator*(const Matrix<T>& mat) const
 {
-    if( this->cols() != mat.rows() )
+    if (this->cols() != mat.rows())
     {
         std::cout << "mismatching matrix size";
         std::exit(-1);
@@ -617,18 +612,18 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
     // -> this is helpful because this way the column vector is in a
     //    continous memory block.
     std::vector<Matrix<T>> lookup;
-    for(size_t k = 0; k < mat.cols(); k++)
+    for (size_t k = 0; k < mat.cols(); k++)
         lookup.push_back(mat.column(k));
 
-    for( size_t n = 0; n < mat.cols(); n++)
+    for (size_t n = 0; n < mat.cols(); n++)
     {
-        for( size_t m = 0; m < this->rows(); m++)
+        for (size_t m = 0; m < this->rows(); m++)
         {
             // get column mat -> continous memory block
             const T* matColNPtr = lookup.at(n).data();
-            const T* thisRowPtr = data()+m*cols(); // this is fast
+            const T* thisRowPtr = data() + m * cols(); // this is fast
 
-            res(m,n) = elementwiseMultiplyAndSum(thisRowPtr, matColNPtr, this->cols() );
+            res(m, n) = elementwiseMultiplyAndSum(thisRowPtr, matColNPtr, this->cols());
         }
     }
 
@@ -636,69 +631,74 @@ Matrix<T> Matrix<T>::operator* (const Matrix<T>& mat) const
 }
 
 template <class T>
-Matrix<T> Matrix<T>::operator/ (const Matrix<T>& mat) const
+Matrix<T> Matrix<T>::operator/(const Matrix<T>& mat) const
 {
     // check dimension
-    if(!equalDimension(*this, mat))
+    if (!equalDimension(*this, mat))
     {
         std::cout << "mismatching matrix size";
         std::exit(-1);
     }
 
-    Matrix<T> res = Matrix<T>(rows(),cols());
-    T* resD = res.data(); const T* thisData = data(); const T* matD = mat.data();
-    for(size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i] = thisData[i] / matD[i];
+    Matrix<T> res      = Matrix<T>(rows(), cols());
+    T*        resD     = res.data();
+    const T*  thisData = data();
+    const T*  matD     = mat.data();
+    for (size_t i = 0; i < getNbrOfElements(); i++)
+        resD[i]   = thisData[i] / matD[i];
 
     return res;
 }
 
 template <class T>
-Matrix<T> Matrix<T>::operator+ (const Matrix<T>& mat) const
+Matrix<T> Matrix<T>::operator+(const Matrix<T>& mat) const
 {
     // check dimension
-    if(!equalDimension(*this, mat))
+    if (!equalDimension(*this, mat))
     {
         std::cout << "mismatching matrix size";
         std::exit(-1);
     }
 
-    Matrix<T> res = Matrix<T>(rows(),cols());
-    T* resD = res.data(); const T* thisData = data(); const T* matD = mat.data();
-    for(size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i] = thisData[i] + matD[i];
+    Matrix<T> res      = Matrix<T>(rows(), cols());
+    T*        resD     = res.data();
+    const T*  thisData = data();
+    const T*  matD     = mat.data();
+    for (size_t i = 0; i < getNbrOfElements(); i++)
+        resD[i]   = thisData[i] + matD[i];
 
     return res;
 }
 
 template <class T>
-Matrix<T> Matrix<T>::operator- (const Matrix<T>& mat) const
+Matrix<T> Matrix<T>::operator-(const Matrix<T>& mat) const
 {
     // check dimension
-    if(!equalDimension(*this, mat))
+    if (!equalDimension(*this, mat))
     {
         std::cout << "mismatching matrix size";
         std::exit(-1);
     }
 
-    Matrix<T> res = Matrix<T>(rows(),cols());
-    T* resD = res.data(); const T* thisData = data(); const T* matD = mat.data();
-    for(size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i] = thisData[i] - matD[i];
+    Matrix<T> res      = Matrix<T>(rows(), cols());
+    T*        resD     = res.data();
+    const T*  thisData = data();
+    const T*  matD     = mat.data();
+    for (size_t i = 0; i < getNbrOfElements(); i++)
+        resD[i]   = thisData[i] - matD[i];
 
     return res;
 }
-
 
 template <class T>
 std::ostream& operator<<(std::ostream& os, Matrix<T> const& mat)
 {
-    for( size_t m = 0; m < mat.rows(); m++ )
+    for (size_t m = 0; m < mat.rows(); m++)
     {
-        for( size_t n = 0; n < mat.cols(); n++ )
+        for (size_t n = 0; n < mat.cols(); n++)
         {
-            os << mat(m,n);
-            if( n+1 < mat.cols() )
+            os << mat(m, n);
+            if (n + 1 < mat.cols())
                 os << ", ";
         }
 
@@ -708,33 +708,31 @@ std::ostream& operator<<(std::ostream& os, Matrix<T> const& mat)
     return os;
 }
 
-
 // from http://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 inline bool almost_equal(double x, double y)
 {
     // the machine epsilon has to be scaled to the magnitude of the values used
     // and multiplied by the desired precision in ULPs (units in the last place)
-    return std::abs(x-y) <= std::numeric_limits<double>::epsilon() * std::abs(x+y) * 2
-           || std::abs(x-y) < std::numeric_limits<double>::min();
+    return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * 2 || std::abs(x - y) < std::numeric_limits<double>::min();
 }
-
 
 template <class T>
 bool Matrix<T>::compare(const Matrix<T>& mat) const
 {
-    if(!equalDimension(*this, mat))
+    if (!equalDimension(*this, mat))
     {
         std::cout << "mismatching matrix size";
         std::exit(-1);
     }
 
-    const T* thisData = data(); const T* matD = mat.data();
-    for(size_t i = 0; i < getNbrOfElements(); i++)
+    const T* thisData = data();
+    const T* matD     = mat.data();
+    for (size_t i = 0; i < getNbrOfElements(); i++)
     {
         T x = thisData[i];
         T y = matD[i];
 
-        if( std::abs(x-y) > std::numeric_limits<double>::epsilon() * std::abs(x+y) * 2 )
+        if (std::abs(x - y) > std::numeric_limits<double>::epsilon() * std::abs(x + y) * 2)
             return false;
     }
 
@@ -742,10 +740,10 @@ bool Matrix<T>::compare(const Matrix<T>& mat) const
 }
 
 template <class T>
-T Matrix<T>::elementwiseMultiplyAndSum(const T *arr1, const T *arr2, size_t length) const
+T Matrix<T>::elementwiseMultiplyAndSum(const T* arr1, const T* arr2, size_t length) const
 {
     T accum = 0;
-    for( size_t a = 0; a < length; a++ )
+    for (size_t a = 0; a < length; a++)
         accum += arr1[a] * arr2[a];
 
     return accum;
@@ -754,20 +752,20 @@ T Matrix<T>::elementwiseMultiplyAndSum(const T *arr1, const T *arr2, size_t leng
 template <>
 inline int Matrix<int>::elementwiseMultiplyAndSum(const int* arr1, const int* arr2, size_t length) const
 {
-    __m128i* arr_1_ptr = (__m128i*) arr1;
-    __m128i* arr_2_ptr = (__m128i*) arr2;
+    __m128i* arr_1_ptr = (__m128i*)arr1;
+    __m128i* arr_2_ptr = (__m128i*)arr2;
 
-    int accum = 0;
-    size_t simdLoops = length / 4;
-    size_t singleLoops = length - 4*simdLoops;
+    int    accum       = 0;
+    size_t simdLoops   = length / 4;
+    size_t singleLoops = length - 4 * simdLoops;
 
-    for( size_t simd = 0; simd < simdLoops; simd++ )
+    for (size_t simd = 0; simd < simdLoops; simd++)
     {
         __m128i reg_1_SSE = _mm_load_si128(arr_1_ptr);
         __m128i reg_2_SSE = _mm_load_si128(arr_2_ptr);
-        __m128i mulRes = _mm_mullo_epi32 (reg_1_SSE, reg_2_SSE);
-        __m128i sumRes = _mm_hadd_epi32(mulRes,mulRes);
-                sumRes = _mm_hadd_epi32(sumRes,sumRes);
+        __m128i mulRes    = _mm_mullo_epi32(reg_1_SSE, reg_2_SSE);
+        __m128i sumRes    = _mm_hadd_epi32(mulRes, mulRes);
+        sumRes            = _mm_hadd_epi32(sumRes, sumRes);
 
         accum += _mm_extract_epi32(sumRes, 0);
 
@@ -775,11 +773,11 @@ inline int Matrix<int>::elementwiseMultiplyAndSum(const int* arr1, const int* ar
         arr_2_ptr++;
     }
 
-    const int* offset1 = arr1 + 4*simdLoops;
-    const int* offset2 = arr2 + 4*simdLoops;
-    for(size_t a = 0; a < singleLoops; a++)
+    const int* offset1 = arr1 + 4 * simdLoops;
+    const int* offset2 = arr2 + 4 * simdLoops;
+    for (size_t a = 0; a < singleLoops; a++)
     {
-        accum += offset1[a]* offset2[a];
+        accum += offset1[a] * offset2[a];
     }
 
     return accum;
@@ -820,17 +818,16 @@ inline double Matrix<double>::elementwiseMultiplyAndSum(const double* arr1, cons
 }
 */
 
-
 template <class T>
 std::tuple<size_t, size_t, T> Matrix<T>::max() const
 {
-    T maxVal = std::numeric_limits<T>::min();
-    size_t maxPos = 0;
+    T        maxVal  = std::numeric_limits<T>::min();
+    size_t   maxPos  = 0;
     const T* matData = data();
 
-    for( size_t i = 0; i < getNbrOfElements(); i++ )
+    for (size_t i = 0; i < getNbrOfElements(); i++)
     {
-        if( maxVal <  matData[i] )
+        if (maxVal < matData[i])
         {
             maxPos = i;
             maxVal = matData[i];
@@ -838,21 +835,21 @@ std::tuple<size_t, size_t, T> Matrix<T>::max() const
     }
 
     size_t m = maxPos / cols();
-    size_t n = maxPos - (m*cols());
+    size_t n = maxPos - (m * cols());
 
-    return std::make_tuple(m,n,maxVal);
+    return std::make_tuple(m, n, maxVal);
 }
 
 template <class T>
 std::tuple<size_t, size_t, T> Matrix<T>::min() const
 {
-    T minVal = std::numeric_limits<T>::max();
-    size_t minPos = 0;
+    T        minVal  = std::numeric_limits<T>::max();
+    size_t   minPos  = 0;
     const T* matData = data();
 
-    for( size_t i = 0; i < getNbrOfElements(); i++ )
+    for (size_t i = 0; i < getNbrOfElements(); i++)
     {
-        if( minVal >  matData[i] )
+        if (minVal > matData[i])
         {
             minPos = i;
             minVal = matData[i];
@@ -860,15 +857,15 @@ std::tuple<size_t, size_t, T> Matrix<T>::min() const
     }
 
     size_t m = minPos / cols();
-    size_t n = minPos - (m*cols());
+    size_t n = minPos - (m * cols());
 
-    return std::make_tuple(m,n,minVal);
+    return std::make_tuple(m, n, minVal);
 }
 
 template <class T>
 T* Matrix<T>::getRowPtr(size_t row)
 {
-    return data() + row*cols();
+    return data() + row * cols();
 }
 
 template <class T>
@@ -885,7 +882,7 @@ void Matrix<T>::swapRows(size_t m1, size_t m2)
 
     for (size_t i = 0; i < cols(); i++)
     {
-        std::swap(row1[i],row2[i]);
+        std::swap(row1[i], row2[i]);
     }
 }
 
@@ -898,20 +895,20 @@ void Matrix<T>::setRow(size_t rowIdx, const Matrix<T>& row)
         std::exit(-1);
     }
 
-    if( row.cols() != cols() )
+    if (row.cols() != cols())
     {
         std::cout << "mismatching matrix size";
         std::exit(-1);
     }
 
-    T* dstPtr = getRowPtr(rowIdx);
+    T*       dstPtr = getRowPtr(rowIdx);
     const T* srcPtr = row.data();
-    for( size_t i = 0; i < row.cols(); i++ )
+    for (size_t i = 0; i < row.cols(); i++)
         dstPtr[i] = srcPtr[i];
 }
 
 template <class T>
-void Matrix<T>::setColumn( size_t colIdx, const Matrix<T>& col )
+void Matrix<T>::setColumn(size_t colIdx, const Matrix<T>& col)
 {
     if (colIdx >= cols())
     {
@@ -919,18 +916,18 @@ void Matrix<T>::setColumn( size_t colIdx, const Matrix<T>& col )
         std::exit(-1);
     }
 
-    if( col.rows() != rows() )
+    if (col.rows() != rows())
     {
         std::cout << "mismatching matrix size";
         std::exit(-1);
     }
 
-    for( size_t i = 0; i < col.rows(); i++ )
-        setValue(i,colIdx,col(i,0));
+    for (size_t i = 0; i < col.rows(); i++)
+        setValue(i, colIdx, col(i, 0));
 }
 
 // Predefined Matrix Types
-typedef std::shared_ptr<Matrix<int>> MatrixISP;
+typedef std::shared_ptr<Matrix<int>>    MatrixISP;
 typedef std::shared_ptr<Matrix<double>> MatrixDSP;
 
 #include "transformation.hpp"
@@ -945,10 +942,10 @@ size_t Matrix<T>::getRank() const
     zeroRow.fill(0.0);
 
     size_t rank = 0;
-    for(size_t i = 0; i < rows(); i++)
+    for (size_t i = 0; i < rows(); i++)
     {
         Matrix<double> cRow = echelonMat.row(i);
-        if( cRow.compare(zeroRow) )
+        if (cRow.compare(zeroRow))
             break;
         else
             rank++;
@@ -961,17 +958,17 @@ template <class T>
 Matrix<double> Matrix<T>::inverted(bool* invertable) const
 {
     // needs to be square matrix
-    if( m_rows != m_cols )
+    if (m_rows != m_cols)
     {
         std::cout << "Needs to be square matrix" << std::endl;
         *invertable = false;
         return *this;
     }
 
-    bool detOk;
+    bool   detOk;
     double det = determinant(&detOk);
 
-    if( detOk && std::abs(det) < std::numeric_limits<double>::min() )
+    if (detOk && std::abs(det) < std::numeric_limits<double>::min())
     {
         std::cout << "No inverse for singular matrix: Det = 0" << std::endl;
         *invertable = false;
@@ -988,9 +985,9 @@ Matrix<double> Matrix<T>::inverted(bool* invertable) const
 
     // multiply Echelon operators in reverse order
     // http://stattrek.com/matrix-algebra/how-to-find-inverse.aspx
-    while( !ops.empty() )
+    while (!ops.empty())
     {
-        inv = inv*ops.back();
+        inv = inv * ops.back();
         ops.pop_back();
     }
 
@@ -1009,28 +1006,28 @@ double Matrix<T>::determinant(bool* successful) const
     double det = 0.0;
 
     // needs to be square matrix
-    if( m_rows != m_cols )
+    if (m_rows != m_cols)
     {
         std::cout << "Needs to be square matrix" << std::endl;
         *successful = false;
         return det;
     }
 
-    Decomposition::LUResult lu = Decomposition::luDecomposition(*this);
-    Matrix<double> lDiag = lu.L.diagonal();
-    Matrix<double> uDiag = lu.U.diagonal();
+    Decomposition::LUResult lu    = Decomposition::luDecomposition(*this);
+    Matrix<double>          lDiag = lu.L.diagonal();
+    Matrix<double>          uDiag = lu.U.diagonal();
 
     // build diagonal products
     double lProd = 1.0;
     double uProd = 1.0;
 
-    for(size_t i = 0; i < lDiag.rows(); i++)
+    for (size_t i = 0; i < lDiag.rows(); i++)
     {
-        lProd = lProd * lDiag(i,0);
-        uProd = uProd * uDiag(i,0);
+        lProd = lProd * lDiag(i, 0);
+        uProd = uProd * uDiag(i, 0);
     }
 
-    det = lProd * uProd;
+    det         = lProd * uProd;
     *successful = true;
 
     return det;
@@ -1041,20 +1038,18 @@ Matrix<double> Matrix<T>::normalizeColumns() const
 {
     Matrix<double> retMat = Matrix<double>(m_rows, m_cols);
 
-    for( size_t n = 0; n < m_cols; n++ )
+    for (size_t n = 0; n < m_cols; n++)
     {
         Matrix<double> c = column(n);
 
         // root(square and add) -> length
-        double length = std::sqrt( static_cast<double>((c.transpose() * c)(0,0)) );
+        double length = std::sqrt(static_cast<double>((c.transpose() * c)(0, 0)));
 
         // scale column and copy it to the return matrix
-        retMat.setColumn(n,  c * (1.0/length));
+        retMat.setColumn(n, c * (1.0 / length));
     }
 
     return retMat;
 }
-
-
 
 #endif //MY_MATRIX_H

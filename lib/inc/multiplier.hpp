@@ -26,13 +26,11 @@
 
 #include "matrix.hpp"
 
-
 // tutorial: http://stattrek.com/matrix-algebra/elementary-operations.aspx
 
 class Multiplier
 {
 public:
-
     /**
      * Get the matrix L-multiplier, which swaps the rows r0 and r1.
      * @param mat
@@ -66,7 +64,6 @@ public:
     static Matrix<T> multiplyRow(const Matrix<T>& mat, T factor, size_t r);
 };
 
-
 template <class T>
 Matrix<T> Multiplier::swapRow(const Matrix<T>& mat, size_t r0, size_t r1)
 {
@@ -79,16 +76,16 @@ Matrix<T> Multiplier::swapRow(const Matrix<T>& mat, size_t r0, size_t r1)
     Matrix<T> swapOp(mat.rows(), mat.rows());
     swapOp.setToIdentity();
 
-    Matrix<T> zeroRow(1,mat.rows());
+    Matrix<T> zeroRow(1, mat.rows());
     zeroRow.fill(0);
 
     // r0
-    swapOp.setRow(r0,zeroRow);
-    swapOp(r0,r1) = 1;
+    swapOp.setRow(r0, zeroRow);
+    swapOp(r0, r1) = 1;
 
     // r1
-    swapOp.setRow(r1,zeroRow);
-    swapOp(r1,r0) = 1;
+    swapOp.setRow(r1, zeroRow);
+    swapOp(r1, r0) = 1;
 
     return swapOp;
 }
@@ -104,7 +101,7 @@ Matrix<T> Multiplier::addProductOfRow(const Matrix<T>& mat, T factor, size_t r0,
 
     Matrix<T> addProdOp(mat.rows(), mat.rows());
     addProdOp.setToIdentity();
-    addProdOp(r1,r0) = factor;
+    addProdOp(r1, r0) = factor;
 
     return addProdOp;
 }
@@ -120,10 +117,9 @@ Matrix<T> Multiplier::multiplyRow(const Matrix<T>& mat, T factor, size_t r)
 
     Matrix<T> mulOp(mat.rows(), mat.rows());
     mulOp.setToIdentity();
-    mulOp(r,r) = factor;
+    mulOp(r, r) = factor;
 
     return mulOp;
 }
 
 #endif //MY_MULTIPLIER_H
-

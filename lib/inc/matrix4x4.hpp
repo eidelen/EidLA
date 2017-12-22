@@ -26,14 +26,10 @@
 
 #include "matrix.hpp"
 
-class Matrix4x4: public Matrix<double>
+class Matrix4x4 : public Matrix<double>
 {
 public:
     Matrix4x4();
-
 };
 
-
-
 #endif //MY_AFFINE_H
-

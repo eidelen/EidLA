@@ -161,10 +161,10 @@ TEST(Matrix, SetRow)
 
 TEST(Matrix, SetColumn)
 {
-    int  inData[] = {1, 0,   1, 0};
-    auto in = Matrix<int>(2,2,inData);
+    int  inData[] = {1, 0, 1, 0};
+    auto in       = Matrix<int>(2, 2, inData);
 
-    auto soll = Matrix<int>(2,2);
+    auto soll = Matrix<int>(2, 2);
     soll.fill(1);
 
     auto cpy = in.column(0);
@@ -175,11 +175,11 @@ TEST(Matrix, SetColumn)
 
 TEST(Matrix, Transpose)
 {
-    int inData[6] = {1, 1, 1,  3, 3, 3};
-    auto in = Matrix<int>(2, 3, inData);
+    int  inData[6] = {1, 1, 1, 3, 3, 3};
+    auto in        = Matrix<int>(2, 3, inData);
 
-    int sollData[6] = {1,3,  1,3,   1,3};
-    auto soll = Matrix<int>(3, 2, sollData);
+    int  sollData[6] = {1, 3, 1, 3, 1, 3};
+    auto soll        = Matrix<int>(3, 2, sollData);
 
     auto inTranspose = in.transpose();
 
@@ -188,33 +188,33 @@ TEST(Matrix, Transpose)
 
 TEST(Matrix, Diagonal)
 {
-    int inData[9] = {1, 1, 1,   3, 3, 3,   5, 5, 5};
-    auto in = Matrix<int>(3, 3, inData);
+    int  inData[9] = {1, 1, 1, 3, 3, 3, 5, 5, 5};
+    auto in        = Matrix<int>(3, 3, inData);
 
-    int diagData[3] = {1,3,5};
-    auto diagSoll = Matrix<int>(3, 1, diagData);
+    int  diagData[3] = {1, 3, 5};
+    auto diagSoll    = Matrix<int>(3, 1, diagData);
 
     ASSERT_TRUE(diagSoll.compare(in.diagonal()));
 }
 
 TEST(Matrix, Sum)
 {
-    int inData[9] = {1, 1, 1,   3, 3, 3,   5, 5, 5};
-    auto in = Matrix<int>(3, 3, inData);
+    int  inData[9] = {1, 1, 1, 3, 3, 3, 5, 5, 5};
+    auto in        = Matrix<int>(3, 3, inData);
 
-    ASSERT_EQ( in.sum(), 27 );
+    ASSERT_EQ(in.sum(), 27);
 }
 
 TEST(Matrix, AssignmentOperator)
 {
-    auto mat = Matrix<int>(3,3);
+    auto mat = Matrix<int>(3, 3);
     mat.setToIdentity();
     int* addressAllocOrigin = mat.data();
 
-    auto newMat = Matrix<int>(2,2);
+    auto newMat = Matrix<int>(2, 2);
     newMat.fill(5);
 
-    mat = newMat;
+    mat                  = newMat;
     int* addressAllocNew = mat.data();
 
     ASSERT_TRUE(mat.compare(newMat));
@@ -223,16 +223,16 @@ TEST(Matrix, AssignmentOperator)
 
 TEST(Matrix, AssignmentOperatorSameNbrElement)
 {
-    auto mat = Matrix<int>(3,3);
+    auto mat = Matrix<int>(3, 3);
     mat.setToIdentity();
     int* addrOriginal = mat.data();
 
-    auto newMat = Matrix<int>(1,9);
+    auto newMat = Matrix<int>(1, 9);
     newMat.fill(5);
 
-    mat = newMat;
+    mat                   = newMat;
     int* addrAfterAssignt = mat.data();
 
     ASSERT_TRUE(mat.compare(newMat));
-    ASSERT_TRUE(addrOriginal==addrAfterAssignt); // should be same, since same number of elements
+    ASSERT_TRUE(addrOriginal == addrAfterAssignt); // should be same, since same number of elements
 }

@@ -102,30 +102,30 @@ TEST(Matrix, MinElement)
 
 TEST(Matrix, RandomInt)
 {
-    auto rand = Matrix<int>::random(4,6, 0, 10);
+    auto rand = Matrix<int>::random(4, 6, 0, 10);
 
-    ASSERT_EQ(4, rand.rows() );
-    ASSERT_EQ(6, rand.cols() );
+    ASSERT_EQ(4, rand.rows());
+    ASSERT_EQ(6, rand.cols());
 
-    for( size_t s = 0; s < rand.getNbrOfElements(); s++ )
+    for (size_t s = 0; s < rand.getNbrOfElements(); s++)
     {
         int val = rand.data()[s];
-        ASSERT_GE( val, 0 );
-        ASSERT_LE( val, 10);
+        ASSERT_GE(val, 0);
+        ASSERT_LE(val, 10);
     }
 }
 
 TEST(Matrix, RandomDouble)
 {
-    auto rand = Matrix<double>::random(4,6, 0.0, 1.0);
+    auto rand = Matrix<double>::random(4, 6, 0.0, 1.0);
 
-    ASSERT_EQ(4, rand.rows() );
-    ASSERT_EQ(6, rand.cols() );
+    ASSERT_EQ(4, rand.rows());
+    ASSERT_EQ(6, rand.cols());
 
-    for( size_t s = 0; s < rand.getNbrOfElements(); s++ )
+    for (size_t s = 0; s < rand.getNbrOfElements(); s++)
     {
         double val = rand.data()[s];
-        ASSERT_GE( val, 0.0 );
-        ASSERT_LE( val, 1.0);
+        ASSERT_GE(val, 0.0);
+        ASSERT_LE(val, 1.0);
     }
 }

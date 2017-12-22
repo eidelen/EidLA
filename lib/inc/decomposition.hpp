@@ -29,25 +29,27 @@
 class Decomposition
 {
 public:
-
     struct LUResult
     {
-        LUResult(Matrix<double> l, Matrix<double> u) :
-                L(l), U(u) {}
+        LUResult(Matrix<double> l, Matrix<double> u)
+        : L(l), U(u)
+        {
+        }
         const Matrix<double> L; // Lower triangle matrix
         const Matrix<double> U; // Upper triangle matrix
     };
 
     struct EigenPair
     {
-        EigenPair(Matrix<double> v, double l) :
-                V(v), L(l) {}
+        EigenPair(Matrix<double> v, double l)
+        : V(v), L(l)
+        {
+        }
         const Matrix<double> V; // Eigen vector
-        const double L; // Eigen value
+        const double         L; // Eigen value
     };
 
 public:
-
     /**
      * LU decomposition of the matrix mat.
      * @param mat
@@ -61,7 +63,7 @@ public:
      * @param mat
      * @return Eigen pairs in desending eigenvalue order.
      */
-    template<class T>
+    template <class T>
     static std::vector<EigenPair> eigen(const Matrix<T>& mat);
 
     /**
@@ -72,16 +74,13 @@ public:
      * @param vec
      * @return Rayleigh quotient
      */
-    template<class T>
+    template <class T>
     static double rayleighQuotient(const Matrix<T>& mat, const Matrix<T> vec);
 
 private:
-
     template <class T>
     static LUResult doolittle(const Matrix<T>& a);
-
 };
-
 
 // Infos from:
 //  http://mathonline.wikidot.com/the-algorithm-for-doolittle-s-method-for-lu-decompositions
@@ -89,7 +88,7 @@ private:
 template <class T>
 Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
 {
-    if( mat.rows() != mat.cols() )
+    if (mat.rows() != mat.cols())
     {
         std::cout << "Square matrix required";
         std::exit(-1);
@@ -102,57 +101,58 @@ Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
 template <class T>
 Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& a)
 {
-    size_t n = a.rows();
-    Matrix<double> l = Matrix<double>(n,n);
-    Matrix<double> u = Matrix<double>(n,n);
+    size_t         n = a.rows();
+    Matrix<double> l = Matrix<double>(n, n);
+    Matrix<double> u = Matrix<double>(n, n);
 
-    l.setToIdentity(); u.fill(0.0);
+    l.setToIdentity();
+    u.fill(0.0);
 
-    for( size_t k = 0; k < n; k++ )
+    for (size_t k = 0; k < n; k++)
     {
-        for( size_t m = k; m < n; m++ )
+        for (size_t m = k; m < n; m++)
         {
             // compute u(k,m)
             double pSum = 0;
 
-            if( k > 0 )
+            if (k > 0)
             {
-                for (size_t j = 0; j < k; j++ )
+                for (size_t j = 0; j < k; j++)
                 {
-                    double lkj = l(k,j);
-                    double ujm = u(j,m);
-                    pSum += l(k,j)*u(j,m);
+                    double lkj = l(k, j);
+                    double ujm = u(j, m);
+                    pSum += l(k, j) * u(j, m);
                 }
             }
 
             // debug
-            double akm = a(k,m);
-            double ukm = a(k,m) - pSum;
+            double akm = a(k, m);
+            double ukm = a(k, m) - pSum;
 
-            u(k,m) = a(k,m) - pSum;
+            u(k, m) = a(k, m) - pSum;
         }
 
-        for( size_t i = k+1; i < n; i++ )
+        for (size_t i = k + 1; i < n; i++)
         {
             // compute l(i,k)
-            if( k == i )
+            if (k == i)
             {
-                l(i,k) = 1.0;
+                l(i, k) = 1.0;
             }
             else
             {
                 double pSum = 0;
 
-                if( k > 0 )
+                if (k > 0)
                 {
-                    for (size_t j = 0; j < k; j++ )
+                    for (size_t j = 0; j < k; j++)
                     {
-                        pSum += l(i,j)*u(j,k);
+                        pSum += l(i, j) * u(j, k);
                     }
                 }
 
-                double ukk = u(k,k);
-                if( std::abs(ukk) > std::numeric_limits<double>::min() ) // check if divider > 0
+                double ukk = u(k, k);
+                if (std::abs(ukk) > std::numeric_limits<double>::min()) // check if divider > 0
                 {
                     l(i, k) = (a(i, k) - pSum) / ukk;
                 }
@@ -160,13 +160,13 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& a)
                 {
                     // this is a singular matrix, therefore l(i,k) can be freely chosen -> lu decomposition is not unique
                     // info: https://math.stackexchange.com/questions/2010470/doolittle-transformation-is-non-unique-for-singular-matrices
-                    l(i,k) = 0;
+                    l(i, k) = 0;
                 }
             }
         }
     }
 
-    LUResult ret(l,u);
+    LUResult ret(l, u);
     return ret;
 }
 
@@ -177,24 +177,24 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
 
     // Power iteration : https://en.wikipedia.org/wiki/Power_iteration
     // Find biggest eigenvalue
-    Matrix<double> matD = mat;
-    double initRange = 1.0/std::sqrt(mat.cols());
-    Matrix<double> ev = Matrix<double>::random(matD.cols(), 1, -initRange, initRange);
+    Matrix<double> matD      = mat;
+    double         initRange = 1.0 / std::sqrt(mat.cols());
+    Matrix<double> ev        = Matrix<double>::random(matD.cols(), 1, -initRange, initRange);
     Matrix<double> ev_before = ev;
 
     bool go = true;
-    while( go )
+    while (go)
     {
         Matrix<double> prod = matD * ev;
-        ev = prod.normalizeColumns();
+        ev                  = prod.normalizeColumns();
 
         // check stopping criteria -> stop if all entries almost equal
-        go = !(ev.compare(ev_before));
+        go        = !(ev.compare(ev_before));
         ev_before = ev;
     }
 
-    double eigenVal = rayleighQuotient(matD,ev);
-    ret.push_back( EigenPair( ev, eigenVal ) );
+    double eigenVal = rayleighQuotient(matD, ev);
+    ret.push_back(EigenPair(ev, eigenVal));
 
     return ret;
 }
@@ -204,8 +204,7 @@ template <class T>
 double Decomposition::rayleighQuotient(const Matrix<T>& m, const Matrix<T> v)
 {
     Matrix<T> vT = v.transpose();
-    return static_cast<double>( (vT*m*v)(0,0) ) / static_cast<double>( (vT*v)(0,0) );
+    return static_cast<double>((vT * m * v)(0, 0)) / static_cast<double>((vT * v)(0, 0));
 }
 
 #endif //MY_DECOMPOSITION_H
-
