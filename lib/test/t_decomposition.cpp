@@ -49,13 +49,14 @@ TEST(Decomposition, LUIdent)
 
 TEST(Decomposition, Eigenvalue)
 {
-    auto m = Matrix<double>::identity(4);
-    for (size_t s = 0; s < 4; s++)
+    auto m = Matrix<double>::identity(3);
+    for (size_t s = 0; s < 3; s++)
         m(s, s) = static_cast<double>(s + 1);
 
     std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
 
     // eigenvalues on diagonal of m
+    std::cout << "Mat in: " << m << std::endl;
 
     for (const Decomposition::EigenPair ep : eig)
     {

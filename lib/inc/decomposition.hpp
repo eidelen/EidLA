@@ -175,26 +175,39 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
 {
     std::vector<EigenPair> ret;
 
-    // Power iteration : https://en.wikipedia.org/wiki/Power_iteration
-    // Find biggest eigenvalue
     Matrix<double> matD      = mat;
-    double         initRange = 1.0 / std::sqrt(mat.cols());
-    Matrix<double> ev        = Matrix<double>::random(matD.cols(), 1, -initRange, initRange);
-    Matrix<double> ev_before = ev;
+
+
+    // Rayleigh quotient iteration: https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
+
+    // start values
+    Matrix<double> e_vec = Matrix<double>::random(matD.cols(), 1, -1, 1);
+    double e_val = 1;
+    double e_val_before = e_val;
+
+    // used variables
+    Matrix<double> ident = Matrix<double>::identity(matD.cols());
+    bool invOk = true;
+    Matrix<double> e_vec_unscaled = Matrix<double>(matD.cols(),1);
 
     bool go = true;
     while (go)
     {
-        Matrix<double> prod = matD * ev;
-        ev                  = prod.normalizeColumns();
+        e_vec_unscaled = (matD - (ident*e_val) ).inverted(&invOk) * e_vec;
+        if( invOk )
+        {
+            e_vec = e_vec_unscaled.normalizeColumns();
+        }
+
+        e_val = rayleighQuotient(matD,e_vec);
 
         // check stopping criteria -> stop if all entries almost equal
-        go        = !(ev.compare(ev_before));
-        ev_before = ev;
+        go = std::abs(e_val - e_val_before) > std::numeric_limits<double>::epsilon() * std::abs(e_val + e_val_before) * 2;
+
+        e_val_before = e_val;
     }
 
-    double eigenVal = rayleighQuotient(matD, ev);
-    ret.push_back(EigenPair(ev, eigenVal));
+    ret.push_back(EigenPair(e_vec, e_val));
 
     return ret;
 }

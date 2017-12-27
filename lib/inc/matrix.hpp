@@ -970,7 +970,7 @@ Matrix<double> Matrix<T>::inverted(bool* invertable) const
 
     if (detOk && std::abs(det) < std::numeric_limits<double>::min())
     {
-        std::cout << "No inverse for singular matrix: Det = 0" << std::endl;
+        std::cout << "Inverse failed due to determinant equal zero" << std::endl;
         *invertable = false;
         return *this;
     }
