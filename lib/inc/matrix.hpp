@@ -115,6 +115,18 @@ public:
     Matrix<T> column(size_t n) const;
 
     /**
+     * Removes the whole row at index m
+     * @param m Index of row to remove.
+     */
+    void removeRow(size_t m);
+
+    /**
+     * Removes the whole column at index n
+     * @param n Index of column to remove.
+     */
+    void removeColumn(size_t n);
+
+    /**
      * Elementwise comparisson with the passed matrix mat.
      * @param epsilon The allowed tolerance.
      * @return True if all elements are within the tolerance. Otherwise false.
@@ -270,6 +282,13 @@ public:
      * @return
      */
     Matrix<double> normalizeColumns() const;
+
+
+    /**
+     * Returns the first minors of this matrix.
+     * @return First minors matrix.
+     */
+    Matrix<double> firstMinors() const;
 
 protected:
     /**
@@ -722,7 +741,7 @@ bool Matrix<T>::compare(const Matrix<T>& mat) const
     if (!equalDimension(*this, mat))
     {
         std::cout << "mismatching matrix size";
-        std::exit(-1);
+        return false;
     }
 
     const T* thisData = data();
@@ -970,7 +989,7 @@ Matrix<double> Matrix<T>::inverted(bool* invertable) const
 
     if (detOk && std::abs(det) < std::numeric_limits<double>::min())
     {
-        std::cout << "Inverse failed due to determinant equal zero" << std::endl;
+        std::cout << "Inverse failed due to determinant equal zero:" << *this << std::endl;
         *invertable = false;
         return *this;
     }
@@ -1050,6 +1069,70 @@ Matrix<double> Matrix<T>::normalizeColumns() const
     }
 
     return retMat;
+}
+
+template <class T>
+Matrix<double> Matrix<T>::firstMinors() const
+{
+    Matrix<double> fm = Matrix<double>(rows(),cols());
+
+    for( size_t m = 0; m < rows(); m++ )
+    {
+        for( size_t n = 0; n < cols(); n++ )
+        {
+
+        }
+    }
+
+    return fm;
+}
+
+template <class T>
+void Matrix<T>::removeRow(size_t m)
+{
+    if (m >= rows())
+    {
+        std::cout << "Row removal not possible. " << m << ", max " << rows();
+        std::exit(-1);
+    }
+
+    // swap the row to remove step by step to the very down
+    for(size_t i = m; (i+1) < rows(); i++)
+    {
+        swapRows(i,i+1);
+    }
+
+    // adapt matrix shape - but not allocated memory
+    m_rows = rows()-1;
+    m_nbrOfElements = m_cols*m_rows;
+}
+
+template <class T>
+void Matrix<T>::removeColumn(size_t n)
+{
+    if (n >= cols())
+    {
+        std::cout << "Column removal not possible. " << n << ", max " << cols();
+        std::exit(-1);
+    }
+
+    size_t new_memLoc = 0;
+
+    Matrix<T> cpy = Matrix<T>( *this );
+    for( size_t m = 0; m < rows(); m++ )
+    {
+        for( size_t c = 0; c < cols(); c++ )
+        {
+            if( c != n )
+            {
+                data()[new_memLoc++] = cpy(m,c);
+            }
+        }
+    }
+
+    // adapt matrix shape - but not allocated memory
+    m_cols = cols()-1;
+    m_nbrOfElements = m_cols*m_rows;
 }
 
 #endif //MY_MATRIX_H

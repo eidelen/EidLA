@@ -103,3 +103,17 @@ TEST(MatAdvanced, ColumnNormalization2)
 
     ASSERT_TRUE(soll.compare(mat.normalizeColumns()));
 }
+
+// example from https://www.mathsisfun.com/algebra/matrix-inverse-minors-cofactors-adjugate.html
+TEST(MatAdvanced, FirstMinors)
+{
+    double matData[] = {3,0,2,  2,0,-2,  0,1,1};
+    auto mat = Matrix<double>(3,3,matData);
+
+    double sollData[] = {2,2,2,  -2,3,3,  0,-10,0};
+    auto soll = Matrix<double>(3,3,sollData);
+
+    auto firstMinors = mat.firstMinors();
+
+    ASSERT_TRUE( soll.compare(firstMinors) );
+}

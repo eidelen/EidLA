@@ -47,11 +47,30 @@ TEST(Decomposition, LUIdent)
     ASSERT_TRUE(in.compare(res.U));
 }
 
+/*
 TEST(Decomposition, Eigenvalue)
 {
     auto m = Matrix<double>::identity(3);
     for (size_t s = 0; s < 3; s++)
         m(s, s) = static_cast<double>(s + 1);
+
+    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
+
+    // eigenvalues on diagonal of m
+    std::cout << "Mat in: " << m << std::endl;
+
+    for (const Decomposition::EigenPair ep : eig)
+    {
+        std::cout << "Eigenvalue: " << ep.L << std::endl;
+        std::cout << "Eigenvector: " << ep.V.transpose() << "------" << std::endl;
+    }
+}*/
+
+// Example from https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
+TEST(Decomposition, EigenvalueExample2)
+{
+    double mat_data[] = {1,2,3,  1,2,1,  3,2,1};
+    auto m = Matrix<double>(3,3,mat_data);
 
     std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
 

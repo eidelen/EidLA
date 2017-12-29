@@ -236,3 +236,33 @@ TEST(Matrix, AssignmentOperatorSameNbrElement)
     ASSERT_TRUE(mat.compare(newMat));
     ASSERT_TRUE(addrOriginal == addrAfterAssignt); // should be same, since same number of elements
 }
+
+TEST(Matrix, RemoveRow)
+{
+    // remove row 1
+
+    auto mat = Matrix<int>::random(3,2,0,10);
+
+    auto soll = Matrix<int>(2,2);
+    soll.setRow(0, mat.row(0));
+    soll.setRow(1, mat.row(2));
+
+    mat.removeRow(1);
+
+    ASSERT_TRUE(mat.compare(soll));
+}
+
+TEST(Matrix, RemoveColumn)
+{
+    // remove col 0
+
+    auto mat = Matrix<int>::random(2,3,0,10);
+
+    auto soll = Matrix<int>(2,2);
+    soll.setColumn(0, mat.column(1));
+    soll.setColumn(1, mat.column(2));
+
+    mat.removeColumn(0);
+
+    ASSERT_TRUE(mat.compare(soll));
+}

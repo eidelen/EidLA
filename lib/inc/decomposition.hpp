@@ -181,8 +181,10 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
     // Rayleigh quotient iteration: https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
 
     // start values
-    Matrix<double> e_vec = Matrix<double>::random(matD.cols(), 1, -1, 1);
-    double e_val = 1;
+    Matrix<double> e_vec = Matrix<double>(matD.cols(), 1);
+    e_vec.fill(1);
+
+    double e_val = 200;
     double e_val_before = e_val;
 
     // used variables
@@ -198,8 +200,14 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
         {
             e_vec = e_vec_unscaled.normalizeColumns();
         }
+        else
+        {
+            std::cout << "subt: " << matD - (ident*e_val) << std::endl << "evec" << e_vec << std::endl  << "eval = " << e_val << std::endl << std::endl;
+        }
 
         e_val = rayleighQuotient(matD,e_vec);
+
+        std::cout << "Iteration:" << std::endl << e_vec << std::endl << e_val << std::endl;
 
         // check stopping criteria -> stop if all entries almost equal
         go = std::abs(e_val - e_val_before) > std::numeric_limits<double>::epsilon() * std::abs(e_val + e_val_before) * 2;
