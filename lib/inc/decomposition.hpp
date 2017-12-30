@@ -31,12 +31,13 @@ class Decomposition
 public:
     struct LUResult
     {
-        LUResult(Matrix<double> l, Matrix<double> u)
-        : L(l), U(u)
+        LUResult(Matrix<double> l, Matrix<double> u, Matrix<double> p)
+        : L(l), U(u), P(p)
         {
         }
         const Matrix<double> L; // Lower triangle matrix
         const Matrix<double> U; // Upper triangle matrix
+        const Matrix<double> P; // Row Swaps
     };
 
     struct EigenPair
@@ -94,13 +95,14 @@ Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
         std::exit(-1);
     }
 
-    Matrix<double> a(mat);
-    return doolittle(a);
+    return doolittle(mat);
 }
 
 template <class T>
-Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& a)
+Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn)
 {
+    Matrix<double> a(aIn);
+
     size_t         n = a.rows();
     Matrix<double> l = Matrix<double>(n, n);
     Matrix<double> u = Matrix<double>(n, n);
@@ -108,8 +110,21 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& a)
     l.setToIdentity();
     u.fill(0.0);
 
+    Matrix<double> p = Matrix<double>::identity(n);
+
     for (size_t k = 0; k < n; k++)
     {
+        // todo: only check necessary rows!
+        // find pivot row and swap
+        Matrix<double> procColumn = a.column(k);
+        auto maxEntry = procColumn.max();
+        size_t maxRow = std::get<0>(maxEntry);
+        if( maxRow > k)
+        {
+            a.swapRows(maxRow,k);
+            p = Multiplier::swapRow(a,maxRow,k) * p;
+        }
+
         for (size_t m = k; m < n; m++)
         {
             // compute u(k,m)
@@ -124,10 +139,6 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& a)
                     pSum += l(k, j) * u(j, m);
                 }
             }
-
-            // debug
-            double akm = a(k, m);
-            double ukm = a(k, m) - pSum;
 
             u(k, m) = a(k, m) - pSum;
         }
@@ -166,7 +177,7 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& a)
         }
     }
 
-    LUResult ret(l, u);
+    LUResult ret(l, u, p);
     return ret;
 }
 

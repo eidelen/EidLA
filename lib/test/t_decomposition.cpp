@@ -57,6 +57,8 @@ TEST(Decomposition, LU2x2)
     auto l = Matrix<double>(2,2, l_data);
     double u_data[] = {1,1, 0,-2};
     auto u = Matrix<double>(2,2,u_data);
+    double p_data[] = {0,1, 1,0};
+    auto p = Matrix<double>(2,2,p_data);
 
     // Note: this test fails because our lu decomposition does not support permutation!!
     // ToDo: extend LU decomposition with permutation
@@ -64,8 +66,19 @@ TEST(Decomposition, LU2x2)
     Decomposition::LUResult res = Decomposition::luDecomposition(mat);
     std::cout << "L" << res.L << std::endl << "U" << res.U;
 
-    ASSERT_TRUE( mat.compare(l*u) );
+    ASSERT_TRUE( (p*mat).compare(l*u) );
+    ASSERT_TRUE( l.compare(res.L) );
+    ASSERT_TRUE( u.compare(res.U) );
+    ASSERT_TRUE( p.compare(res.P) );
 }
+
+/*
+// example from https://math.stackexchange.com/questions/485513/what-are-pivot-numbers-in-lu-decomposition-please-explain-me-in-an-example
+TEST(Decomposition, LUPivoting)
+{
+    double matData[] = {};
+
+}*/
 
 /*
 TEST(Decomposition, Eigenvalue)
