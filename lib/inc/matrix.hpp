@@ -1032,23 +1032,31 @@ double Matrix<T>::determinant(bool* successful) const
         return det;
     }
 
-    Decomposition::LUResult lu    = Decomposition::luDecomposition(*this);
-    Matrix<double>          lDiag = lu.L.diagonal();
-    Matrix<double>          uDiag = lu.U.diagonal();
-
-    // build diagonal products
-    double lProd = 1.0;
-    double uProd = 1.0;
-
-    for (size_t i = 0; i < lDiag.rows(); i++)
+    if( m_rows == 2 ) // m_cols eq. m_rows
     {
-        lProd = lProd * lDiag(i, 0);
-        uProd = uProd * uDiag(i, 0);
+        // special case 2x2 matrix
+        det = getValue(0,0) * getValue(1,1) - getValue(0,1) * getValue(1,0);
+    }
+    else
+    {
+        Decomposition::LUResult lu = Decomposition::luDecomposition(*this);
+        Matrix<double> lDiag = lu.L.diagonal();
+        Matrix<double> uDiag = lu.U.diagonal();
+
+        // build diagonal products
+        double lProd = 1.0;
+        double uProd = 1.0;
+
+        for (size_t i = 0; i < lDiag.rows(); i++)
+        {
+            lProd = lProd * lDiag(i, 0);
+            uProd = uProd * uDiag(i, 0);
+        }
+
+        det = lProd * uProd;
     }
 
-    det         = lProd * uProd;
     *successful = true;
-
     return det;
 }
 
@@ -1074,13 +1082,37 @@ Matrix<double> Matrix<T>::normalizeColumns() const
 template <class T>
 Matrix<double> Matrix<T>::firstMinors() const
 {
+    if (m_rows != m_cols)
+    {
+        std::cout << "First minors: Square matrix required" << std::endl;
+        std::exit(-1);
+    }
+
+    // https://en.wikipedia.org/wiki/Minor_(linear_algebra)
+
     Matrix<double> fm = Matrix<double>(rows(),cols());
+    Matrix<double> tDouble(*this);
 
     for( size_t m = 0; m < rows(); m++ )
     {
         for( size_t n = 0; n < cols(); n++ )
         {
+            Matrix<double> subMat(tDouble);
+            subMat.removeRow(m);
+            subMat.removeColumn(n);
 
+            bool detCalc;
+            double det = subMat.determinant(&detCalc);
+
+            if( detCalc )
+            {
+                fm(m,n) = det;
+            }
+            else
+            {
+                std::cout << "Compute first minors failed" << std::endl;
+                std::exit(-1);
+            }
         }
     }
 
@@ -1096,7 +1128,8 @@ void Matrix<T>::removeRow(size_t m)
         std::exit(-1);
     }
 
-    // swap the row to remove step by step to the very down
+    // swap the row to remove step by step to the very end
+    // (swapping a row is relatively fast)
     for(size_t i = m; (i+1) < rows(); i++)
     {
         swapRows(i,i+1);
@@ -1118,6 +1151,9 @@ void Matrix<T>::removeColumn(size_t n)
 
     size_t new_memLoc = 0;
 
+    // Different to rows, columns are not mapped
+    // to the memory. Therefore modifying a column
+    // is relatively time consuming.
     Matrix<T> cpy = Matrix<T>( *this );
     for( size_t m = 0; m < rows(); m++ )
     {

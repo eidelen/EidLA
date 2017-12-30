@@ -47,6 +47,26 @@ TEST(Decomposition, LUIdent)
     ASSERT_TRUE(in.compare(res.U));
 }
 
+
+TEST(Decomposition, LU2x2)
+{
+    double matData[] = {0, -2,   1, 1};
+    auto mat = Matrix<double>(2,2, matData);
+
+    double l_data[] = {1,0, 0,1};
+    auto l = Matrix<double>(2,2, l_data);
+    double u_data[] = {1,1, 0,-2};
+    auto u = Matrix<double>(2,2,u_data);
+
+    // Note: this test fails because our lu decomposition does not support permutation!!
+    // ToDo: extend LU decomposition with permutation
+
+    Decomposition::LUResult res = Decomposition::luDecomposition(mat);
+    std::cout << "L" << res.L << std::endl << "U" << res.U;
+
+    ASSERT_TRUE( mat.compare(l*u) );
+}
+
 /*
 TEST(Decomposition, Eigenvalue)
 {

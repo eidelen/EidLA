@@ -85,6 +85,15 @@ TEST(MatAdvanced, DeterminantSingularMatrix)
     ASSERT_NEAR(mat.determinant(&ok), 0.0, 0.00001);
 }
 
+TEST(MatAdvanced, Determinant2x2)
+{
+    double matData[] = {0, -2,   1, 1};
+    auto mat = Matrix<double>(2,2, matData);
+
+    bool ok;
+    ASSERT_NEAR(mat.determinant(&ok), 2.0, 0.00001);
+}
+
 TEST(MatAdvanced, ColumnNormalization)
 {
     auto mat = Matrix<int>(1, 1);
