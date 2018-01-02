@@ -1021,6 +1021,7 @@ double Matrix<T>::determinant(bool* successful) const
     // compute determinant by using LU decomposition
     // infos: https://s-mat-pcs.oulu.fi/~mpa/matreng/eem3_4-3.htm
     //        -> the example is wrong!
+    // https://math.stackexchange.com/questions/831823/finding-determinant-of-44-matrix-via-lu-decomposition
 
     double det = 0.0;
 
@@ -1039,21 +1040,27 @@ double Matrix<T>::determinant(bool* successful) const
     }
     else
     {
+        // sum of product of l and u diag elements.
+        // by definition, product of l diag is 1!
         Decomposition::LUResult lu = Decomposition::luDecomposition(*this);
-        Matrix<double> lDiag = lu.L.diagonal();
         Matrix<double> uDiag = lu.U.diagonal();
 
-        // build diagonal products
-        double lProd = 1.0;
-        double uProd = 1.0;
+        // build diagonal products to get determinant of u
+        double detU = 1.0;
 
-        for (size_t i = 0; i < lDiag.rows(); i++)
+        for (size_t i = 0; i < uDiag.rows(); i++)
         {
-            lProd = lProd * lDiag(i, 0);
-            uProd = uProd * uDiag(i, 0);
+            detU = detU * uDiag(i, 0);
         }
 
-        det = lProd * uProd;
+        // determinant of permutation matrix: 1.0 or -1.0
+        double detP;
+        if( lu.NbrRowSwaps % 2 == 0 ) // check if even
+            detP = 1.0;
+        else
+            detP = -1.0;
+
+        det =  detP*detU;
     }
 
     *successful = true;

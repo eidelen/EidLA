@@ -31,13 +31,14 @@ class Decomposition
 public:
     struct LUResult
     {
-        LUResult(Matrix<double> l, Matrix<double> u, Matrix<double> p)
-        : L(l), U(u), P(p)
+        LUResult(Matrix<double> l, Matrix<double> u, Matrix<double> p, size_t n)
+        : L(l), U(u), P(p), NbrRowSwaps(n)
         {
         }
         const Matrix<double> L; // Lower triangle matrix
         const Matrix<double> U; // Upper triangle matrix
         const Matrix<double> P; // Row Swaps
+        size_t NbrRowSwaps;     // Number of row swaps
     };
 
     struct EigenPair
@@ -109,6 +110,7 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
     l.setToIdentity();
 
     Matrix<double> p = Matrix<double>::identity(n);
+    size_t nbrRowSwaps = 0;
 
     for (size_t k = 0; k < n; k++)
     {
@@ -130,6 +132,8 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
             // swap row if different from k
             if (pivotRow != k)
             {
+                nbrRowSwaps++;
+
                 // swap rows in u
                 u.swapRows(pivotRow, k);
                 p = Multiplier::swapRow(u, pivotRow, k) * p;
@@ -144,18 +148,33 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
             }
         }
 
+
         // process beneath rows, so that first pivot column element of u is zero
         double pivot = u(k,k);
-        Matrix<double> pivotRow = u.row(k);
-        for(size_t i = k+1; i < n; i++)
+
+        if( std::abs(pivot) > std::numeric_limits<double>::min()) // check if pivot is not zero
         {
-            double cFactor = - (u(i,k) / pivot);
+            Matrix<double> pivotRow = u.row(k);
+            for (size_t i = k + 1; i < n; i++)
+            {
+                double cFactor = -(u(i, k) / pivot);
 
-            // modify row in u
-            u.setRow(i, cFactor*pivotRow + u.row(i));
+                // modify row in u
+                u.setRow(i, cFactor * pivotRow + u.row(i));
 
-            // modify corresponding entry in l
-            l(i,k) = -cFactor;
+                // modify corresponding entry in l
+                l(i, k) = -cFactor;
+            }
+        }
+        else
+        {
+            // This is a singular matrix, therefore l(i,k) can be freely chosen -> lu decomposition is not unique
+            // U does not be to be modified in this step
+            // info: https://math.stackexchange.com/questions/2010470/doolittle-transformation-is-non-unique-for-singular-matrices
+            for(size_t i = k + 1; i < n; i++)
+            {
+                l(i, k) = 0;
+            }
         }
 
 /*
@@ -166,7 +185,7 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
         std::cout << "-------------------" << std::endl;*/
     }
 
-    LUResult ret(l, u, p);
+    LUResult ret(l, u, p, nbrRowSwaps);
     return ret;
 }
 

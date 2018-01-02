@@ -70,6 +70,7 @@ TEST(Decomposition, LUPivoting)
     ASSERT_TRUE( l.compare(res.L) );
     ASSERT_TRUE( u.compare(res.U) );
     ASSERT_TRUE( p.compare(res.P) );
+    ASSERT_EQ(res.NbrRowSwaps, 3 );
 }
 
 
