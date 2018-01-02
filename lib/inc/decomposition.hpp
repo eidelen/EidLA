@@ -54,10 +54,11 @@ public:
     /**
      * LU decomposition of the matrix mat.
      * @param mat
+     * @param pivoting Enable or disable row pivoting. If disabled, the returning P is the identity matrix.
      * @return LUResult
      */
     template <class T>
-    static LUResult luDecomposition(const Matrix<T>& mat);
+    static LUResult luDecomposition(const Matrix<T>& mat, bool pivoting = true);
 
     /**
      * Eigen decomposition of the matrix mat.
@@ -80,14 +81,14 @@ public:
 
 private:
     template <class T>
-    static LUResult doolittle(const Matrix<T>& a);
+    static LUResult doolittle(const Matrix<T>& a, bool pivoting);
 };
 
 // Infos from:
 //  http://mathonline.wikidot.com/the-algorithm-for-doolittle-s-method-for-lu-decompositions
 
 template <class T>
-Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
+Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat, bool pivoting)
 {
     if (mat.rows() != mat.cols())
     {
@@ -95,86 +96,74 @@ Decomposition::LUResult Decomposition::luDecomposition(const Matrix<T>& mat)
         std::exit(-1);
     }
 
-    return doolittle(mat);
+    return doolittle(mat, pivoting);
 }
 
 template <class T>
-Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn)
+Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivoting)
 {
-    Matrix<double> a(aIn);
-
-    size_t         n = a.rows();
+    Matrix<double> u = Matrix<double>(aIn);
+    size_t         n = u.rows();
     Matrix<double> l = Matrix<double>(n, n);
-    Matrix<double> u = Matrix<double>(n, n);
 
     l.setToIdentity();
-    u.fill(0.0);
 
     Matrix<double> p = Matrix<double>::identity(n);
 
     for (size_t k = 0; k < n; k++)
     {
-        // todo: only check necessary rows!
-        // find pivot row and swap
-        Matrix<double> procColumn = a.column(k);
-        auto maxEntry = procColumn.max();
-        size_t maxRow = std::get<0>(maxEntry);
-        if( maxRow > k)
+        if( pivoting )
         {
-            a.swapRows(maxRow,k);
-            p = Multiplier::swapRow(a,maxRow,k) * p;
-        }
-
-        for (size_t m = k; m < n; m++)
-        {
-            // compute u(k,m)
-            double pSum = 0;
-
-            if (k > 0)
+            // find pivot row and swap
+            size_t pivotRow = k;
+            double pivotValue = 0.0;
+            for (size_t searchPivotIdx = k; searchPivotIdx < n; searchPivotIdx++)
             {
-                for (size_t j = 0; j < k; j++)
+                double cPivotElement = std::abs(u(searchPivotIdx, k));
+                if (cPivotElement > pivotValue)
                 {
-                    double lkj = l(k, j);
-                    double ujm = u(j, m);
-                    pSum += l(k, j) * u(j, m);
+                    pivotRow = searchPivotIdx;
+                    pivotValue = cPivotElement;
                 }
             }
 
-            u(k, m) = a(k, m) - pSum;
+            // swap row if different from k
+            if (pivotRow != k)
+            {
+                // swap rows in u
+                u.swapRows(pivotRow, k);
+                p = Multiplier::swapRow(u, pivotRow, k) * p;
+
+                //swap the subdiagonal entries of in l
+                for( size_t lswapIdx = 0; lswapIdx < k; lswapIdx++)
+                {
+                    double tmpVal = l(pivotRow, lswapIdx);
+                    l(pivotRow, lswapIdx) = l(k,lswapIdx);
+                    l(k,lswapIdx) = tmpVal;
+                }
+            }
         }
 
-        for (size_t i = k + 1; i < n; i++)
+        // process beneath rows, so that first pivot column element of u is zero
+        double pivot = u(k,k);
+        Matrix<double> pivotRow = u.row(k);
+        for(size_t i = k+1; i < n; i++)
         {
-            // compute l(i,k)
-            if (k == i)
-            {
-                l(i, k) = 1.0;
-            }
-            else
-            {
-                double pSum = 0;
+            double cFactor = - (u(i,k) / pivot);
 
-                if (k > 0)
-                {
-                    for (size_t j = 0; j < k; j++)
-                    {
-                        pSum += l(i, j) * u(j, k);
-                    }
-                }
+            // modify row in u
+            u.setRow(i, cFactor*pivotRow + u.row(i));
 
-                double ukk = u(k, k);
-                if (std::abs(ukk) > std::numeric_limits<double>::min()) // check if divider > 0
-                {
-                    l(i, k) = (a(i, k) - pSum) / ukk;
-                }
-                else
-                {
-                    // this is a singular matrix, therefore l(i,k) can be freely chosen -> lu decomposition is not unique
-                    // info: https://math.stackexchange.com/questions/2010470/doolittle-transformation-is-non-unique-for-singular-matrices
-                    l(i, k) = 0;
-                }
-            }
+            // modify corresponding entry in l
+            l(i,k) = -cFactor;
         }
+
+/*
+        std::cout << "step " << k << std::endl;
+        std::cout << "l:" << l << std::endl;
+        std::cout << "u:" << u << std::endl;
+        std::cout << "p:" << p << std::endl;
+        std::cout << "-------------------" << std::endl;*/
     }
 
     LUResult ret(l, u, p);
