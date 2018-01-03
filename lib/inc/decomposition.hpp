@@ -203,7 +203,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
     Matrix<double> e_vec = Matrix<double>(matD.cols(), 1);
     e_vec.fill(1);
 
-    double e_val = 200;
+    double e_val = 1;
     double e_val_before = e_val;
 
     // used variables
@@ -214,15 +214,17 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
     bool go = true;
     while (go)
     {
-        e_vec_unscaled = (matD - (ident*e_val) ).inverted(&invOk) * e_vec;
-        if( invOk )
+        e_vec_unscaled = (matD - (ident*e_val) ).adjugate() * e_vec;
+        e_vec = e_vec_unscaled.normalizeColumns();
+
+        /*if( invOk )
         {
             e_vec = e_vec_unscaled.normalizeColumns();
         }
         else
         {
             std::cout << "subt: " << matD - (ident*e_val) << std::endl << "evec" << e_vec << std::endl  << "eval = " << e_val << std::endl << std::endl;
-        }
+        }*/
 
         e_val = rayleighQuotient(matD,e_vec);
 
