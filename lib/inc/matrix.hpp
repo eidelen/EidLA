@@ -290,6 +290,18 @@ public:
      */
     Matrix<double> firstMinors() const;
 
+    /**
+     * Return the cofactors of this matrix.
+     * @return Cofactors matrix.
+     */
+    Matrix<double> cofactors() const;
+
+    /**
+     * Return the adjugate (adjoint) of this matrix.
+     * @return Adjugate matrix.
+     */
+    Matrix<double> adjugate() const;
+
 protected:
     /**
      * Check if the dimensions of the two passed matrix are equal.
@@ -1124,6 +1136,44 @@ Matrix<double> Matrix<T>::firstMinors() const
     }
 
     return fm;
+}
+
+template <class T>
+Matrix<double> Matrix<T>::cofactors() const
+{
+    if (m_rows != m_cols)
+    {
+        std::cout << "Cofactors: Square matrix required" << std::endl;
+        std::exit(-1);
+    }
+
+    Matrix<double> fm = firstMinors();
+
+    // modify signs
+    for(size_t m = 0; m < m_rows; m++)
+    {
+        for(size_t n = 0; n < m_cols; n++)
+        {
+            if( (m+n) % 2 != 0 ) // check if uneven
+            {
+                fm(m,n) = -fm(m,n);
+            }
+        }
+    }
+
+    return fm;
+}
+
+template <class T>
+Matrix<double> Matrix<T>::adjugate() const
+{
+    if (m_rows != m_cols)
+    {
+        std::cout << "Adjugate: Square matrix required" << std::endl;
+        std::exit(-1);
+    }
+
+    return cofactors().transpose();
 }
 
 template <class T>

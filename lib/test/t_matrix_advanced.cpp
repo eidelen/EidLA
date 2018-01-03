@@ -126,3 +126,33 @@ TEST(MatAdvanced, FirstMinors)
 
     ASSERT_TRUE( soll.compare(firstMinors) );
 }
+
+// example from https://www.mathsisfun.com/algebra/matrix-inverse-minors-cofactors-adjugate.html
+TEST(MatAdvanced, Cofactors)
+{
+    double matData[] = {3,0,2,  2,0,-2,  0,1,1};
+    auto mat = Matrix<double>(3,3,matData);
+
+    double sollData[] = {2,-2,2,  2,3,-3,  0,10,0};
+    auto soll = Matrix<double>(3,3,sollData);
+
+    auto cf = mat.cofactors();
+
+    ASSERT_TRUE( soll.compare(cf) );
+}
+
+// example from https://www.mathsisfun.com/algebra/matrix-inverse-minors-cofactors-adjugate.html
+TEST(MatAdvanced, Adjugate)
+{
+    double matData[] = {3,0,2,  2,0,-2,  0,1,1};
+    auto mat = Matrix<double>(3,3,matData);
+
+    // adjugate is the transpose of cofactors
+    double cfData[] = {2,-2,2,  2,3,-3,  0,10,0};
+    auto cf = Matrix<double>(3,3,cfData);
+    auto soll = cf.transpose();
+
+    auto aj = mat.adjugate();
+
+    ASSERT_TRUE( soll.compare(aj) );
+}
