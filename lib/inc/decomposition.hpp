@@ -70,6 +70,15 @@ public:
     static std::vector<EigenPair> eigen(const Matrix<T>& mat);
 
     /**
+     * Finds the largest eigenvalue and corresponding eigenvector
+     * of the matrix mat.
+     * @param mat
+     * @return Eigen pair.
+     */
+    template <class T>
+    static EigenPair rayleighIteration(const Matrix<T>& mat);
+
+    /**
      * Compute Rayleigh quotient of a matrix and a vector. This can be
      * used to find the Eigenvalue to a corresponding Eigenvector and
      * matrix.
@@ -192,23 +201,48 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
 template <class T>
 std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
 {
+    if (mat.rows() != mat.cols())
+    {
+        std::cout << "Eigen: Square matrix required";
+        std::exit(-1);
+    }
+
+    // Find all eigen pairs by using hotelling's deflation
+    // and Rayleigh iteration.
+    // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
+
     std::vector<EigenPair> ret;
 
-    Matrix<double> matD      = mat;
+    Matrix<double> cMat(mat);
+    for( size_t i = 0; i < 2; i++ )
+    {
+        EigenPair cPair = rayleighIteration(cMat);
+        ret.push_back(cPair);
 
+        // Hotelling deflation
+        cMat = cMat - (cPair.L * (cPair.V * cPair.V.transpose()));
+    }
+
+    return ret;
+}
+
+template <class T>
+Decomposition::EigenPair Decomposition::rayleighIteration(const Matrix<T>& mat)
+{
+    Matrix<double> matD      = mat;
 
     // Rayleigh quotient iteration: https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
 
     // start values
     Matrix<double> e_vec = Matrix<double>(matD.cols(), 1);
     e_vec.fill(1);
+    e_vec.normalizeColumns();
 
-    double e_val = 1;
+    double e_val = 5;
     double e_val_before = e_val;
 
     // used variables
     Matrix<double> ident = Matrix<double>::identity(matD.cols());
-    bool invOk = true;
     Matrix<double> e_vec_unscaled = Matrix<double>(matD.cols(),1);
 
     bool go = true;
@@ -216,15 +250,6 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
     {
         e_vec_unscaled = (matD - (ident*e_val) ).adjugate() * e_vec;
         e_vec = e_vec_unscaled.normalizeColumns();
-
-        /*if( invOk )
-        {
-            e_vec = e_vec_unscaled.normalizeColumns();
-        }
-        else
-        {
-            std::cout << "subt: " << matD - (ident*e_val) << std::endl << "evec" << e_vec << std::endl  << "eval = " << e_val << std::endl << std::endl;
-        }*/
 
         e_val = rayleighQuotient(matD,e_vec);
 
@@ -236,9 +261,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
         e_val_before = e_val;
     }
 
-    ret.push_back(EigenPair(e_vec, e_val));
-
-    return ret;
+    return EigenPair(e_vec, e_val);
 }
 
 // info: https://www.mathematik.uni-wuerzburg.de/~borzi/RQGradient_Chapter_10.pdf
