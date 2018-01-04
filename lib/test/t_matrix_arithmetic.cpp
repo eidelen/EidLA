@@ -64,10 +64,13 @@ TEST(Matrix, Comparisson)
     ASSERT_TRUE(f0.compare(f1));
     ASSERT_TRUE(f1.compare(f0));
 
-    f0(0, 0) = 1.01;
+    f0(0, 0) = 1.1;
 
     ASSERT_FALSE(f0.compare(f1));
     ASSERT_FALSE(f1.compare(f0));
+
+    ASSERT_TRUE(f0.compare(f1,true,0.2));
+    ASSERT_TRUE(f1.compare(f0,true,0.2));
 }
 
 TEST(Matrix, MaxElement)

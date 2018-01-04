@@ -128,10 +128,12 @@ public:
 
     /**
      * Elementwise comparisson with the passed matrix mat.
-     * @param epsilon The allowed tolerance.
+     * @param mat Matrix to compare to.
+     * @param useCustomTolerance Set if custom tolerance is used or not. Default false.
+     * @param customTolerance Custom tolerance.
      * @return True if all elements are within the tolerance. Otherwise false.
      */
-    bool compare(const Matrix<T>& mat) const;
+    bool compare(const Matrix<T>& mat, bool useCustomTolerance = false, T customTolerance = 0) const;
 
     /**
      * Gets the value at position m, n.
@@ -760,7 +762,7 @@ inline bool almost_equal(double x, double y)
 }
 
 template <class T>
-bool Matrix<T>::compare(const Matrix<T>& mat) const
+bool Matrix<T>::compare(const Matrix<T>& mat, bool useCustomTolerance, T customTolerance ) const
 {
     if (!equalDimension(*this, mat))
     {
@@ -775,8 +777,20 @@ bool Matrix<T>::compare(const Matrix<T>& mat) const
         T x = thisData[i];
         T y = matD[i];
 
-        if (std::abs(x - y) > std::numeric_limits<double>::epsilon() * std::abs(x + y) * 2)
-            return false;
+        T absDiff = std::abs(x - y);
+
+        if( useCustomTolerance )
+        {
+            if( absDiff > customTolerance )
+                return false;
+        }
+        else
+        {
+            // automatic tolerance
+            if (absDiff > std::numeric_limits<double>::epsilon() * std::abs(x + y) * 2)
+                return false;
+        }
+
     }
 
     return true;

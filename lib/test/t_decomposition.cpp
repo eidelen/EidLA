@@ -94,40 +94,87 @@ TEST(Decomposition, LU2x2Pivoting)
     ASSERT_TRUE( p.compare(res.P) );
 }
 
-
-/*
-TEST(Decomposition, Eigenvalue)
+TEST(Decomposition, EigenvalueSymmetricDiagonal)
 {
     auto m = Matrix<double>::identity(3);
     for (size_t s = 0; s < 3; s++)
         m(s, s) = static_cast<double>(s + 1);
 
+    // soll values
+    auto v0 = Matrix<double>::identity(3).column(0);
+    auto v1 = Matrix<double>::identity(3).column(1);
+    auto v2 = Matrix<double>::identity(3).column(2);
+    double l0 = 1;
+    double l1 = 2;
+    double l2 = 3;
+
+    std::vector<Decomposition::EigenPair> soll;
+    soll.push_back( Decomposition::EigenPair(v2,l2,true));
+    soll.push_back( Decomposition::EigenPair(v1,l1,true));
+    soll.push_back( Decomposition::EigenPair(v0,l0,true));
+
     std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
 
-    // eigenvalues on diagonal of m
-    std::cout << "Mat in: " << m << std::endl;
+    ASSERT_EQ(soll.size(), eig.size());
 
-    for (const Decomposition::EigenPair ep : eig)
+    for( size_t i = 0; i < soll.size(); i++ )
     {
-        std::cout << "Eigenvalue: " << ep.L << std::endl;
-        std::cout << "Eigenvector: " << ep.V.transpose() << "------" << std::endl;
+        auto cEP = eig.at(i);
+        auto sEP = soll.at(i);
+
+        ASSERT_TRUE(cEP.Valid);
+        ASSERT_TRUE(cEP.V.compare(sEP.V,true,0.0001));
+        ASSERT_NEAR(cEP.L, sEP.L, 0.001);
     }
-}*/
+}
 
 // Example from https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
-TEST(Decomposition, EigenvalueExample2)
+TEST(Decomposition, EigenvalueNonSymmetricLargest)
+{
+    double mat_data[] = {1,2,3,  1,2,1,  3,2,1};
+    auto m = Matrix<double>(3,3,mat_data);
+
+    double sollEigenVal = 3 + std::sqrt(5.0);
+    double sollEigenVecData[] = {1, (1+std::sqrt(5.0))/2.0 - 1  , 1};
+    auto sollEigenVec = Matrix<double>(3,1,sollEigenVecData).normalizeColumns();
+
+    Decomposition::EigenPair sigEigenPair = Decomposition::powerIteration(m,20,std::numeric_limits<double>::epsilon());
+
+    ASSERT_TRUE( sigEigenPair.Valid );
+    ASSERT_FLOAT_EQ(sigEigenPair.L,sollEigenVal);
+    ASSERT_TRUE(sollEigenVec.compare(sigEigenPair.V));
+}
+
+/*
+// Example from https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
+TEST(Decomposition, EigenvalueAllNonSymmetric)
 {
     double mat_data[] = {1,2,3,  1,2,1,  3,2,1};
     auto m = Matrix<double>(3,3,mat_data);
 
     std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
 
-    // eigenvalues on diagonal of m
-    std::cout << "Mat in: " << m << std::endl;
-
     for (const Decomposition::EigenPair ep : eig)
     {
+        if(ep.Valid)
+            std::cout << "Valid" << std::endl;
+        else
+            std::cout << "Invalid" << std::endl;
+
         std::cout << "Eigenvalue: " << ep.L << std::endl;
-        std::cout << "Eigenvector: " << ep.V.transpose() << "------" << std::endl;
+        std::cout << "Eigenvector: " << ep.V.transpose() ;
+
+        if( (m*ep.V).compare(ep.L*ep.V) )
+        {
+            std::cout << "True" << std::endl;
+        }
+        else
+        {
+            auto eucDist = ((m*ep.V) - (ep.L*ep.V));
+            std::cout << "False: err = " << eucDist.transpose() << " length: " <<std::sqrt( (eucDist.transpose() * eucDist)(0,0)) << std::endl;
+        }
+
+        std::cout << "------" << std::endl << std::endl;
     }
 }
+*/
