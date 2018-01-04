@@ -266,3 +266,26 @@ TEST(Matrix, RemoveColumn)
 
     ASSERT_TRUE(mat.compare(soll));
 }
+
+TEST(Matrix, Symmetric)
+{
+    auto mat = Matrix<int>(3,3);
+    mat.fill(1);
+    ASSERT_TRUE(mat.isSymmetric());
+
+    mat(0,0) = 2;
+    ASSERT_TRUE(mat.isSymmetric());
+
+    mat(0,1) = 5;
+    ASSERT_FALSE(mat.isSymmetric());
+}
+
+
+TEST(Matrix, Square)
+{
+    auto mat = Matrix<int>(3,3);
+    ASSERT_TRUE(mat.isSquare());
+    mat.removeColumn(0);
+    ASSERT_FALSE(mat.isSquare());
+}
+

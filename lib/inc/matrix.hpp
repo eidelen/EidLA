@@ -302,6 +302,18 @@ public:
      */
     Matrix<double> adjugate() const;
 
+    /**
+     * Checks if this matris is symmetric: A = A'
+     * @return True if symmetric. Otherwise false.
+     */
+    bool isSymmetric() const;
+
+    /**
+     * Checks if this matrix is a square matrix: NbrRows = NbrColumns
+     * @return True if square. Otherwise false.
+     */
+    bool isSquare() const;
+
 protected:
     /**
      * Check if the dimensions of the two passed matrix are equal.
@@ -1226,6 +1238,18 @@ void Matrix<T>::removeColumn(size_t n)
     // adapt matrix shape - but not allocated memory
     m_cols = cols()-1;
     m_nbrOfElements = m_cols*m_rows;
+}
+
+template <class T>
+bool Matrix<T>::isSymmetric() const
+{
+    return compare( transpose() );
+}
+
+template <class T>
+bool Matrix<T>::isSquare() const
+{
+    return rows() == cols();
 }
 
 #endif //MY_MATRIX_H
