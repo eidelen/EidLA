@@ -43,12 +43,13 @@ public:
 
     struct EigenPair
     {
-        EigenPair(Matrix<double> v, double l)
-        : V(v), L(l)
+        EigenPair(Matrix<double> v, double l, bool valid)
+        : V(v), L(l), Valid(valid)
         {
         }
-        const Matrix<double> V; // Eigen vector
-        const double         L; // Eigen value
+        const Matrix<double> V;     // Eigen vector
+        const double         L;     // Eigen value
+        const bool           Valid; // Is eigen pair valid? It is if precision was reached.
     };
 
 public:
@@ -62,21 +63,36 @@ public:
     static LUResult luDecomposition(const Matrix<T>& mat, bool pivoting = true);
 
     /**
-     * Eigen decomposition of the matrix mat.
+     * Eigen decomposition of the matrix mat. Finds all Eigen pairs
+     * in symmetric real matrices. In non-symmetric matrices, it finds
+     * at least the most significant Eigen pair.
      * @param mat
-     * @return Eigen pairs in desending eigenvalue order.
+     * @return Vector of Eigen pairs .
      */
     template <class T>
     static std::vector<EigenPair> eigen(const Matrix<T>& mat);
 
     /**
-     * Finds the largest eigenvalue and corresponding eigenvector
-     * of the matrix mat.
-     * @param mat
+     * Converges to Eigen pair depending on initial Eigen vector and Eigen value.
+     * @param mat Matrix of which to perform Eigen decomposition.
+     * @param initialEigenVector Initial Eigen vector
+     * @param initialEigenValue Initial Eigen value
+     * @param maxIteration Maximum number of rayleigh iterations. If precision not reached, no Eigen pair was found.
+     * @param precision Rayleigh iteration stops when the Eigen value change is below the passed precision value
      * @return Eigen pair.
      */
     template <class T>
-    static EigenPair rayleighIteration(const Matrix<T>& mat);
+    static EigenPair rayleighIteration(const Matrix<T>& mat, const Matrix<double>& initialEigenVector, double initialEigenValue, size_t maxIteration, double precision);
+
+    /**
+     * Converges to Eigen pair with most significant Eigen value.
+     * @param mat  Matrix of which to perform Eigen decomposition.
+     * @param maxIteration Maximum number of power iterations. If precision not reached, no Eigen pair was found.
+     * @param precision Power iteration stops when the Eigen value change is below the passed precision value
+     * @return Eigen pair
+     */
+    template <class T>
+    static EigenPair powerIteration(const Matrix<T>& mat, size_t maxIteration, double precision);
 
     /**
      * Compute Rayleigh quotient of a matrix and a vector. This can be
@@ -201,67 +217,170 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
 template <class T>
 std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
 {
-    if (mat.rows() != mat.cols())
+    if(!mat.isSquare())
     {
         std::cout << "Eigen: Square matrix required";
         std::exit(-1);
     }
 
-    // Find all eigen pairs by using hotelling's deflation
-    // and Rayleigh iteration.
-    // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
-
+    Matrix<double> cMat(mat);
     std::vector<EigenPair> ret;
 
-    Matrix<double> cMat(mat);
-    for( size_t i = 0; i < 2; i++ )
+    if( cMat.isSymmetric() )
     {
-        EigenPair cPair = rayleighIteration(cMat);
+        // use power iteration and hotelling's deflation
+        // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
+
+        for( size_t i = 0; i < cMat.rows(); i++ )
+        {
+            EigenPair ePair = powerIteration(cMat, 30, 10e-10);
+            if (ePair.Valid)
+            {
+                ret.push_back(ePair);
+
+                // Hotelling's deflation -> remove found Eigen pair from cMat
+                cMat = cMat - (ePair.L * ePair.V * ePair.V.transpose());
+            }
+        }
+    }
+    else
+    {
+        std::cout << "Note: This Eigen decomposition on non-symmetric matrices does not work properly!!" << std::endl;
+
+        /*
+        for( int k = 0; k < 3; k++ )
+        {
+            // Step 1: Find most significant Eigen pair by using the power iteration
+            EigenPair msPair = powerIteration(cMat, 20, std::numeric_limits<double>::epsilon());
+
+            if (msPair.Valid)
+            {
+
+                std::cout << "Mat input: " << std::endl << cMat << std::endl;
+                std::cout << "Eigenvalue = " << msPair.L << " Eigenvector = " << msPair.V.transpose() << std::endl;
+                std::cout << "Diff deflated matrix: " << std::endl << (cMat*msPair.V - msPair.L*msPair.V).transpose() << std::endl;
+                std::cout << "Diff original matrix: " << std::endl << (mat*msPair.V - msPair.L*msPair.V).transpose() << "----------------" << std::endl ;
+
+                // modify based on former eigenvectors
+                // http://zoro.ee.ncku.edu.tw/na/res/09-power_method.pdf
+
+                ret.push_back(msPair);
+
+                // Hotelling's deflation -> remove most significant Eigen pair
+                cMat = cMat - (msPair.L * msPair.V * msPair.V.transpose());
+            }
+            else
+            {
+                std::cout << "Power iteration did not find an Eigen pair" << std::endl;
+                return ret;
+            }
+
+
+            for( size_t i = 0; i < cMat.cols()*2; i++ )
+    {
+        // initial eigen value and eigen vector
+        Matrix<double> initialEigenVector = Matrix<double>::random(cMat.cols(), 1, -1, 1);
+        initialEigenVector.normalizeColumns();
+
+        double initialEigenValue = Matrix<double>::random(1, 1, -10, +10)(0,0); // random value -/+ most significant eigen value
+
+        EigenPair cPair = rayleighIteration(cMat, initialEigenVector, initialEigenValue, 100, std::numeric_limits<double>::epsilon()*1000);
         ret.push_back(cPair);
 
         // Hotelling deflation
-        cMat = cMat - (cPair.L * (cPair.V * cPair.V.transpose()));
+        if(cPair.Valid)
+        {
+            cMat = cMat - (cPair.L * (cPair.V * cPair.V.transpose()));
+        }
+    }
+        }*/
     }
 
     return ret;
 }
 
 template <class T>
-Decomposition::EigenPair Decomposition::rayleighIteration(const Matrix<T>& mat)
+Decomposition::EigenPair Decomposition::rayleighIteration(const Matrix<T>& mat, const Matrix<double>& initialEigenVector, double initialEigenValue, size_t maxIteration, double precision)
 {
     Matrix<double> matD      = mat;
 
     // Rayleigh quotient iteration: https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
 
-    // start values
-    Matrix<double> e_vec = Matrix<double>(matD.cols(), 1);
-    e_vec.fill(1);
-    e_vec.normalizeColumns();
-
-    double e_val = 5;
+    Matrix<double> e_vec = initialEigenVector;
+    double e_val = initialEigenValue;
     double e_val_before = e_val;
 
-    // used variables
+    // init used variables
     Matrix<double> ident = Matrix<double>::identity(matD.cols());
     Matrix<double> e_vec_unscaled = Matrix<double>(matD.cols(),1);
-
     bool go = true;
+    size_t nbrOfIterations = 0;
+    bool validEigenPair = false;
+
     while (go)
     {
         e_vec_unscaled = (matD - (ident*e_val) ).adjugate() * e_vec;
         e_vec = e_vec_unscaled.normalizeColumns();
-
         e_val = rayleighQuotient(matD,e_vec);
 
-        std::cout << "Iteration:" << std::endl << e_vec << std::endl << e_val << std::endl;
+        //std::cout << "Iteration: " << nbrOfIterations << std::endl << e_vec << std::endl << e_val << "--------------" << std::endl;
 
-        // check stopping criteria -> stop if all entries almost equal
-        go = std::abs(e_val - e_val_before) > std::numeric_limits<double>::epsilon() * std::abs(e_val + e_val_before) * 2;
+        // check stopping criteria of Rayleigh iteration
+        if( std::abs(e_val - e_val_before) < precision*std::abs(e_val + e_val_before) )
+        {
+            go = false;
+            validEigenPair = true;
+        }
+        else if( nbrOfIterations >= maxIteration )
+        {
+            go = false;
+            validEigenPair = false;
+        }
 
         e_val_before = e_val;
+        nbrOfIterations++;
     }
 
-    return EigenPair(e_vec, e_val);
+    return EigenPair(e_vec, e_val, validEigenPair);
+}
+
+template <class T>
+Decomposition::EigenPair Decomposition::powerIteration(const Matrix<T>& mat, size_t maxIteration, double precision)
+{
+    // Power iteration : https://en.wikipedia.org/wiki/Power_iteration
+    // Finds most significant eigenvalue
+
+    Matrix<double> matD = mat;
+    Matrix<double> eVec(matD.rows(),1); eVec.fill(1.0);
+    double eVal = 1;
+    double eValBefore = eVal;
+
+    bool validEigenPair = false;
+    size_t nbrOfIterations = 0;
+    bool go = true;
+
+    while (go)
+    {
+        eVec = (matD * eVec).normalizeColumns();
+        eVal = rayleighQuotient(matD,eVec);
+
+        // check stopping criteria of power iteration
+        if( std::abs(eVal - eValBefore) < precision*std::abs(eVal + eValBefore) )
+        {
+            go = false;
+            validEigenPair = true;
+        }
+        else if( nbrOfIterations >= maxIteration )
+        {
+            go = false;
+            validEigenPair = false;
+        }
+
+        eValBefore = eVal;
+        nbrOfIterations++;
+    }
+
+    return EigenPair(eVec, eVal, validEigenPair);
 }
 
 // info: https://www.mathematik.uni-wuerzburg.de/~borzi/RQGradient_Chapter_10.pdf

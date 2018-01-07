@@ -128,10 +128,12 @@ public:
 
     /**
      * Elementwise comparisson with the passed matrix mat.
-     * @param epsilon The allowed tolerance.
+     * @param mat Matrix to compare to.
+     * @param useCustomTolerance Set if custom tolerance is used or not. Default false.
+     * @param customTolerance Custom tolerance.
      * @return True if all elements are within the tolerance. Otherwise false.
      */
-    bool compare(const Matrix<T>& mat) const;
+    bool compare(const Matrix<T>& mat, bool useCustomTolerance = false, T customTolerance = 0) const;
 
     /**
      * Gets the value at position m, n.
@@ -307,6 +309,18 @@ public:
      * @return Euclidean norm (2-norm)
      */
     double norm() const;
+
+    /**
+     * Checks if this matris is symmetric: A = A'
+     * @return True if symmetric. Otherwise false.
+     */
+    bool isSymmetric() const;
+
+    /**
+     * Checks if this matrix is a square matrix: NbrRows = NbrColumns
+     * @return True if square. Otherwise false.
+     */
+    bool isSquare() const;
 
 protected:
     /**
@@ -754,7 +768,7 @@ inline bool almost_equal(double x, double y)
 }
 
 template <class T>
-bool Matrix<T>::compare(const Matrix<T>& mat) const
+bool Matrix<T>::compare(const Matrix<T>& mat, bool useCustomTolerance, T customTolerance ) const
 {
     if (!equalDimension(*this, mat))
     {
@@ -769,8 +783,20 @@ bool Matrix<T>::compare(const Matrix<T>& mat) const
         T x = thisData[i];
         T y = matD[i];
 
-        if (std::abs(x - y) > std::numeric_limits<double>::epsilon() * std::abs(x + y) * 2)
-            return false;
+        T absDiff = std::abs(x - y);
+
+        if( useCustomTolerance )
+        {
+            if( absDiff > customTolerance )
+                return false;
+        }
+        else
+        {
+            // automatic tolerance
+            if (absDiff > std::numeric_limits<double>::epsilon() * std::abs(x + y) * 2)
+                return false;
+        }
+
     }
 
     return true;
@@ -1236,26 +1262,33 @@ void Matrix<T>::removeColumn(size_t n)
 }
 
 template <class T>
-double Matrix<T>::norm() const
-{
+double Matrix<T>::norm() const {
     double norm = 0.0;
 
-    if( cols() == 1 || rows() == 1)
-    {
-        const T* matData = data();
-        for( size_t i = 0; i < getNbrOfElements(); i++)
-        {
+    if (cols() == 1 || rows() == 1) {
+        const T *matData = data();
+        for (size_t i = 0; i < getNbrOfElements(); i++) {
             T val = matData[i];
             norm += static_cast<double>(val * val);
         }
         norm = std::sqrt(norm);
-    }
-    else
-    {
+    } else {
         std::cout << "Norm: needs to be a row or column vector." << std::endl;
     }
 
     return norm;
+}
+
+template <class T>
+bool Matrix<T>::isSymmetric() const
+{
+    return compare( transpose() );
+}
+
+template <class T>
+bool Matrix<T>::isSquare() const
+{
+    return rows() == cols();
 }
 
 #endif //MY_MATRIX_H
