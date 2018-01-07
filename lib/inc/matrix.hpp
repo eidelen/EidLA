@@ -302,6 +302,12 @@ public:
      */
     Matrix<double> adjugate() const;
 
+    /**
+     * Computes the Euclidean norm of a mx1 or 1xn vector.
+     * @return Euclidean norm (2-norm)
+     */
+    double norm() const;
+
 protected:
     /**
      * Check if the dimensions of the two passed matrix are equal.
@@ -984,7 +990,6 @@ size_t Matrix<T>::getRank() const
 
     return rank;
 }
-
 template <class T>
 Matrix<double> Matrix<T>::inverted(bool* invertable) const
 {
@@ -1001,7 +1006,9 @@ Matrix<double> Matrix<T>::inverted(bool* invertable) const
 
     if (detOk && std::abs(det) < std::numeric_limits<double>::min())
     {
-        std::cout << "Inverse failed due to determinant equal zero:" << std::endl << *this << std::endl;
+        std::cout << "Inverse failed due to determinant equal zero:"
+
+        << std::endl << *this << std::endl;
         *invertable = false;
         return *this;
     }
@@ -1226,6 +1233,29 @@ void Matrix<T>::removeColumn(size_t n)
     // adapt matrix shape - but not allocated memory
     m_cols = cols()-1;
     m_nbrOfElements = m_cols*m_rows;
+}
+
+template <class T>
+double Matrix<T>::norm() const
+{
+    double norm = 0.0;
+
+    if( cols() == 1 || rows() == 1)
+    {
+        const T* matData = data();
+        for( size_t i = 0; i < getNbrOfElements(); i++)
+        {
+            T val = matData[i];
+            norm += static_cast<double>(val * val);
+        }
+        norm = std::sqrt(norm);
+    }
+    else
+    {
+        std::cout << "Norm: needs to be a row or column vector." << std::endl;
+    }
+
+    return norm;
 }
 
 #endif //MY_MATRIX_H

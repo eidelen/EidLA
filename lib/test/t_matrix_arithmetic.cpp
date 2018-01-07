@@ -129,3 +129,18 @@ TEST(Matrix, RandomDouble)
         ASSERT_LE(val, 1.0);
     }
 }
+
+TEST(Matrix, Norm)
+{
+    // column vector
+    int data[] = {1,2,3};
+    auto vec = Matrix<int>(3,1,data);
+
+    ASSERT_NEAR(vec.norm(), 3.7417, 0.001);
+
+    // row vector
+    ASSERT_NEAR(vec.transpose().norm(), 3.7417, 0.001);
+
+    auto mat = Matrix<double>::random(2,2,1.0,2.0);
+    ASSERT_FLOAT_EQ(mat.norm(), 0.0);
+}
