@@ -26,4 +26,10 @@
 Matrix4x4::Matrix4x4()
 : Matrix<double>(4, 4)
 {
+    setToIdentity();
+}
+
+void Matrix4x4::rotZ(double radian)
+{
+
 }

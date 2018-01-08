@@ -26,10 +26,28 @@
 
 #include "matrix.hpp"
 
+/**
+ * This class represents a 4x4 double matrix, often used
+ * to define rigid transformations.
+ */
 class Matrix4x4 : public Matrix<double>
 {
 public:
+
+    //todo: init with data!
+
+    /**
+     * Constructs a 4x4 identity double matrix.
+     */
     Matrix4x4();
+
+    /**
+     * Rotate around the z-axis.
+     * @param radian Rotation angle.
+     */
+    void rotZ(double radian);
+
+
 };
 
 #endif //MY_AFFINE_H
