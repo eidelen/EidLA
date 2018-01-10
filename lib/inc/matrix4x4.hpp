@@ -27,14 +27,12 @@
 #include "matrix.hpp"
 
 /**
- * This class represents a 4x4 double matrix, often used
- * to define rigid transformations.
+ * This class represents a 4x4 double matrix. This kind
+ * of matrix is often used to define rigid transformations.
  */
 class Matrix4x4 : public Matrix<double>
 {
 public:
-
-    //todo: init with data!
 
     /**
      * Constructs a 4x4 identity double matrix.
@@ -42,12 +40,60 @@ public:
     Matrix4x4();
 
     /**
+     * Constructs a 4x4 double matrix with content.
+     * @param m(M,N) Matrix entry m of row M and column N.
+     */
+    Matrix4x4(  double m00, double m01, double m02, double m03,
+                double m10, double m11, double m12, double m13,
+                double m20, double m21, double m22, double m23,
+                double m30, double m31, double m32, double m33 );
+
+    /**
+     * Copy constructor.
+     * @param mat Matrix from which to copy
+     */
+    template <class R>
+    Matrix4x4(const Matrix<R>& mat);
+
+    Matrix4x4(const Matrix4x4& mat);
+
+    /**
+     * Asignment operator: overwrite content of this matrix.
+     * @param other
+     * @return
+     */
+    Matrix4x4& operator=(const Matrix4x4& other);
+
+    /**
+     * Asignment operator: overwrite content of this matrix.
+     * @param other
+     * @return
+     */
+    Matrix4x4& operator=(const Matrix<double>& other);
+
+    /**
      * Rotate around the z-axis.
      * @param radian Rotation angle.
      */
     void rotZ(double radian);
-
-
 };
+
+
+template <class R>
+Matrix4x4::Matrix4x4(const Matrix<R>& mat)
+        : Matrix4x4()
+{
+    if( Matrix::equalDimension(*this, mat) )
+    {
+        // if you have a compile error here, you have to extend the
+        // copyMatData function with the particular types.
+        copyMatData(mat, *this);
+    }
+    else
+    {
+        std::cout << "Cannot create Matrix4x4 from matrix with unequal dimension" << std::endl;
+        std::exit(-1);
+    }
+}
 
 #endif //MY_AFFINE_H
