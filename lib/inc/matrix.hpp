@@ -154,9 +154,16 @@ public:
     /**
      * Matrix multiplication
      * @param mat
-     * @return Product of two matrix
+     * @return Product of two matrix "this * mat"
      */
     Matrix<T> operator*(const Matrix<T>& mat) const;
+
+    /**
+     * Right side matrix multiplication.
+     * @param mat
+     * @return Product of two matrix "this * mat"
+     */
+    Matrix<T> matMulR(const Matrix<T>& mat) const;
 
     /**
      * Elementwise division
@@ -323,6 +330,7 @@ public:
     bool isSquare() const;
 
 protected:
+
     /**
      * Check if the dimensions of the two passed matrix are equal.
      * @param m1 Mat 1
@@ -650,6 +658,12 @@ Matrix<T> operator*(T scale, const Matrix<T>& mat)
 
 template <class T>
 Matrix<T> Matrix<T>::operator*(const Matrix<T>& mat) const
+{
+    return matMulR(mat);
+}
+
+template <class T>
+Matrix<T> Matrix<T>::matMulR(const Matrix<T>& mat) const
 {
     if (this->cols() != mat.rows())
     {

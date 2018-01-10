@@ -72,6 +72,16 @@ public:
     Matrix4x4& operator=(const Matrix<double>& other);
 
     /**
+     * Matrix multiplication
+     * @param mat
+     * @return Product of two 4x4 matrix
+     */
+    Matrix4x4 operator*(const Matrix4x4& mat) const;
+    template <class R>
+    Matrix<double> operator*(const Matrix<R>& mat) const;
+
+
+    /**
      * Rotate around the z-axis.
      * @param radian Rotation angle.
      */
@@ -94,6 +104,12 @@ Matrix4x4::Matrix4x4(const Matrix<R>& mat)
         std::cout << "Cannot create Matrix4x4 from matrix with unequal dimension" << std::endl;
         std::exit(-1);
     }
+}
+
+template <class R>
+Matrix<double> Matrix4x4::operator*(const Matrix<R>& mat) const
+{
+    return matMulR(mat);
 }
 
 #endif //MY_AFFINE_H

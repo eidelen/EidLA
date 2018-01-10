@@ -56,6 +56,55 @@ TEST(Matrix4x4, AssignMatrixDouble)
     ASSERT_TRUE(mat.compare(matD));
 }
 
+
+TEST(Matrix4x4, Mulitplication4x4)
+{
+    Matrix4x4 a = Matrix4x4();
+    Matrix4x4 b = Matrix4x4();
+    for (size_t i = 0; i < 16; i++)
+    {
+        a.data()[i] = 1.0 * i;
+        b.data()[i] = 2.0 * i;
+    }
+
+    Matrix4x4 soll = a.matMulR(b); // generic
+    Matrix4x4 res = a * b;
+
+    ASSERT_TRUE(soll.compare(res));
+}
+
+TEST(Matrix4x4, Mulitplication4x4Performance)
+{
+    auto r = Matrix4x4();
+    r.rotZ(M_PI);
+    auto soll = r;
+
+    auto d = Matrix4x4();
+    d.setToIdentity();
+
+    // test Matrix4x4 multiplication
+    for( int i = 0; i < 100000; i++ )
+    {
+        r = d*r;
+    }
+}
+
+TEST(Matrix4x4, MulitplicationGenericPerformance)
+{
+    auto r = Matrix4x4();
+    r.rotZ(M_PI);
+    auto soll = r;
+
+    auto d = Matrix4x4();
+    d.setToIdentity();
+
+    // test general multiplication
+    for( int i = 0; i < 100000; i++ )
+    {
+        r = d.matMulR(r);
+    }
+}
+
 TEST(Matrix4x4, RotZ)
 {
     Matrix4x4 mat = Matrix4x4();
@@ -75,3 +124,4 @@ TEST(Matrix4x4, RotZ)
     r1 = mat * v1;
     ASSERT_TRUE( v1.compare(r1) );
 }
+
