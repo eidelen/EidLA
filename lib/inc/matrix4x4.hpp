@@ -86,6 +86,12 @@ public:
      * @param radian Rotation angle.
      */
     void rotZ(double radian);
+
+    /**
+     * Rotate around the x-axis.
+     * @param radian Rotation angle.
+     */
+    void rotX(double radian);
 };
 
 

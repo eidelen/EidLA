@@ -83,12 +83,22 @@ Matrix4x4::Matrix4x4(const Matrix4x4& mat)
 
 void Matrix4x4::rotZ(double radian)
 {
-    Matrix4x4 rotZMat = Matrix4x4(std::cos(radian), -std::sin(radian), 0.0, 0.0,
-                                  std::sin(radian), std::cos(radian), 0.0, 0.0,
-                                  0.0, 0.0, 1.0, 0.0,
-                                  0.0, 0.0, 0.0, 1.0);
+    Matrix4x4 rotZMat( std::cos(radian), -std::sin(radian), 0.0, 0.0,
+                       std::sin(radian), std::cos(radian), 0.0, 0.0,
+                       0.0, 0.0, 1.0, 0.0,
+                       0.0, 0.0, 0.0, 1.0);
 
     *this = rotZMat * (*this);
+}
+
+void Matrix4x4::rotX(double radian)
+{
+    Matrix4x4 rotXMat( 1.0, 0.0, 0.0, 0.0,
+                       0.0, std::cos(radian), -std::sin(radian), 0.0,
+                       0.0, std::sin(radian),  std::cos(radian), 0.0,
+                       0.0, 0.0, 0.0, 1.0 );
+
+    *this = rotXMat * (*this);
 }
 
 Matrix4x4 Matrix4x4::operator*(const Matrix4x4& m) const
@@ -118,3 +128,4 @@ Matrix4x4 Matrix4x4::operator*(const Matrix4x4& m) const
 
     return res;
 }
+
