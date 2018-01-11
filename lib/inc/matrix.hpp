@@ -127,6 +127,16 @@ public:
     void removeColumn(size_t n);
 
     /**
+     * Create a nbrOfRows x nbrOfColumns submatrix starting at rowStart/ columnStart.
+     * @param rowStart Submatrix starts at rowStart.
+     * @param columnStart Submatrix starts at columnStart.
+     * @param nbrOfRows
+     * @param nbrOfColumns
+     * @return
+     */
+    Matrix<T> subMatrix(size_t rowStart, size_t columnStart, size_t nbrOfRows, size_t nbrOfColumns) const;
+
+    /**
      * Elementwise comparisson with the passed matrix mat.
      * @param mat Matrix to compare to.
      * @param useCustomTolerance Set if custom tolerance is used or not. Default false.
@@ -1273,6 +1283,31 @@ void Matrix<T>::removeColumn(size_t n)
     // adapt matrix shape - but not allocated memory
     m_cols = cols()-1;
     m_nbrOfElements = m_cols*m_rows;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::subMatrix(size_t rowStart, size_t columnStart, size_t nbrOfRows, size_t nbrOfColumns) const
+{
+    if( rowStart + nbrOfRows > rows() || columnStart + nbrOfColumns > cols() )
+    {
+        std::cout << "subMatrix exceeds actual matrix size";
+        std::exit(-1);
+    }
+
+    Matrix<T> res( nbrOfRows, nbrOfColumns );
+    T* dst = res.data();
+    const T* src = data() + rowStart*cols() + columnStart;
+
+    for(size_t m = 0; m < nbrOfRows; m++ )
+    {
+        // copy partial lines at once
+        const T* c_Src = src + m*cols();
+        T* c_Dst = dst + m*nbrOfColumns;
+
+        std::copy( c_Src, c_Src + nbrOfColumns, c_Dst);
+    }
+
+    return res;
 }
 
 template <class T>

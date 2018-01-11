@@ -267,6 +267,27 @@ TEST(Matrix, RemoveColumn)
     ASSERT_TRUE(mat.compare(soll));
 }
 
+TEST(Matrix, SubMatrix)
+{
+    int matData[] = {0,1,2,   3,4,5};
+    auto mat = Matrix<int>(2,3, matData);
+
+    int sollData[] = {1, 4};
+    auto soll = Matrix<int>(2,1, sollData);
+    auto subMat = mat.subMatrix(0,1,2,1);
+    ASSERT_TRUE(soll.compare(subMat));
+
+    int sollData2[] = {1,2, 4,5};
+    auto soll2 = Matrix<int>(2,2, sollData2);
+    auto subMat2 = mat.subMatrix(0,1,2,2);
+    ASSERT_TRUE(soll2.compare(subMat2));
+
+    int sollData3[] = {3};
+    auto soll3 = Matrix<int>(1,1, sollData3);
+    auto subMat3 = mat.subMatrix(1,0,1,1);
+    ASSERT_TRUE(soll3.compare(subMat3));
+}
+
 TEST(Matrix, Symmetric)
 {
     auto mat = Matrix<int>(3,3);
