@@ -80,12 +80,17 @@ public:
     template <class R>
     Matrix<double> operator*(const Matrix<R>& mat) const;
 
-
     /**
      * Rotate around the z-axis.
      * @param radian Rotation angle.
      */
     void rotZ(double radian);
+
+    /**
+     * Rotate around the y-axis.
+     * @param radian Rotation angle.
+     */
+    void rotY(double radian);
 
     /**
      * Rotate around the x-axis.

@@ -125,6 +125,26 @@ TEST(Matrix4x4, RotZ)
     ASSERT_TRUE( v1.compare(r1) );
 }
 
+TEST(Matrix4x4, RotY)
+{
+    Matrix4x4 mat = Matrix4x4();
+    mat.rotY(M_PI/2.0); // rotate 90
+
+    double v1Data[] = {2,1,7,1};
+    auto v1 = Matrix<double>(4,1,v1Data);
+
+    auto r1 = mat * v1;
+
+    double r1SollData[] = {7,1,-2,1};
+    auto r1Soll = Matrix<double>(4,1,r1SollData);
+
+    ASSERT_TRUE(r1Soll.compare(r1));
+
+    mat.rotY(3*M_PI/2.0); // With above rotation, this makes a whole 360 degree
+    r1 = mat * v1;
+    ASSERT_TRUE( v1.compare(r1, true, 0.00001) );
+}
+
 TEST(Matrix4x4, RotX)
 {
     Matrix4x4 mat = Matrix4x4();
@@ -142,8 +162,6 @@ TEST(Matrix4x4, RotX)
 
     mat.rotX(3*M_PI/2.0); // With above rotation, this makes a whole 360 degree
     r1 = mat * v1;
-
-    std::cout << "v1:" << v1 << std::endl << "r1:"  << r1 << mat;
 
     ASSERT_TRUE( v1.compare(r1, true, 0.00001) );
 }

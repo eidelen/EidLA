@@ -91,6 +91,16 @@ void Matrix4x4::rotZ(double radian)
     *this = rotZMat * (*this);
 }
 
+void Matrix4x4::rotY(double radian)
+{
+    Matrix4x4 rotYMat( std::cos(radian), 0.0, std::sin(radian), 0.0,
+                       0.0, 1.0, 0.0, 0.0,
+                       -std::sin(radian), 0.0, std::cos(radian), 0.0,
+                       0.0, 0.0, 0.0, 1.0 );
+
+    *this = rotYMat * (*this);
+}
+
 void Matrix4x4::rotX(double radian)
 {
     Matrix4x4 rotXMat( 1.0, 0.0, 0.0, 0.0,
