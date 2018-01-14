@@ -97,6 +97,15 @@ public:
      * @param radian Rotation angle.
      */
     void rotX(double radian);
+
+    /**
+     * Computes the inverse of this 4x4 matrix,
+     * by assuming it is a rigid transformation.
+     * In that way, the invert of the 3x3 rot-mat
+     * can be computed fast.
+     * @return Inverse of the rigid transformation.
+     */
+    Matrix4x4 inverted_rg() const;
 };
 
 

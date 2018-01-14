@@ -139,3 +139,17 @@ Matrix4x4 Matrix4x4::operator*(const Matrix4x4& m) const
     return res;
 }
 
+
+// https://math.stackexchange.com/questions/1234948/inverse-of-a-rigid-transformation
+Matrix4x4 Matrix4x4::inverted_rg() const
+{
+    Matrix<double> rotMat = subMatrix(0,0,3,3).transpose();
+    Matrix<double> transVect = (rotMat*(-1)) * subMatrix(0,3,3,1);
+
+    Matrix4x4 ret( rotMat(0,0), rotMat(0,1), rotMat(0,2), transVect(0,0),
+                   rotMat(1,0), rotMat(1,1), rotMat(1,2), transVect(1,0),
+                   rotMat(2,0), rotMat(2,1), rotMat(2,2), transVect(2,0),
+                   0.0, 0.0, 0.0, 1.0);
+
+    return ret;
+}

@@ -165,3 +165,24 @@ TEST(Matrix4x4, RotX)
 
     ASSERT_TRUE( v1.compare(r1, true, 0.00001) );
 }
+
+TEST(Matrix4x4, RigidInverse)
+{
+    Matrix4x4 t;
+    t.rotZ(M_PI/2.0); // set z-rot
+    t.rotY(M_PI/3.0); // set y-rot
+    t(0,3) = 2.0; // set x-translation
+
+    bool invertable;
+    Matrix4x4 t_slowComputedInv = t.inverted(&invertable); // true
+    ASSERT_TRUE(invertable);
+
+    Matrix4x4 t_fastInv = t.inverted_rg();
+
+    ASSERT_TRUE(t_slowComputedInv.compare(t_fastInv,true,0.0000001));
+
+    Matrix4x4 ident;
+    ASSERT_TRUE(ident.compare(t_fastInv * t, true, 0.0000001));
+
+
+}
