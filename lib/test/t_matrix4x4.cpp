@@ -183,6 +183,36 @@ TEST(Matrix4x4, RigidInverse)
 
     Matrix4x4 ident;
     ASSERT_TRUE(ident.compare(t_fastInv * t, true, 0.0000001));
+}
 
 
+TEST(Matrix4x4, SetAndGetRotation)
+{
+    double rotData[] = {1,2,3,  4,5,6,  7,8,9};
+    auto rot = Matrix<double>(3,3, rotData);
+
+    Matrix4x4 t = Matrix4x4();
+    t.setRotation(rot);
+
+    auto rotGet = t.getRotation();
+
+    ASSERT_TRUE(rot.compare(rotGet));
+}
+
+TEST(Matrix4x4, SetAndGetTranslation)
+{
+    double transData[] = {1,2,3};
+    auto trans = Matrix<double>(3,1, transData);
+
+    Matrix4x4 t = Matrix4x4();
+    t.setTranslation(trans);
+    auto transGet = t.getTranslation();
+
+    ASSERT_TRUE(trans.compare(transGet));
+
+    Matrix4x4 t2 = Matrix4x4();
+    t2.setTranslation(1,2,3);
+    auto getTrans2 = t2.getTranslation();
+
+    ASSERT_TRUE(trans.compare(getTrans2));
 }

@@ -72,6 +72,44 @@ public:
     Matrix4x4& operator=(const Matrix<double>& other);
 
     /**
+     * This function returns the upper left 3x3
+     * matrix. In case of rigid transformations,
+     * this is the rotation matrix.
+     * @return Rotation matrix.
+     */
+    Matrix<double> getRotation() const;
+
+    /**
+     * This function returns the most right column.
+     * In case of rigid transformations, this is
+     * the translation vector.
+     * @return Translation vector.
+     */
+    Matrix<double> getTranslation() const;
+
+    /**
+     * Sets the 3x3 upper left rotation matrix.
+     * @param rot 3x3 rotation matrix.
+     */
+    void setRotation( const Matrix<double>& rot );
+
+    /**
+     * Sets the most right column, which is the
+     * translation vector.
+     * @param trans Translation vector.
+     */
+    void setTranslation( const Matrix<double>& trans);
+
+    /**
+     * Sets the most right column, which is the
+     * translation vector.
+     * @param x
+     * @param y
+     * @param z
+     */
+    void setTranslation( double x, double y, double z);
+
+    /**
      * Matrix multiplication
      * @param mat
      * @return Product of two 4x4 matrix

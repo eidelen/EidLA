@@ -146,10 +146,53 @@ Matrix4x4 Matrix4x4::inverted_rg() const
     Matrix<double> rotMat = subMatrix(0,0,3,3).transpose();
     Matrix<double> transVect = (rotMat*(-1)) * subMatrix(0,3,3,1);
 
-    Matrix4x4 ret( rotMat(0,0), rotMat(0,1), rotMat(0,2), transVect(0,0),
-                   rotMat(1,0), rotMat(1,1), rotMat(1,2), transVect(1,0),
-                   rotMat(2,0), rotMat(2,1), rotMat(2,2), transVect(2,0),
-                   0.0, 0.0, 0.0, 1.0);
-
+    Matrix4x4 ret;
+    ret.setRotation( rotMat );
+    ret.setTranslation(transVect);
     return ret;
+}
+
+Matrix<double> Matrix4x4::getRotation() const
+{
+    return subMatrix(0,0,3,3);
+}
+
+Matrix<double> Matrix4x4::getTranslation() const
+{
+    return subMatrix(0,3,3,1);
+}
+
+void Matrix4x4::setRotation( const Matrix<double>& rot )
+{
+    if( rot.cols() != 3 || rot.rows() != 3 )
+    {
+        std::cout << "Rotation matrix has wrong dimension";
+        std::exit(-1);
+    }
+
+    const double* src = rot.data();
+    double* dst = data();
+
+    std::copy(src, src+3, dst);
+    std::copy(src+3, src+6, dst+4);
+    std::copy(src+6, src+9, dst+8);
+}
+
+void Matrix4x4::setTranslation( const Matrix<double>& trans)
+{
+    if( trans.cols() != 1 || trans.rows() != 3 )
+    {
+        std::cout << "Translation vector has wrong dimension";
+        std::exit(-1);
+    }
+
+    setTranslation( trans(0,0), trans(1,0), trans(2,0) );
+}
+
+void Matrix4x4::setTranslation( double x, double y, double z)
+{
+    setValue(0,3,  x);
+    setValue(1,3,  y);
+    setValue(2,3,  z);
+    setValue(3,3,  1.0);
 }
