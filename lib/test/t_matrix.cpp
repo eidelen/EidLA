@@ -301,7 +301,6 @@ TEST(Matrix, Symmetric)
     ASSERT_FALSE(mat.isSymmetric());
 }
 
-
 TEST(Matrix, Square)
 {
     auto mat = Matrix<int>(3,3);
@@ -310,3 +309,41 @@ TEST(Matrix, Square)
     ASSERT_FALSE(mat.isSquare());
 }
 
+TEST(Matrix, SerializeDeserialize)
+{
+    int data[] = {1,2,3,  4,5,6};
+    Matrix<int> serialize = Matrix<int>(2, 3, data);
+    std::string serialData = serialize.serialize();
+
+    Matrix<int> deserialize(1,1);
+    deserialize.deserialize(serialData);
+
+    ASSERT_TRUE(serialize.compare(deserialize));
+}
+
+
+TEST(Matrix, SaveLoad)
+{
+    std::string filename = "tmpmat.mat";
+
+    int data[] = {1,2,3,  4,5,6};
+    Matrix<int> save = Matrix<int>(2, 3, data);
+    ASSERT_TRUE(save.save(filename));
+
+    Matrix<int> load(filename);
+
+    ASSERT_TRUE(save.compare(load));
+}
+
+TEST(Matrix, SaveLoadDouble)
+{
+    std::string filename = "tmpmat.mat";
+
+    double data[] = {1,2,3,  4,5,6};
+    Matrix<double> save = Matrix<double>(2, 3, data);
+    ASSERT_TRUE(save.save(filename));
+
+    Matrix<double> load(filename);
+
+    ASSERT_TRUE(save.compare(load));
+}

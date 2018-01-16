@@ -30,6 +30,8 @@
 #include <tuple>
 #include <limits>
 #include <random>
+#include <fstream>
+
 
 #include <smmintrin.h> // SSE4
 
@@ -62,6 +64,14 @@ public:
      * @param data Pointer to data
      */
     Matrix(size_t rows, size_t cols, const T* data);
+
+    /**
+     * Constructs a matrix based on the specified
+     * file at filepath. See the functions load
+     * and save.
+     * @param filepath
+     */
+    Matrix(const std::string& filepath);
 
     /**
      * Asignment operator: overwrite content of this matrix.
@@ -339,6 +349,34 @@ public:
      */
     bool isSquare() const;
 
+    /**
+     * Save matrix at the passed path.
+     * @param path Path and filename.
+     * @return True if successful. Otherwise false.
+     */
+    bool save(const std::string& path) const;
+
+    /**
+     * Load matrix from passed path.
+     * @param path Path anf filename.
+     * @return True if successful. Otherwise false.
+     */
+    bool load(const std::string& path);
+
+    /**
+     * Serialize the matrix as a data
+     * array.
+     * @return Data array in form of a string.
+     */
+    std::string serialize() const;
+
+    /**
+     * Deserialize the passed data into
+     * this matrix.
+     * @param data Data array in form of a string.
+     */
+    void deserialize(const std::string& data);
+
 protected:
 
     /**
@@ -421,6 +459,13 @@ Matrix<T>::Matrix(size_t rows, size_t cols, const T* data)
 {
     T* dst = this->data();
     std::copy(data, data + this->getNbrOfElements(), this->data());
+}
+
+template <class T>
+Matrix<T>::Matrix(const std::string& filepath)
+{
+    // allocates and overwrites
+    load(filepath);
 }
 
 template <class T>
@@ -1339,5 +1384,75 @@ bool Matrix<T>::isSquare() const
 {
     return rows() == cols();
 }
+
+template <class T>
+bool Matrix<T>::save(const std::string& path) const
+{
+
+    std::ofstream f;
+    f.open(path, std::ofstream::trunc);
+    if( ! f.is_open() )
+    {
+        std::cout << "Cannot save file " << path << std::endl;
+        return false;
+    }
+
+    f << serialize();
+    f.close();
+
+    return true;
+}
+
+template <class T>
+bool Matrix<T>::load(const std::string& path)
+{
+    std::ifstream f( path );
+    if( ! f.is_open() )
+    {
+        std::cout << "Cannot open file " << path << std::endl;
+        return false;
+    }
+
+    // read the whole file
+    std::string buffer((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    f.close();
+
+    deserialize(buffer);
+    return true;
+}
+
+template <class T>
+std::string Matrix<T>::serialize() const
+{
+    std::string data;
+
+    size_t* dim = new size_t[2];
+    dim[0] = m_rows;
+    dim[1] = m_cols;
+
+    data.append( std::string( (char*)dim, 2*sizeof(size_t) ) );
+    data.append( std::string( (char*)this->data(), m_nbrOfElements* sizeof(T) ));
+
+    delete[] dim;
+    return data;
+}
+
+template <class T>
+void Matrix<T>::deserialize(const std::string& data)
+{
+    const char* buffer = data.c_str();
+
+    // init members
+    m_rows = ((size_t*)(buffer))[0];
+    m_cols = ((size_t*)(buffer))[1];
+
+    m_nbrOfElements = m_rows * m_cols;
+    m_data.reset(new T[m_nbrOfElements]);
+
+    // copy data
+    const T* src = (const T*)(buffer + 2* sizeof(size_t));
+    std::copy(src, src + m_nbrOfElements, this->data());
+}
+
 
 #endif //MY_MATRIX_H
