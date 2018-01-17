@@ -115,8 +115,30 @@ public:
     template <class T>
     static double rayleighQuotient(const Matrix<T>& mat, const Matrix<T> vec);
 
+    /**
+     * QR decomposition, where the passed matrix A is decomposed into an
+     * orthogonal matrix Q and an upper triangle matrix R, such that
+     * A = Q * R.
+     * @param mat Matrix A
+     * @return QR decomposition
+     */
     template <class T>
-    static QRResult qrDecomposition(const Matrix<T> mat);
+    static QRResult qr(const Matrix<T> mat);
+
+    /**
+     * The QR decomposition is not unique. Changing the sign of a row and
+     * its corresponding column leads to another valid decomposition. This
+     * function modifies an existing QR decomposition and returns another
+     * solution.
+     * @param q Orthogonal matrix
+     * @param r Upper triangle matrix
+     * @param row Which row in r is modified (change sign)
+     * @return  Another QR decomposition
+     */
+    template <class T>
+    static QRResult qrSignModifier(const Matrix<T>& q, const Matrix<T>& r, size_t row);
+
+
 
 private:
     template <class T>
@@ -404,53 +426,69 @@ double Decomposition::rayleighQuotient(const Matrix<T>& m, const Matrix<T> v)
     return static_cast<double>((vT * m * v)(0, 0)) / static_cast<double>((vT * v)(0, 0));
 }
 
+// QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf
 template <class T>
-Decomposition::QRResult Decomposition::qrDecomposition(const Matrix<T> mat)
+Decomposition::QRResult Decomposition::qr(const Matrix<T> mat)
 {
-    Matrix<double> a = mat;
-    size_t m = a.rows();
-    size_t n = a.cols();
+    Matrix<double> r = mat;
+    size_t m = r.rows();
+    size_t n = r.cols();
 
+    // initialize q as identity
     Matrix<double> q = Matrix<double>::identity(m);
 
     for( size_t i = 0; i < n; i++ )
     {
-        Matrix<double> x = a.subMatrix(i,i,m-i,1);
+        // copy current column
+        Matrix<double> x = r.subMatrix(i,i,m-i,1);
+
+        // generate basis vector [1.0, 0, 0, ..]
         Matrix<double> e(m-i,1);
         e(0,0) = 1.0;
 
         double sign = 1.0;
         if( x(0,0) > 0.0 )
-            sign = -1;
+            sign = -1.0;
 
+        // vh -> Householder vector
         Matrix<double> vh = x - (e*x.norm()*sign);
 
         double c = 2.0 / (vh.transpose() * vh)(0,0);
 
+        // Householder matrix
         Matrix<double> h = Matrix<double>::identity(vh.rows()) - c * vh * vh.transpose();
 
-        Matrix<double> aSub = h * a.subMatrix(i,i, m-i, n-i);
+        // create the matrix for next loop.
+        Matrix<double> rSub = h * r.subMatrix(i,i, m-i, n-i);
+        r.setSubMatrix(i,i,rSub);
 
-        // copy aSub to the region of a
-        a.setSubMatrix(i,i,aSub);
-
-
-        // compute part of q
+        // use the smaller Householder matrix h to
+        // create one of the right size, H.
+        // each H is used to get step by step to to
+        // the matrix Q.
         Matrix<double> H = Matrix<double>::identity(m);
         H.setSubMatrix(i,i,h);
         q = q * H;
-
-
-        std::cout << i << std::endl <<  "x =" << std::endl << x << std::endl <<  "xnorm =" << x.norm() << std::endl <<  "vh =" << std::endl << vh << std::endl << "c=" << c << std::endl
-                  << "h" << std::endl << h << "aSub" << std::endl << aSub << "a" << std::endl << a;
-
-        std::cout << "-------------------" << std::endl;
     }
 
-    std::cout << "******************************" << std::endl;
-    std::cout << "Q = " << std::endl << q;
-    std::cout << "R = " << std::endl << a;
+    return QRResult(q,r);
+}
 
+template <class T>
+Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const Matrix<T>& r, size_t row)
+{
+    // https://math.stackexchange.com/questions/2237262/is-there-a-correct-qr-factorization-result
+
+    Matrix<double> Q = q;
+    Matrix<double> R = r;
+
+    for( size_t i = 0; i < Q.rows(); i++)
+        Q(i, row) = -Q(i, row);
+
+    for( size_t i = 0; i < R.cols(); i++)
+        R(row,i) = -R(row,i);
+
+    return QRResult(Q,R);
 }
 
 #endif //MY_DECOMPOSITION_H
