@@ -52,6 +52,16 @@ public:
         const bool           Valid; // Is eigen pair valid? It is if precision was reached.
     };
 
+    struct QRResult
+    {
+        QRResult(Matrix<double> q, Matrix<double> r)
+        : Q(q), R(r)
+        {
+        }
+        const Matrix<double> Q; // Orthogonal matrix
+        const Matrix<double> R; // Upper triangle matrix
+    };
+
 public:
     /**
      * LU decomposition of the matrix mat.
@@ -104,6 +114,9 @@ public:
      */
     template <class T>
     static double rayleighQuotient(const Matrix<T>& mat, const Matrix<T> vec);
+
+    template <class T>
+    static QRResult qrDecomposition(const Matrix<T> mat);
 
 private:
     template <class T>
@@ -389,6 +402,12 @@ double Decomposition::rayleighQuotient(const Matrix<T>& m, const Matrix<T> v)
 {
     Matrix<T> vT = v.transpose();
     return static_cast<double>((vT * m * v)(0, 0)) / static_cast<double>((vT * v)(0, 0));
+}
+
+template <class T>
+Decomposition::QRResult Decomposition::qrDecomposition(const Matrix<T> mat)
+{
+
 }
 
 #endif //MY_DECOMPOSITION_H
