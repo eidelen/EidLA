@@ -40,7 +40,8 @@ class Matrix
 {
 public:
     /**
-     * Constructor
+     * Constructs a matrix of size rows x cols and sets
+     * all values to 0.
      * @param rows number of rows
      * @param cols number of columns
      */
@@ -412,6 +413,7 @@ Matrix<T>::Matrix(size_t rows, size_t cols)
 : m_rows(rows), m_cols(cols), m_nbrOfElements(rows * cols)
 {
     m_data.reset(new T[m_nbrOfElements]);
+    fill(0);
 }
 
 //** Specific copy transformations - to be extended
