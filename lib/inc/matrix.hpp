@@ -148,6 +148,15 @@ public:
     Matrix<T> subMatrix(size_t rowStart, size_t columnStart, size_t nbrOfRows, size_t nbrOfColumns) const;
 
     /**
+     * Writes the elements of the submatrix to this matrix at the given position.
+     * @param rowStart Submatrix starts at rowStart.
+     * @param columnStart Submatrix starts at columnStart.
+     * @param subMat Matrix to write
+     */
+    template <class R>
+    void setSubMatrix(size_t rowStart, size_t columnStart, const Matrix<R>& subMat);
+
+    /**
      * Elementwise comparisson with the passed matrix mat.
      * @param mat Matrix to compare to.
      * @param useCustomTolerance Set if custom tolerance is used or not. Default false.
@@ -417,6 +426,7 @@ Matrix<T>::Matrix(size_t rows, size_t cols)
 }
 
 //** Specific copy transformations - to be extended
+
 template <class T>
 void copyMatData(const Matrix<T>& src, Matrix<T>& dst)
 {
@@ -1355,6 +1365,25 @@ Matrix<T> Matrix<T>::subMatrix(size_t rowStart, size_t columnStart, size_t nbrOf
     }
 
     return res;
+}
+
+template <class T>
+template <class R>
+void Matrix<T>::setSubMatrix(size_t rowStart, size_t columnStart, const Matrix<R>& subMat)
+{
+    if( rowStart + subMat.rows() > rows() || columnStart + subMat.cols() > cols() )
+    {
+        std::cout << "writing subMatrix exceeds actual matrix size";
+        std::exit(-1);
+    }
+
+    for( size_t m = 0; m < subMat.rows(); m++ )
+    {
+        for( size_t n = 0; n < subMat.cols(); n++ )
+        {
+            setValue(m+rowStart, n+columnStart, subMat(m,n));
+        }
+    }
 }
 
 template <class T>

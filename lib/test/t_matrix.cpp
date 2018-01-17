@@ -288,6 +288,27 @@ TEST(Matrix, SubMatrix)
     ASSERT_TRUE(soll3.compare(subMat3));
 }
 
+TEST(Matrix, SetSubMatrix)
+{
+    int matData[] = {0, 1, 2, 3, 4, 5};
+    auto mat = Matrix<int>(2, 3, matData);
+
+    int submatData[] = {8, 9, 10, 11};
+    auto sub = Matrix<int>(2, 2, submatData);
+
+    int sollData[] = {0, 8, 9, 3, 10, 11};
+    auto soll = Matrix<int>(2, 3, sollData);
+
+    mat.setSubMatrix(0, 1, sub);
+
+    ASSERT_TRUE(soll.compare(mat));
+
+    Matrix<int> nextTest = Matrix<int>(2,3);
+    nextTest.setSubMatrix(0,0, mat);
+
+    ASSERT_TRUE(nextTest.compare(mat));
+}
+
 TEST(Matrix, Symmetric)
 {
     auto mat = Matrix<int>(3,3);
