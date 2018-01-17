@@ -407,6 +407,49 @@ double Decomposition::rayleighQuotient(const Matrix<T>& m, const Matrix<T> v)
 template <class T>
 Decomposition::QRResult Decomposition::qrDecomposition(const Matrix<T> mat)
 {
+    Matrix<double> a = mat;
+    size_t m = a.rows();
+    size_t n = a.cols();
+
+    Matrix<double> q = Matrix<double>::identity(m);
+
+    for( size_t i = 0; i < n; i++ )
+    {
+        Matrix<double> x = a.subMatrix(i,i,m-i,1);
+        Matrix<double> e(m-i,1);
+        e(0,0) = 1.0;
+
+        double sign = 1.0;
+        if( x(0,0) > 0.0 )
+            sign = -1;
+
+        Matrix<double> vh = x - (e*x.norm()*sign);
+
+        double c = 2.0 / (vh.transpose() * vh)(0,0);
+
+        Matrix<double> h = Matrix<double>::identity(vh.rows()) - c * vh * vh.transpose();
+
+        Matrix<double> aSub = h * a.subMatrix(i,i, m-i, n-i);
+
+        // copy aSub to the region of a
+        a.setSubMatrix(i,i,aSub);
+
+
+        // compute part of q
+        Matrix<double> H = Matrix<double>::identity(m);
+        H.setSubMatrix(i,i,h);
+        q = q * H;
+
+
+        std::cout << i << std::endl <<  "x =" << std::endl << x << std::endl <<  "xnorm =" << x.norm() << std::endl <<  "vh =" << std::endl << vh << std::endl << "c=" << c << std::endl
+                  << "h" << std::endl << h << "aSub" << std::endl << aSub << "a" << std::endl << a;
+
+        std::cout << "-------------------" << std::endl;
+    }
+
+    std::cout << "******************************" << std::endl;
+    std::cout << "Q = " << std::endl << q;
+    std::cout << "R = " << std::endl << a;
 
 }
 

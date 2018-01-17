@@ -189,5 +189,7 @@ TEST(Decomposition, QRDecomposition)
 
     auto mat = Matrix<double>(5, 3, matData);
 
+    Decomposition::qrDecomposition(mat);
+
 
 }
