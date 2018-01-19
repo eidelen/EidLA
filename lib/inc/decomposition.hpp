@@ -105,6 +105,20 @@ public:
     static EigenPair powerIteration(const Matrix<T>& mat, size_t maxIteration, double precision);
 
     /**
+     * The QR algorithm iteratively finds all Eigen values and Eigen vectors of a matrix
+     * by applying iteratively the QR decomposition.
+     * @param mat  Matrix of which to perform Eigen decomposition.
+     * @param maxIteration Maximum number of power iterations. If precision not reached, no Eigen pair was found.
+     * @param precision Power iteration stops when the Eigen value change is below the passed precision value
+     * @return Eigen pairs
+     */
+    template <class T>
+    static std::vector<EigenPair> qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision);
+
+
+
+
+    /**
      * Compute Rayleigh quotient of a matrix and a vector. This can be
      * used to find the Eigenvalue to a corresponding Eigenvector and
      * matrix.
@@ -377,6 +391,32 @@ Decomposition::EigenPair Decomposition::rayleighIteration(const Matrix<T>& mat, 
     }
 
     return EigenPair(e_vec, e_val, validEigenPair);
+}
+
+template <class T>
+std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision)
+{
+    // https://en.wikipedia.org/wiki/QR_algorithm
+
+    Matrix<double> a = mat;
+    size_t nbrOfIterations = 0;
+    bool go = true;
+
+    while (go)
+    {
+        Decomposition::QRResult qr = Decomposition::qr(a);
+
+        a = qr.Q.transpose() * a * qr.Q;
+
+        if( nbrOfIterations >= maxIteration )
+        {
+            go = false;
+
+            std::cout << "R " << std::endl << qr.R << "Q " << std::endl << qr.Q << std::endl;
+        }
+
+        nbrOfIterations++;
+    }
 }
 
 template <class T>

@@ -139,7 +139,7 @@ TEST(Decomposition, EigenvalueNonSymmetricLargest)
     double sollEigenVecData[] = {1, (1+std::sqrt(5.0))/2.0 - 1  , 1};
     auto sollEigenVec = Matrix<double>(3,1,sollEigenVecData).normalizeColumns();
 
-    Decomposition::EigenPair sigEigenPair = Decomposition::powerIteration(m,20,std::numeric_limits<double>::epsilon());
+    Decomposition::EigenPair sigEigenPair = Decomposition::powerIteration(m,40,std::numeric_limits<double>::epsilon());
 
     ASSERT_TRUE( sigEigenPair.Valid );
     ASSERT_FLOAT_EQ(sigEigenPair.L,sollEigenVal);
