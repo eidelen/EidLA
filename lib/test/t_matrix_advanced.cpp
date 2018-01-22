@@ -156,3 +156,12 @@ TEST(MatAdvanced, Adjugate)
 
     ASSERT_TRUE( soll.compare(aj) );
 }
+
+TEST(MatAdvanced, IsOrthogonal)
+{
+    Matrix<double> mat = Matrix<double>::identity(4);
+    ASSERT_TRUE(mat.isOrthogonal());
+
+    mat(0,1) = 1.0;
+    ASSERT_FALSE(mat.isOrthogonal());
+}

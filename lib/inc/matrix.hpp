@@ -361,6 +361,13 @@ public:
     bool isSquare() const;
 
     /**
+     * Checks if this matrix is an orthogonal matrix.
+     * @param customTolerance Allowed tolerance of norm.
+     * @return True if orthogonal. Otherwise false.
+     */
+    bool isOrthogonal(T customTolerance = 0) const;
+
+    /**
      * Save matrix at the passed path.
      * @param path Path and filename.
      * @return True if successful. Otherwise false.
@@ -1428,9 +1435,26 @@ bool Matrix<T>::isSquare() const
 }
 
 template <class T>
+bool Matrix<T>::isOrthogonal(T customTolerance) const
+{
+    if( !isSymmetric() )
+    {
+        return false;
+    }
+
+    for( size_t i = 0; i < rows(); i++)
+    {
+        // both row and column norm is 1.0
+        if( std::abs(row(i).norm() - column(i).norm()) > customTolerance )
+            return false;
+    }
+
+    return true;
+}
+
+template <class T>
 bool Matrix<T>::save(const std::string& path) const
 {
-
     std::ofstream f;
     f.open(path, std::ofstream::trunc);
     if( ! f.is_open() )
