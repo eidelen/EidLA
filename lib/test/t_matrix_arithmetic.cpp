@@ -159,3 +159,15 @@ TEST(Matrix, SetToZero)
     mat.setToZero(2);
     ASSERT_TRUE( mat.compare(soll));
 }
+
+TEST(Matrix, SetToDouble)
+{
+    double data[] = {0.01, 0.2,   -0.5, -0.04};
+    auto mat = Matrix<double>(2,2,data);
+
+    double sooldata[] = {0.0, 0.2,   -0.5, 0.0};
+    auto soll = Matrix<double>(2,2,sooldata);
+
+    mat.setToZero(0.06);
+    ASSERT_TRUE( mat.compare(soll));
+}

@@ -31,6 +31,7 @@
 #include <limits>
 #include <random>
 #include <fstream>
+#include <algorithm>
 
 
 #include <smmintrin.h> // SSE4
@@ -1499,7 +1500,7 @@ template <class T>
 void Matrix<T>::setToZero( T threshold )
 {
     std::transform(data(), data()+m_nbrOfElements, data(),
-                   [=](T val) -> T
+                   [&threshold](T val) -> T
                    {
                        if( std::abs(val) < threshold)
                            return 0;
