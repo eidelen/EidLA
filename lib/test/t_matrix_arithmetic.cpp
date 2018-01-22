@@ -147,3 +147,15 @@ TEST(Matrix, Norm)
     auto mat = Matrix<double>::random(2,2,1.0,2.0);
     ASSERT_FLOAT_EQ(mat.norm(), 0.0);
 }
+
+TEST(Matrix, SetToZero)
+{
+    int data[] = {1,2, 3,-1};
+    auto mat = Matrix<int>(2,2,data);
+
+    int sooldata[] = {0,2, 3,0};
+    auto soll = Matrix<int>(2,2,sooldata);
+
+    mat.setToZero(2);
+    ASSERT_TRUE( mat.compare(soll));
+}

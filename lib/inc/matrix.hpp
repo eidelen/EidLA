@@ -387,6 +387,14 @@ public:
      */
     void deserialize(const std::string& data);
 
+    /**
+     * Sets matrix elements to zero, which are smaller
+     * than the passed threshold:
+     * |value| < threshold   ->  value = 0;
+     * @param threshold
+     */
+    void setToZero( T threshold );
+
 protected:
 
     /**
@@ -1397,7 +1405,9 @@ double Matrix<T>::norm() const {
             norm += static_cast<double>(val * val);
         }
         norm = std::sqrt(norm);
-    } else {
+    }
+    else
+    {
         std::cout << "Norm: needs to be a row or column vector." << std::endl;
     }
 
@@ -1483,6 +1493,19 @@ void Matrix<T>::deserialize(const std::string& data)
     // copy data
     const T* src = (const T*)(buffer + 2* sizeof(size_t));
     std::copy(src, src + m_nbrOfElements, this->data());
+}
+
+template <class T>
+void Matrix<T>::setToZero( T threshold )
+{
+    std::transform(data(), data()+m_nbrOfElements, data(),
+                   [=](T val) -> T
+                   {
+                       if( std::abs(val) < threshold)
+                           return 0;
+                       else
+                           return val;
+                   });
 }
 
 
