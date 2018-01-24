@@ -765,7 +765,7 @@ Matrix<T> Matrix<T>::matMulR(const Matrix<T>& mat) const
     Matrix<T> res(this->rows(), mat.cols());
 
     // Direct implementation for common square matrices
-    if( this->isSquare() && Matrix<T>::equalDimension(*this,mat) && this->rows() < 3)
+    if( this->isSquare() && Matrix<T>::equalDimension(*this,mat) && this->rows() < 5)
     {
         if (this->rows() == 1)
         {
@@ -777,6 +777,42 @@ Matrix<T> Matrix<T>::matMulR(const Matrix<T>& mat) const
             res(0,1) = getValue(0,0) * mat(0,1) + getValue(0,1) * mat(1,1);
             res(1,0) = getValue(1,0) * mat(0,0) + getValue(1,1) * mat(1,0);
             res(1,1) = getValue(1,0) * mat(0,1) + getValue(1,1) * mat(1,1);
+        }
+        else if( this->rows() == 3)
+        {
+            res(0,0) = getValue(0,0) * mat(0,0) + getValue(0,1) * mat(1,0) + getValue(0,2) * mat(2,0);
+            res(0,1) = getValue(0,0) * mat(0,1) + getValue(0,1) * mat(1,1) + getValue(0,2) * mat(2,1);
+            res(0,2) = getValue(0,0) * mat(0,2) + getValue(0,1) * mat(1,2) + getValue(0,2) * mat(2,2);
+
+            res(1,0) = getValue(1,0) * mat(0,0) + getValue(1,1) * mat(1,0) + getValue(1,2) * mat(2,0);
+            res(1,1) = getValue(1,0) * mat(0,1) + getValue(1,1) * mat(1,1) + getValue(1,2) * mat(2,1);
+            res(1,2) = getValue(1,0) * mat(0,2) + getValue(1,1) * mat(1,2) + getValue(1,2) * mat(2,2);
+
+            res(2,0) = getValue(2,0) * mat(0,0) + getValue(2,1) * mat(1,0) + getValue(2,2) * mat(2,0);
+            res(2,1) = getValue(2,0) * mat(0,1) + getValue(2,1) * mat(1,1) + getValue(2,2) * mat(2,1);
+            res(2,2) = getValue(2,0) * mat(0,2) + getValue(2,1) * mat(1,2) + getValue(2,2) * mat(2,2);
+        }
+        else if( this->rows() == 4)
+        {
+            res(0,0) = getValue(0,0)*mat(0,0) + getValue(0,1)*mat(1,0) +  getValue(0,2)*mat(2,0) + getValue(0,3)*mat(3,0);
+            res(0,1) = getValue(0,0)*mat(0,1) + getValue(0,1)*mat(1,1) +  getValue(0,2)*mat(2,1) + getValue(0,3)*mat(3,1);
+            res(0,2) = getValue(0,0)*mat(0,2) + getValue(0,1)*mat(1,2) +  getValue(0,2)*mat(2,2) + getValue(0,3)*mat(3,2);
+            res(0,3) = getValue(0,0)*mat(0,3) + getValue(0,1)*mat(1,3) +  getValue(0,2)*mat(2,3) + getValue(0,3)*mat(3,3);
+
+            res(1,0) = getValue(1,0)*mat(0,0) + getValue(1,1)*mat(1,0) +  getValue(1,2)*mat(2,0) + getValue(1,3)*mat(3,0);
+            res(1,1) = getValue(1,0)*mat(0,1) + getValue(1,1)*mat(1,1) +  getValue(1,2)*mat(2,1) + getValue(1,3)*mat(3,1);
+            res(1,2) = getValue(1,0)*mat(0,2) + getValue(1,1)*mat(1,2) +  getValue(1,2)*mat(2,2) + getValue(1,3)*mat(3,2);
+            res(1,3) = getValue(1,0)*mat(0,3) + getValue(1,1)*mat(1,3) +  getValue(1,2)*mat(2,3) + getValue(1,3)*mat(3,3);
+
+            res(2,0) = getValue(2,0)*mat(0,0) + getValue(2,1)*mat(1,0) +  getValue(2,2)*mat(2,0) + getValue(2,3)*mat(3,0);
+            res(2,1) = getValue(2,0)*mat(0,1) + getValue(2,1)*mat(1,1) +  getValue(2,2)*mat(2,1) + getValue(2,3)*mat(3,1);
+            res(2,2) = getValue(2,0)*mat(0,2) + getValue(2,1)*mat(1,2) +  getValue(2,2)*mat(2,2) + getValue(2,3)*mat(3,2);
+            res(2,3) = getValue(2,0)*mat(0,3) + getValue(2,1)*mat(1,3) +  getValue(2,2)*mat(2,3) + getValue(2,3)*mat(3,3);
+
+            res(3,0) = getValue(3,0)*mat(0,0) + getValue(3,1)*mat(1,0) +  getValue(3,2)*mat(2,0) + getValue(3,3)*mat(3,0);
+            res(3,1) = getValue(3,0)*mat(0,1) + getValue(3,1)*mat(1,1) +  getValue(3,2)*mat(2,1) + getValue(3,3)*mat(3,1);
+            res(3,2) = getValue(3,0)*mat(0,2) + getValue(3,1)*mat(1,2) +  getValue(3,2)*mat(2,2) + getValue(3,3)*mat(3,2);
+            res(3,3) = getValue(3,0)*mat(0,3) + getValue(3,1)*mat(1,3) +  getValue(3,2)*mat(2,3) + getValue(3,3)*mat(3,3);
         }
     }
     else
