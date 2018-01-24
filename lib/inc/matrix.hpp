@@ -764,22 +764,40 @@ Matrix<T> Matrix<T>::matMulR(const Matrix<T>& mat) const
 
     Matrix<T> res(this->rows(), mat.cols());
 
-    //Create a lookup table of the right matrix split to column vectors
-    // -> this is helpful because this way the column vector is in a
-    //    continous memory block.
-    std::vector<Matrix<T>> lookup;
-    for (size_t k = 0; k < mat.cols(); k++)
-        lookup.push_back(mat.column(k));
-
-    for (size_t n = 0; n < mat.cols(); n++)
+    // Direct implementation for common square matrices
+    if( this->isSquare() && Matrix<T>::equalDimension(*this,mat) && this->rows() < 3)
     {
-        for (size_t m = 0; m < this->rows(); m++)
+        if (this->rows() == 1)
         {
-            // get column mat -> continous memory block
-            const T* matColNPtr = lookup.at(n).data();
-            const T* thisRowPtr = data() + m * cols(); // this is fast
+            res(0,0) = mat(0,0) * getValue(0,0);
+        }
+        else if( this->rows() == 2)
+        {
+            res(0,0) = getValue(0,0) * mat(0,0) + getValue(0,1) * mat(1,0);
+            res(0,1) = getValue(0,0) * mat(0,1) + getValue(0,1) * mat(1,1);
+            res(1,0) = getValue(1,0) * mat(0,0) + getValue(1,1) * mat(1,0);
+            res(1,1) = getValue(1,0) * mat(0,1) + getValue(1,1) * mat(1,1);
+        }
+    }
+    else
+    {
+        //Create a lookup table of the right matrix split to column vectors
+        // -> this is helpful because this way the column vector is in a
+        //    continous memory block.
+        std::vector<Matrix<T>> lookup;
+        for (size_t k = 0; k < mat.cols(); k++)
+            lookup.push_back(mat.column(k));
 
-            res(m, n) = elementwiseMultiplyAndSum(thisRowPtr, matColNPtr, this->cols());
+        for (size_t n = 0; n < mat.cols(); n++)
+        {
+            for (size_t m = 0; m < this->rows(); m++)
+            {
+                // get column mat -> continous memory block
+                const T *matColNPtr = lookup.at(n).data();
+                const T *thisRowPtr = data() + m * cols(); // this is fast
+
+                res(m, n) = elementwiseMultiplyAndSum(thisRowPtr, matColNPtr, this->cols());
+            }
         }
     }
 
