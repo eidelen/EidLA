@@ -148,6 +148,22 @@ TEST(Matrix, Norm)
     ASSERT_FLOAT_EQ(mat.norm(), 0.0);
 }
 
+TEST(Matrix, NormSquare)
+{
+    // column vector
+    int data[] = {1,2,3};
+    auto vec = Matrix<int>(3,1,data);
+
+    ASSERT_EQ(vec.normSquare(), 1*1 + 2*2 + 3*3 );
+
+    // row vector
+    ASSERT_EQ(vec.transpose().normSquare(), 1*1 + 2*2 + 3*3);
+
+    // 0 for matrix
+    auto mat = Matrix<double>::random(2,2,1.0,2.0);
+    ASSERT_FLOAT_EQ(mat.normSquare(), 0.0);
+}
+
 TEST(Matrix, SetToZero)
 {
     int data[] = {1,2, 3,-1};

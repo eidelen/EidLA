@@ -349,6 +349,14 @@ public:
     double norm() const;
 
     /**
+     * Computes the square of the Euclidean vector norm
+     * of a mx1 or 1xn vector. The difference to the
+     * function norm() is that normSquare() is faster.
+     * @return Euclidean norm (2-norm)
+     */
+    T normSquare() const;
+
+    /**
      * Checks if this matris is symmetric: A = A'
      * @return True if symmetric. Otherwise false.
      */
@@ -1403,23 +1411,31 @@ void Matrix<T>::setSubMatrix(size_t rowStart, size_t columnStart, const Matrix<R
 }
 
 template <class T>
-double Matrix<T>::norm() const {
-    double norm = 0.0;
+double Matrix<T>::norm() const
+{
+    return std::sqrt( normSquare() );
+}
 
-    if (cols() == 1 || rows() == 1) {
+template <class T>
+T Matrix<T>::normSquare() const
+{
+    T normSq = 0;
+
+    if (cols() == 1 || rows() == 1)
+    {
         const T *matData = data();
-        for (size_t i = 0; i < getNbrOfElements(); i++) {
+        for (size_t i = 0; i < getNbrOfElements(); i++)
+        {
             T val = matData[i];
-            norm += static_cast<double>(val * val);
+            normSq += val * val;
         }
-        norm = std::sqrt(norm);
     }
     else
     {
-        std::cout << "Norm: needs to be a row or column vector." << std::endl;
+        std::cout << "NormSquare: needs to be a row or column vector." << std::endl;
     }
 
-    return norm;
+    return normSq;
 }
 
 template <class T>
@@ -1445,7 +1461,7 @@ bool Matrix<T>::isOrthogonal(T customTolerance) const
     for( size_t i = 0; i < rows(); i++)
     {
         // both row and column norm is 1.0
-        if( std::abs(row(i).norm() - column(i).norm()) > customTolerance )
+        if( std::abs(row(i).normSquare() - column(i).normSquare()) > customTolerance )
             return false;
     }
 
