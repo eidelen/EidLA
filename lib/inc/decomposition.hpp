@@ -62,6 +62,17 @@ public:
         const Matrix<double> R; // Upper triangle matrix
     };
 
+    struct SVDResult
+    {
+        SVDResult(Matrix<double> u, Matrix<double> s, Matrix<double> v)
+        : U(u), S(s), V(v)
+        {
+        }
+        const Matrix<double> U; // Left singular vectors
+        const Matrix<double> S; // Diagonal matrix of singular values
+        const Matrix<double> V; // Right singular vectors
+    };
+
 public:
     /**
      * LU decomposition of the matrix mat.
@@ -116,8 +127,6 @@ public:
     static std::vector<EigenPair> qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision);
 
 
-
-
     /**
      * Compute Rayleigh quotient of a matrix and a vector. This can be
      * used to find the Eigenvalue to a corresponding Eigenvector and
@@ -151,6 +160,15 @@ public:
      */
     template <class T>
     static QRResult qrSignModifier(const Matrix<T>& q, const Matrix<T>& r, size_t row);
+
+    /**
+     * Performs a singular value decomposition of the
+     * passed matrix mat.
+     * @param mat Passed matrix.
+     * @return SVD decomposition
+     */
+    template <class T>
+    static SVDResult svd( const Matrix<T> mat );
 
 
 
@@ -530,5 +548,12 @@ Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const 
 
     return QRResult(Q,R);
 }
+
+template <class T>
+Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
+{
+
+}
+
 
 #endif //MY_DECOMPOSITION_H
