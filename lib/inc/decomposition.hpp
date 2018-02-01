@@ -58,6 +58,10 @@ public:
         : Q(q), R(r)
         {
         }
+        QRResult(const QRResult& qr)
+            : Q(qr.Q), R(qr.R)
+        {
+        }
         const Matrix<double> Q; // Orthogonal matrix
         const Matrix<double> R; // Upper triangle matrix
     };
@@ -295,9 +299,17 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
 
     if( cMat.isSymmetric() )
     {
+        // QR algorithm
+
+        ret = qrAlgorithm(cMat,30, 10e-10);
+
+
+
+
         // use power iteration and hotelling's deflation
         // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
 
+        /*
         for( size_t i = 0; i < cMat.rows(); i++ )
         {
             EigenPair ePair = powerIteration(cMat, 30, 10e-10);
@@ -308,7 +320,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
                 // Hotelling's deflation -> remove found Eigen pair from cMat
                 cMat = cMat - (ePair.L * ePair.V * ePair.V.transpose());
             }
-        }
+        }*/
     }
     else
     {
@@ -415,26 +427,50 @@ template <class T>
 std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision)
 {
     // https://en.wikipedia.org/wiki/QR_algorithm
+    std::vector<EigenPair> ret;
 
     Matrix<double> a = mat;
     size_t nbrOfIterations = 0;
     bool go = true;
 
+    Matrix<double> q_before = Matrix<double>(a.rows(), a.rows());
+    q_before.fill(0);
+
     while (go)
     {
         Decomposition::QRResult qr = Decomposition::qr(a);
 
-        a = qr.Q.transpose() * a * qr.Q;
-
-        if( nbrOfIterations >= maxIteration )
+        // check stopping criteria
+        if( q_before.compare(qr.Q,true,precision))
         {
+            // q changed less than required precission.
+            // q is good choice since its normalized
             go = false;
 
-            std::cout << "R " << std::endl << qr.R << "Q " << std::endl << qr.Q << std::endl;
+            // modify qr so that R diagonal values are positive
+            for( size_t i = 0; i < qr.Q.rows(); i++)
+            {
+                // make eigenvalues positive
+                if( qr.R(i,i) < 0.0 )
+                {
+                    qr = qrSignModifier(qr.Q, qr.R,i);
+                }
+            }
+
+            std::cout << qr.Q << qr.R;
+
+        }
+        else if( nbrOfIterations >= maxIteration )
+        {
+            go = false;
         }
 
+        a = qr.Q.transpose() * a * qr.Q;
+        q_before = qr.Q;
         nbrOfIterations++;
     }
+
+    return ret;
 }
 
 template <class T>

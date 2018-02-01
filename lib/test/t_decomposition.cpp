@@ -123,6 +123,8 @@ TEST(Decomposition, EigenvalueSymmetricDiagonal)
         auto cEP = eig.at(i);
         auto sEP = soll.at(i);
 
+        std::cout << cEP.L << std::endl;
+
         ASSERT_TRUE(cEP.Valid);
         ASSERT_TRUE(cEP.V.compare(sEP.V,true,0.0001));
         ASSERT_NEAR(cEP.L, sEP.L, 0.001);
