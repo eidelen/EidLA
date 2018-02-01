@@ -35,9 +35,9 @@ public:
         : L(l), U(u), P(p), NbrRowSwaps(n)
         {
         }
-        const Matrix<double> L; // Lower triangle matrix
-        const Matrix<double> U; // Upper triangle matrix
-        const Matrix<double> P; // Row Swaps
+        Matrix<double> L; // Lower triangle matrix
+        Matrix<double> U; // Upper triangle matrix
+        Matrix<double> P; // Row Swaps
         size_t NbrRowSwaps;     // Number of row swaps
     };
 
@@ -47,9 +47,9 @@ public:
         : V(v), L(l), Valid(valid)
         {
         }
-        const Matrix<double> V;     // Eigen vector
-        const double         L;     // Eigen value
-        const bool           Valid; // Is eigen pair valid? It is if precision was reached.
+        Matrix<double> V;     // Eigen vector
+        double         L;     // Eigen value
+        bool           Valid; // Is eigen pair valid? It is if precision was reached.
     };
 
     struct QRResult
@@ -59,11 +59,27 @@ public:
         {
         }
         QRResult(const QRResult& qr)
-            : Q(qr.Q), R(qr.R)
+                : Q(qr.Q), R(qr.R)
         {
         }
-        const Matrix<double> Q; // Orthogonal matrix
-        const Matrix<double> R; // Upper triangle matrix
+        QRResult()
+                : Q(Matrix<double>::identity(1)), R(Matrix<double>::identity(1))
+        {
+        }
+
+        QRResult& operator=(const QRResult& other)
+        {
+            // check for self-assignment
+            if(&other == this)
+                return *this;
+
+            this->Q = other.Q;
+            this->R = other.R;
+            return *this;
+        }
+
+        Matrix<double> Q; // Orthogonal matrix
+        Matrix<double> R; // Upper triangle matrix
     };
 
     struct SVDResult
@@ -72,9 +88,9 @@ public:
         : U(u), S(s), V(v)
         {
         }
-        const Matrix<double> U; // Left singular vectors
-        const Matrix<double> S; // Diagonal matrix of singular values
-        const Matrix<double> V; // Right singular vectors
+        Matrix<double> U; // Left singular vectors
+        Matrix<double> S; // Diagonal matrix of singular values
+        Matrix<double> V; // Right singular vectors
     };
 
 public:
@@ -87,6 +103,13 @@ public:
     template <class T>
     static LUResult luDecomposition(const Matrix<T>& mat, bool pivoting = true);
 
+
+    enum EigenMethod
+    {
+        PowerIterationAndHotellingsDeflation, //Power iteration and hotelling's deflation
+        QRAlgorithm, // QR algorithm
+    };
+
     /**
      * Eigen decomposition of the matrix mat. Finds all Eigen pairs
      * in symmetric real matrices. In non-symmetric matrices, it finds
@@ -95,7 +118,7 @@ public:
      * @return Vector of Eigen pairs .
      */
     template <class T>
-    static std::vector<EigenPair> eigen(const Matrix<T>& mat);
+    static std::vector<EigenPair> eigen(const Matrix<T>& mat, EigenMethod method = QRAlgorithm);
 
     /**
      * Converges to Eigen pair depending on initial Eigen vector and Eigen value.
@@ -286,7 +309,7 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
 }
 
 template <class T>
-std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
+std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat, Decomposition::EigenMethod method )
 {
     if(!mat.isSquare())
     {
@@ -299,80 +322,33 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat)
 
     if( cMat.isSymmetric() )
     {
-        // QR algorithm
-
-        ret = qrAlgorithm(cMat,30, 10e-10);
-
-
-
-
-        // use power iteration and hotelling's deflation
-        // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
-
-        /*
-        for( size_t i = 0; i < cMat.rows(); i++ )
+        switch( method )
         {
-            EigenPair ePair = powerIteration(cMat, 30, 10e-10);
-            if (ePair.Valid)
-            {
-                ret.push_back(ePair);
+            case QRAlgorithm:
+                // QR algorithm
+                ret = qrAlgorithm(cMat, 30, 10e-10);
+                break;
 
-                // Hotelling's deflation -> remove found Eigen pair from cMat
-                cMat = cMat - (ePair.L * ePair.V * ePair.V.transpose());
-            }
-        }*/
+            case PowerIterationAndHotellingsDeflation:
+                // Power iteration and hotelling's deflation
+                // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
+                for (size_t i = 0; i < cMat.rows(); i++)
+                {
+                    EigenPair ePair = powerIteration(cMat, 30, 10e-10);
+                    if (ePair.Valid)
+                    {
+                        ret.push_back(ePair);
+
+                        // Hotelling's deflation -> remove found Eigen pair from cMat
+                        cMat = cMat - (ePair.L * ePair.V * ePair.V.transpose());
+                    }
+                }
+                break;
+        }
     }
     else
     {
-        std::cout << "Note: This Eigen decomposition on non-symmetric matrices does not work properly!!" << std::endl;
-
-        /*
-        for( int k = 0; k < 3; k++ )
-        {
-            // Step 1: Find most significant Eigen pair by using the power iteration
-            EigenPair msPair = powerIteration(cMat, 20, std::numeric_limits<double>::epsilon());
-
-            if (msPair.Valid)
-            {
-
-                std::cout << "Mat input: " << std::endl << cMat << std::endl;
-                std::cout << "Eigenvalue = " << msPair.L << " Eigenvector = " << msPair.V.transpose() << std::endl;
-                std::cout << "Diff deflated matrix: " << std::endl << (cMat*msPair.V - msPair.L*msPair.V).transpose() << std::endl;
-                std::cout << "Diff original matrix: " << std::endl << (mat*msPair.V - msPair.L*msPair.V).transpose() << "----------------" << std::endl ;
-
-                // modify based on former eigenvectors
-                // http://zoro.ee.ncku.edu.tw/na/res/09-power_method.pdf
-
-                ret.push_back(msPair);
-
-                // Hotelling's deflation -> remove most significant Eigen pair
-                cMat = cMat - (msPair.L * msPair.V * msPair.V.transpose());
-            }
-            else
-            {
-                std::cout << "Power iteration did not find an Eigen pair" << std::endl;
-                return ret;
-            }
-
-
-            for( size_t i = 0; i < cMat.cols()*2; i++ )
-    {
-        // initial eigen value and eigen vector
-        Matrix<double> initialEigenVector = Matrix<double>::random(cMat.cols(), 1, -1, 1);
-        initialEigenVector.normalizeColumns();
-
-        double initialEigenValue = Matrix<double>::random(1, 1, -10, +10)(0,0); // random value -/+ most significant eigen value
-
-        EigenPair cPair = rayleighIteration(cMat, initialEigenVector, initialEigenValue, 100, std::numeric_limits<double>::epsilon()*1000);
-        ret.push_back(cPair);
-
-        // Hotelling deflation
-        if(cPair.Valid)
-        {
-            cMat = cMat - (cPair.L * (cPair.V * cPair.V.transpose()));
-        }
-    }
-        }*/
+        std::cout << "Note: This Eigen decomposition of non-symmetric matrices does not work!!" << std::endl;
     }
 
     return ret;
@@ -430,11 +406,13 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
     std::vector<EigenPair> ret;
 
     Matrix<double> a = mat;
+
     size_t nbrOfIterations = 0;
     bool go = true;
-
+    bool foundEig = false;
     Matrix<double> q_before = Matrix<double>(a.rows(), a.rows());
     q_before.fill(0);
+    Matrix<double> qProd = Matrix<double>::identity(a.rows());
 
     while (go)
     {
@@ -446,28 +424,30 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
             // q changed less than required precission.
             // q is good choice since its normalized
             go = false;
-
-            // modify qr so that R diagonal values are positive
-            for( size_t i = 0; i < qr.Q.rows(); i++)
-            {
-                // make eigenvalues positive
-                if( qr.R(i,i) < 0.0 )
-                {
-                    qr = qrSignModifier(qr.Q, qr.R,i);
-                }
-            }
-
-            std::cout << qr.Q << qr.R;
-
+            foundEig = true;
         }
         else if( nbrOfIterations >= maxIteration )
         {
             go = false;
+            foundEig = false;
         }
+        else
+        {
+            // continue -> prepare next loop
 
-        a = qr.Q.transpose() * a * qr.Q;
-        q_before = qr.Q;
-        nbrOfIterations++;
+            a = qr.R * qr.Q; // iteratively converge to a - diag(a) are eigenvalues
+            qProd = qProd * qr.Q; // accumlate q transformations to get eigenvectors
+
+            q_before = qr.Q;
+            nbrOfIterations++;
+        }
+    }
+
+    // The eigenvalues are in a and eigenvectors in qProd
+    for( size_t i = 0; i < qProd.cols(); i++ )
+    {
+        EigenPair eP( qProd.column(i), a(i,i), foundEig );
+        ret.push_back(eP);
     }
 
     return ret;

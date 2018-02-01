@@ -118,16 +118,32 @@ TEST(Decomposition, EigenvalueSymmetricDiagonal)
 
     ASSERT_EQ(soll.size(), eig.size());
 
-    for( size_t i = 0; i < soll.size(); i++ )
+    // actually, soll is not used. we can just check if properties are fullfilled.
+    for( size_t i = 0; i < eig.size(); i++ )
     {
         auto cEP = eig.at(i);
-        auto sEP = soll.at(i);
 
-        std::cout << cEP.L << std::endl;
+        ASSERT_TRUE( cEP.Valid );
+        ASSERT_TRUE( (m * cEP.V).compare( cEP.L * cEP.V, true, 0.00001 ) );
+    }
+}
 
-        ASSERT_TRUE(cEP.Valid);
-        ASSERT_TRUE(cEP.V.compare(sEP.V,true,0.0001));
-        ASSERT_NEAR(cEP.L, sEP.L, 0.001);
+TEST(Decomposition, EigenvalueSymmetric)
+{
+    double data[] = { 6,10,11,  10,17,21,  11,21,42};
+    auto m = Matrix<double>(3,3,data);
+
+    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
+
+    ASSERT_EQ(3, eig.size());
+
+    // just check if properties are fullfilled.
+    for( size_t i = 0; i < eig.size(); i++ )
+    {
+        auto cEP = eig.at(i);
+
+        ASSERT_TRUE( cEP.Valid );
+        ASSERT_TRUE( (m * cEP.V).compare( cEP.L * cEP.V, true, 0.00001 ) );
     }
 }
 

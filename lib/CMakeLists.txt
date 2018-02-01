@@ -25,7 +25,7 @@ IF(${TESTMYLINALG})
     FILE(GLOB_RECURSE  MYLINALG_TESTS_SRC       test/*.cpp)
 
     add_executable(runTests ${MYLINALG_TESTS_INC} ${MYLINALG_TESTS_SRC})
-    target_link_libraries(runTests ${GTEST_LIBRARIES} pthread mylinalglib )
+    target_link_libraries(runTests ${GTEST_LIBRARIES}  mylinalglib )
     target_compile_features( runTests PRIVATE cxx_range_for )
     target_compile_options( runTests PRIVATE "-Wpedantic" )
 ENDIF()
