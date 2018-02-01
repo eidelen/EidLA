@@ -552,7 +552,25 @@ Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const 
 template <class T>
 Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
 {
+    // U*S*V
 
+    Matrix<double> aaT = mat*mat.transpose();
+
+
+    // Compute singular values
+    std::vector<EigenPair> ep = eigen(aaT);
+
+    Matrix<double> s_diag_mat = Matrix<double>(mat.rows(), mat.cols());
+    s_diag_mat.fill(0.0);
+
+    for( size_t p = 0; p < ep.size(); p++ )
+    {
+        s_diag_mat(p,p) = std::sqrt(ep.at(p).L);
+    }
+
+
+
+    return SVDResult(s_diag_mat, s_diag_mat, s_diag_mat);
 }
 
 

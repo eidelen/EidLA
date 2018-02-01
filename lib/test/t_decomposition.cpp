@@ -248,3 +248,19 @@ TEST(Decomposition, QRSignChanger)
         ASSERT_TRUE(mat.compare(nextRes.Q * nextRes.R, true, 0.001));
     }
 }
+
+// http://mysite.science.uottawa.ca/phofstra/MAT2342/SVDproblems.pdf
+TEST(Decomposition, SVD)
+{
+    double matData[] = {0.0, 1.0, 1.0,
+                        std::sqrt(2.0), 2.0, 0,
+                        0.0, 1.0, 1.0};
+
+    auto mat = Matrix<double>(3, 3, matData);
+
+    Decomposition::SVDResult res = Decomposition::svd(mat);
+
+    std::cout << res.S;
+
+}
+
