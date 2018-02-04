@@ -115,7 +115,8 @@ public:
      * in symmetric real matrices. In non-symmetric matrices, it finds
      * at least the most significant Eigen pair.
      * @param mat
-     * @return Vector of Eigen pairs .
+     * @param method Eigen computation method to used.
+     * @return Vector of Eigen pairs.
      */
     template <class T>
     static std::vector<EigenPair> eigen(const Matrix<T>& mat, EigenMethod method = QRAlgorithm);
@@ -295,13 +296,6 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
                 l(i, k) = 0;
             }
         }
-
-/*
-        std::cout << "step " << k << std::endl;
-        std::cout << "l:" << l << std::endl;
-        std::cout << "u:" << u << std::endl;
-        std::cout << "p:" << p << std::endl;
-        std::cout << "-------------------" << std::endl;*/
     }
 
     LUResult ret(l, u, p, nbrRowSwaps);
@@ -326,7 +320,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
         {
             case QRAlgorithm:
                 // QR algorithm
-                ret = qrAlgorithm(cMat, 30, 10e-10);
+                ret = qrAlgorithm(cMat, 50,std::numeric_limits<double>::epsilon());
                 break;
 
             case PowerIterationAndHotellingsDeflation:
@@ -334,7 +328,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
                 // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
                 for (size_t i = 0; i < cMat.rows(); i++)
                 {
-                    EigenPair ePair = powerIteration(cMat, 30, 10e-10);
+                    EigenPair ePair = powerIteration(cMat, 50,std::numeric_limits<double>::epsilon());
                     if (ePair.Valid)
                     {
                         ret.push_back(ePair);
@@ -348,7 +342,10 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
     }
     else
     {
-        std::cout << "Note: This Eigen decomposition of non-symmetric matrices does not work!!" << std::endl;
+        std::cout << "Warning: The Eigen decomposition of non-symmetric matrices does not work yet properly in this library!!" << std::endl;
+
+        // compute the largest eigenvalue
+        ret.push_back(powerIteration(cMat, 30,std::numeric_limits<double>::epsilon()));
     }
 
     return ret;

@@ -95,30 +95,16 @@ TEST(Decomposition, LU2x2Pivoting)
     ASSERT_TRUE( p.compare(res.P) );
 }
 
-TEST(Decomposition, EigenvalueSymmetricDiagonal)
+TEST(Decomposition, EigenvalueSymmetricDiagonalQR)
 {
     auto m = Matrix<double>::identity(3);
     for (size_t s = 0; s < 3; s++)
         m(s, s) = static_cast<double>(s + 1);
 
-    // soll values
-    auto v0 = Matrix<double>::identity(3).column(0);
-    auto v1 = Matrix<double>::identity(3).column(1);
-    auto v2 = Matrix<double>::identity(3).column(2);
-    double l0 = 1;
-    double l1 = 2;
-    double l2 = 3;
+    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m, Decomposition::QRAlgorithm);
 
-    std::vector<Decomposition::EigenPair> soll;
-    soll.push_back( Decomposition::EigenPair(v2,l2,true));
-    soll.push_back( Decomposition::EigenPair(v1,l1,true));
-    soll.push_back( Decomposition::EigenPair(v0,l0,true));
+    ASSERT_EQ(3, eig.size());
 
-    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
-
-    ASSERT_EQ(soll.size(), eig.size());
-
-    // actually, soll is not used. we can just check if properties are fullfilled.
     for( size_t i = 0; i < eig.size(); i++ )
     {
         auto cEP = eig.at(i);
@@ -128,11 +114,32 @@ TEST(Decomposition, EigenvalueSymmetricDiagonal)
     }
 }
 
+TEST(Decomposition, EigenvalueSymmetricDiagonalPower)
+{
+    auto m = Matrix<double>::identity(3);
+    for (size_t s = 0; s < 3; s++)
+        m(s, s) = static_cast<double>(s + 1);
+
+    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m, Decomposition::PowerIterationAndHotellingsDeflation);
+
+    ASSERT_EQ(3, eig.size());
+
+    for( size_t i = 0; i < eig.size(); i++ )
+    {
+        auto cEP = eig.at(i);
+
+        ASSERT_TRUE( cEP.Valid );
+        ASSERT_TRUE( (m * cEP.V).compare( cEP.L * cEP.V, true, 0.001 ) );
+    }
+}
+
+
 TEST(Decomposition, EigenvalueSymmetric)
 {
     double data[] = { 6,10,11,  10,17,21,  11,21,42};
     auto m = Matrix<double>(3,3,data);
 
+    // qr is called
     std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
 
     ASSERT_EQ(3, eig.size());
@@ -144,6 +151,26 @@ TEST(Decomposition, EigenvalueSymmetric)
 
         ASSERT_TRUE( cEP.Valid );
         ASSERT_TRUE( (m * cEP.V).compare( cEP.L * cEP.V, true, 0.00001 ) );
+    }
+}
+
+TEST(Decomposition, EigenvalueSymmetricBatchTesting)
+{
+    for( int k = 0; k < 100; k++ )
+    {
+        auto m = Matrix<double>::random(5, 5, -10.0, 10.0);
+        m = m * m.transpose();
+
+        std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
+        for( size_t i = 0; i < eig.size(); i++ )
+        {
+            auto cEP = eig.at(i);
+
+            if( cEP.Valid )
+            {
+                ASSERT_TRUE((m * cEP.V).compare(cEP.L * cEP.V, true, 0.00001));
+            }
+        }
     }
 }
 
@@ -162,6 +189,14 @@ TEST(Decomposition, EigenvalueNonSymmetricLargest)
     ASSERT_TRUE( sigEigenPair.Valid );
     ASSERT_FLOAT_EQ(sigEigenPair.L,sollEigenVal);
     ASSERT_TRUE(sollEigenVec.compare(sigEigenPair.V));
+
+
+    // This calls also the power iteration
+    std::vector<Decomposition::EigenPair> eigenPair = Decomposition::eigen(m);
+
+    ASSERT_TRUE( eigenPair.at(0).Valid );
+    ASSERT_FLOAT_EQ(eigenPair.at(0).L,sollEigenVal);
+    ASSERT_TRUE(sollEigenVec.compare(eigenPair.at(0).V));
 }
 
 /*
