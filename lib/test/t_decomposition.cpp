@@ -244,16 +244,16 @@ TEST(Decomposition, QRDecomposition)
 
     auto mat = Matrix<double>(5, 3, matData);
 
-    double qData[] = {-0.4927,-0.4806, 0.1780,-0.6015,-0.3644,
-                      -0.5478,-0.3583,-0.5777,0.3760, 0.3104,
-                      -0.0768,0.4754,-0.6343,-0.1497,-0.5859,
-                      -0.5523,0.3391,0.4808,0.5071,-0.3026,
-                      -0.3824,0.5473,0.0311,-0.4661, 0.5796};
+    double qData[] = {0.4927,-0.4806, -0.1780,-0.6015,-0.3644,
+                      0.5478,-0.3583,0.5777,0.3760, 0.3104,
+                      0.0768,0.4754,0.6343,-0.1497,-0.5859,
+                      0.5523,0.3391,-0.4808,0.5071,-0.3026,
+                      0.3824,0.5473,-0.0311,-0.4661, 0.5796};
     auto qSoll = Matrix<double>(5,5,qData);
 
-    double rData[] = {-1.6536,-1.1405,-1.2569,
+    double rData[] = {1.6536,1.1405,1.2569,
                       0, 0.9661, 0.6341,
-                      0, 0, -0.8816,
+                      0, 0, 0.8816,
                       0, 0, 0,
                       0, 0, 0};
     auto rSoll = Matrix<double>(5,3,rData);
@@ -280,6 +280,22 @@ TEST(Decomposition, QRDecompositionSpecialMatrix)
     {
         ASSERT_FLOAT_EQ( res.Q.column(i).norm(), 1.0 );
         ASSERT_FLOAT_EQ( res.Q.row(i).norm(), 1.0 );
+    }
+}
+
+TEST(Decomposition, QRBatchTesting)
+{
+    for( int k = 0; k < 100; k++ )
+    {
+        auto m = Matrix<double>::random(5, 5, -100.0, 100.0);
+
+        Decomposition::QRResult res = Decomposition::qr(m,true);
+        auto Q = res.Q;
+        auto R = res.R;
+
+        ASSERT_TRUE( Q.isSquare() );
+        ASSERT_TRUE( Q.isOrthogonal(0.1) );
+        ASSERT_TRUE( m.compare(Q*R, true, 0.001) );
     }
 }
 

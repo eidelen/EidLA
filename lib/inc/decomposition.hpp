@@ -171,10 +171,11 @@ public:
      * orthogonal matrix Q and an upper triangle matrix R, such that
      * A = Q * R.
      * @param mat Matrix A
+     * @param positive If true, the diagonal elements of R are positive. This needs additional computation.
      * @return QR decomposition
      */
     template <class T>
-    static QRResult qr(const Matrix<T> mat);
+    static QRResult qr(const Matrix<T> mat, bool positive = true);
 
     /**
      * The QR decomposition is not unique. Changing the sign of a row and
@@ -413,7 +414,7 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
 
     while (go)
     {
-        Decomposition::QRResult qr = Decomposition::qr(a);
+        Decomposition::QRResult qr = Decomposition::qr(a, false); // note: not important to have positive elements on diagonal of R
 
         // check stopping criteria
         if( q_before.compare(qr.Q,true,precision))
@@ -499,7 +500,7 @@ double Decomposition::rayleighQuotient(const Matrix<T>& m, const Matrix<T> v)
 
 // QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf
 template <class T>
-Decomposition::QRResult Decomposition::qr(const Matrix<T> mat)
+Decomposition::QRResult Decomposition::qr(const Matrix<T> mat, bool positive)
 {
     Matrix<double> r = mat;
     size_t m = r.rows();
@@ -542,7 +543,22 @@ Decomposition::QRResult Decomposition::qr(const Matrix<T> mat)
         q = q * H;
     }
 
-    return QRResult(q,r);
+    QRResult retResult(q,r);
+
+    if( positive )
+    {
+        // There exist multiple qr solutions. To get a unique result,
+        // the diagonal elements on r are chosen to be positive.
+        for (size_t i = 0; i < m; i++)
+        {
+            if (r(i, i) < 0)
+            {
+                retResult = qrSignModifier(retResult.Q, retResult.R, i);
+            }
+        }
+    }
+
+    return retResult;
 }
 
 template <class T>
