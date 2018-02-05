@@ -585,16 +585,28 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
 
     Matrix<double> aaT = mat*mat.transpose();
 
+    // aaT is symmetric
+    std::vector<EigenPair> ep = eigen(aaT, QRAlgorithm);
 
-    // Compute singular values
-    std::vector<EigenPair> ep = eigen(aaT);
 
+    // compute singular values -> S
     Matrix<double> s_diag_mat = Matrix<double>(mat.rows(), mat.cols());
     s_diag_mat.fill(0.0);
 
     for( size_t p = 0; p < ep.size(); p++ )
     {
-        s_diag_mat(p,p) = std::sqrt(ep.at(p).L);
+        double tEigenValue = ep.at(p).L;
+        if( tEigenValue < 0.0 )
+        {
+            std::cout << "Warning: Singular value is complex (square root of " << tEigenValue << "). Value set to 0.0" << std::endl;
+            s_diag_mat(p,p) = 0.0;
+        }
+        else
+        {
+            s_diag_mat(p, p) = std::sqrt(tEigenValue);
+        }
+
+        std::cout << "L = " << tEigenValue <<  ", v = " << ep.at(p).V.transpose() << std::endl;
     }
 
 

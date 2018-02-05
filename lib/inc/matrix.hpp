@@ -1603,5 +1603,4 @@ void Matrix<T>::setToZero( T threshold )
                    });
 }
 
-
 #endif //MY_MATRIX_H
