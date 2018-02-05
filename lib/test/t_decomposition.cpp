@@ -326,13 +326,33 @@ TEST(Decomposition, SVD)
 
     auto mat = Matrix<double>(3, 3, matData);
 
+    Matrix<double> s_soll = Matrix<double>(3,3);
+    s_soll.fill(0.0);
+    s_soll(0,0) = 2.0 * std::sqrt(2.0);
+    s_soll(1,1) = std::sqrt(2.0);
+
+    double u_soll_data[] = {1.0/std::sqrt(6.0),   -1.0/std::sqrt(3.0),   1/std::sqrt(2.0),
+                       2.0/std::sqrt(6.0),   1.0/std::sqrt(3.0),       0.0,
+                       1.0/std::sqrt(6.0),   -1.0/std::sqrt(3.0),   -1.0/std::sqrt(2.0)};
+    auto u_soll = Matrix<double>(3,3,u_soll_data);
+
+    double v_soll_data[] = {1.0/std::sqrt(6.0),   1.0/std::sqrt(3.0),    1/std::sqrt(2.0),
+                            3.0/std::sqrt(12.0),   0.0,           -0.5,
+                            1.0/std::sqrt(12.0),   -2.0/std::sqrt(6.0),   0.5};
+    auto v_soll = Matrix<double>(3,3,v_soll_data);
+
     Decomposition::SVDResult res = Decomposition::svd(mat);
 
-    std::cout << "U:" << res.U;
-    std::cout << "S:" << res.S;
-    std::cout << "V:" << res.V;
+    std::cout << "U:" << std::endl << res.U << "-------" << std::endl << u_soll << std::endl << "====================" << std::endl << std::endl;
+    std::cout << "S:" << std::endl << res.S << "-------" << std::endl << s_soll << std::endl << "====================" << std::endl << std::endl;
+    std::cout << "V:" << std::endl << res.V << "-------" << std::endl << v_soll << std::endl << "====================" << std::endl << std::endl;
 
-    std::cout << "M:" << res.U * res.S * res.V.transpose();
 
+    std::cout << u_soll * s_soll * v_soll.transpose();
+
+    auto correctV = res.V;
+    //correctV.setColumn(1, (-1.0)*correctV.column(1));
+
+    std::cout << res.U * res.S * correctV.transpose();
 }
 
