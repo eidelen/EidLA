@@ -293,9 +293,8 @@ TEST(Decomposition, QRBatchTesting)
         auto Q = res.Q;
         auto R = res.R;
 
-        ASSERT_TRUE( Q.isSquare() );
-        ASSERT_TRUE( Q.isOrthogonal(0.1) );
-        ASSERT_TRUE( m.compare(Q*R, true, 0.001) );
+        ASSERT_TRUE( Q.isOrthogonal(0.0001) );
+        ASSERT_TRUE( m.compare(Q*R, true, 0.0001) );
     }
 }
 

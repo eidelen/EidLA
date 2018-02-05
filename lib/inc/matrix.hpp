@@ -1507,15 +1507,15 @@ bool Matrix<T>::isSquare() const
 template <class T>
 bool Matrix<T>::isOrthogonal(T customTolerance) const
 {
-    if( !isSymmetric() )
+    if( !isSquare() )
     {
         return false;
     }
 
     for( size_t i = 0; i < rows(); i++)
     {
-        // both row and column norm is 1.0
-        if( std::abs(row(i).normSquare() - column(i).normSquare()) > customTolerance )
+        // both row and column norm is 1.0 -> subtraction should be around zero
+        if( std::sqrt( std::abs(row(i).normSquare() - column(i).normSquare()) ) > customTolerance )
             return false;
     }
 
