@@ -42,10 +42,11 @@ public:
  * Computes the Echelon form of matrix mat.
  * @param mat
  * @param rowOperations List of required row operations at return.
+ * @param fullPivoting If true, pivot is chosen following to pivots abs-max. If false, first non-zero pivot is taken.
  * @return Echelon form.
  */
     template <class T>
-    static Matrix<double> echelon(const Matrix<T>& mat, std::vector<Matrix<double>>& rowOperations);
+    static Matrix<double> echelon(const Matrix<T>& mat, std::vector<Matrix<double>>& rowOperations, bool fullPivoting = false);
 
     /**
  * Computes the reduced Echelon form of matrix mat.
@@ -59,10 +60,11 @@ public:
  * Computes the reduced Echelon form of matrix mat.
  * @param mat
  * @param rowOperations List of required row operations at return.
+ * @param fullPivoting If true, pivot is chosen following to pivots abs-max. If false, first non-zero pivot is taken.
  * @return Echelon form.
  */
     template <class T>
-    static Matrix<double> reduced_echelon(const Matrix<T>& mat, std::vector<Matrix<double>>& rowOperations);
+    static Matrix<double> reduced_echelon(const Matrix<T>& mat, std::vector<Matrix<double>>& rowOperations, bool fullPivoting = false);
 };
 
 // Algorithm described in
@@ -76,23 +78,32 @@ Matrix<double> Transformation::echelon(const Matrix<T>& mat)
 }
 
 template <class T>
-Matrix<double> Transformation::echelon(const Matrix<T>& mat, std::vector<Matrix<double>>& rowOperations)
+Matrix<double> Transformation::echelon(const Matrix<T>& mat, std::vector<Matrix<double>>& rowOperations, bool fullPivoting)
 {
     Matrix<double> ret(mat);
 
     size_t processingRow = 0;
     for (size_t n = 0; n < ret.cols(); n++)
     {
-        // find first non zero entry in col n from row processingRow on
+        // Choose pivot row - here the abs-max value is chosen.
+        // Find abs-max entry in col n from row processingRow on
         size_t pivotRow          = 0;
+        double maxValue          = std::numeric_limits<double>::min();
         bool   foundNonZeroPivot = false;
         for (size_t m = processingRow; m < ret.rows(); m++)
         {
-            if (std::fabs(ret(m, n)) > std::numeric_limits<double>::min())
+            double currentValue = std::abs(ret(m, n));
+
+            if (currentValue > maxValue )
             {
                 pivotRow          = m;
                 foundNonZeroPivot = true;
-                break;
+                maxValue = currentValue;
+
+                // Possible non-zero pivot found. If fullPivoting is
+                // disabled, pivot search can be stopped.
+                if( !fullPivoting )
+                    break;
             }
         }
 
@@ -141,9 +152,9 @@ Matrix<double> Transformation::reduced_echelon(const Matrix<T>& mat)
 }
 
 template <class T>
-Matrix<double> Transformation::reduced_echelon(const Matrix<T>& mat, std::vector<Matrix<double>>& rowOperations)
+Matrix<double> Transformation::reduced_echelon(const Matrix<T>& mat, std::vector<Matrix<double>>& rowOperations, bool fullPivoting)
 {
-    Matrix<double> echMat = Transformation::echelon(mat, rowOperations);
+    Matrix<double> echMat = Transformation::echelon(mat, rowOperations, fullPivoting);
 
     if (echMat.rows() < 2)
     {
