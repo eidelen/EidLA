@@ -414,7 +414,7 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
 
     while (go)
     {
-        Decomposition::QRResult qr = Decomposition::qr(a, false); // note: not important to have positive elements on diagonal of R
+        Decomposition::QRResult qr = Decomposition::qr(a, true); // note: not important to have positive elements on diagonal of R
 
         // check stopping criteria
         if( q_before.compare(qr.Q,true,precision))
@@ -584,18 +584,25 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
     // U*S*V
 
     Matrix<double> aaT = mat*mat.transpose();
+    Matrix<double> aTa = mat.transpose()*mat;
 
-    // aaT is symmetric
+    // aaT and aTa are symmetric
     std::vector<EigenPair> ep = eigen(aaT, QRAlgorithm);
+    std::vector<EigenPair> ep_right = eigen(aTa, QRAlgorithm);
+
 
 
     // compute singular values -> S
     Matrix<double> s_diag_mat = Matrix<double>(mat.rows(), mat.cols());
     s_diag_mat.fill(0.0);
 
+    Matrix<double> u_left = Matrix<double>(s_diag_mat.rows(), s_diag_mat.rows());
+    Matrix<double> v_right = Matrix<double>(s_diag_mat.cols(), s_diag_mat.cols());
+
     for( size_t p = 0; p < ep.size(); p++ )
     {
-        double tEigenValue = ep.at(p).L;
+        double tEigenValue = ep.at(p).L; // left and right eigenvalues should be equal
+
         if( tEigenValue < 0.0 )
         {
             std::cout << "Warning: Singular value is complex (square root of " << tEigenValue << "). Value set to 0.0" << std::endl;
@@ -606,12 +613,13 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
             s_diag_mat(p, p) = std::sqrt(tEigenValue);
         }
 
-        std::cout << "L = " << tEigenValue <<  ", v = " << ep.at(p).V.transpose() << std::endl;
+        u_left.setColumn(p, ep.at(p).V);
+        v_right.setColumn(p,ep_right.at(p).V);
     }
 
 
 
-    return SVDResult(s_diag_mat, s_diag_mat, s_diag_mat);
+    return SVDResult(u_left, s_diag_mat, v_right);
 }
 
 

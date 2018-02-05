@@ -328,7 +328,11 @@ TEST(Decomposition, SVD)
 
     Decomposition::SVDResult res = Decomposition::svd(mat);
 
-    std::cout << res.S;
+    std::cout << "U:" << res.U;
+    std::cout << "S:" << res.S;
+    std::cout << "V:" << res.V;
+
+    std::cout << "M:" << res.U * res.S * res.V.transpose();
 
 }
 
