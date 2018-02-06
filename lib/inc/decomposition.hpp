@@ -578,6 +578,8 @@ Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const 
     return QRResult(Q,R);
 }
 
+#include "solve.hpp"
+
 template <class T>
 Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
 {
@@ -588,7 +590,7 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
 
     // aaT and aTa are symmetric
     std::vector<EigenPair> ep = eigen(aaT, QRAlgorithm);
-    std::vector<EigenPair> ep_right = eigen(aTa, QRAlgorithm);
+    //std::vector<EigenPair> ep_right = eigen(aTa, QRAlgorithm);
 
 
 
@@ -603,21 +605,79 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
     {
         double tEigenValue = ep.at(p).L; // left and right eigenvalues should be equal
 
-        if( tEigenValue < 0.0 )
+        if (tEigenValue < 0.0)
         {
-            std::cout << "Warning: Singular value is complex (square root of " << tEigenValue << "). Value set to 0.0" << std::endl;
-            s_diag_mat(p,p) = 0.0;
+            std::cout << "Warning: Singular value is complex (square root of " << tEigenValue << "). Value set to 0.0"  << std::endl;
+            s_diag_mat(p, p) = 0.0;
         }
         else
         {
             s_diag_mat(p, p) = std::sqrt(tEigenValue);
         }
 
-        u_left.setColumn(p, ep.at(p).V);
-        v_right.setColumn(p,ep_right.at(p).V);
+        // fix eigenvector signs in u -> first element always positive
+        Matrix<double> eVect = ep.at(p).V;
+        if( eVect(0,0)  < 0.0 )
+            eVect = eVect * (-1.0);
+
+        u_left.setColumn(p, eVect);
+
+
+
+
+
+        // find right eigenvector of aTa based on already found eigenvalue of aaT
+        Matrix<double> coeff = aTa - (Matrix<double>::identity(aTa.cols()) * tEigenValue);
+
+        std::cout << "coeff " << std::endl << coeff << std::endl;
+
+        Matrix<double> a = Matrix<double>(coeff.rows(), coeff.cols() + 1);
+        a.fill(0.0);
+        a.setSubMatrix(0, 0,  coeff);
+
+        Matrix<double> ech = Transformation::echelon(a);
+
+        std::cout << "ech: " << std::endl << ech;
+
+        Matrix<double> ev = Matrix<double>(aTa.cols(), 1);
+        ev.fill(0.0);
+
+        // choose last element of unnomalized eigenvector as 1.0
+        ev( ev.rows()-1, 0) = 1.0;
+
+        // back-substitute
+        for( size_t k = 0; k < aTa.rows() - 1; k++ )
+        {
+            size_t rowToSubstitue = aTa.rows() - 2 - k;
+
+            // sum right of subst element
+            double accum = 0.0;
+            for( size_t i = 0; i < (k+1); i++ )
+            {
+                accum += ech(rowToSubstitue,rowToSubstitue+1+i) * ev(rowToSubstitue+1+i, 0);
+            }
+
+            double uknown = (accum) / ech(rowToSubstitue,rowToSubstitue) * (-1.0);
+
+
+            std::cout << "accum = " << accum << " , pivot = " << ech(rowToSubstitue,rowToSubstitue) << " , unknown = " << uknown << std::endl;
+
+            ev(rowToSubstitue,0) = uknown;
+
+        }
+
+        std::cout << "ev : " << ev.normalizeColumns().transpose() << std::endl;
+
+        std::cout << "ev check " << ((aTa * ev) - (ev*tEigenValue )).transpose()<< std::endl;
+
+        ev = ev.normalizeColumns();
+
+        // fix eigenvector signs in v -> first element always positive
+        if( ev(0,0)  < 0.0 )
+            ev = ev * (-1.0);
+
+        v_right.setColumn(p,ev);
     }
-
-
 
     return SVDResult(u_left, s_diag_mat, v_right);
 }

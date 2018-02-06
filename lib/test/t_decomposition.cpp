@@ -343,9 +343,15 @@ TEST(Decomposition, SVD)
 
     Decomposition::SVDResult res = Decomposition::svd(mat);
 
-    std::cout << "U:" << std::endl << res.U << "-------" << std::endl << u_soll << std::endl << "====================" << std::endl << std::endl;
+    bool z;
+
+    std::cout << "U:" << std::endl << res.U << "-------" << std::endl << u_soll << std::endl << std::endl;
+    std::cout << "det :" << res.U.determinant(&z) << ", " << u_soll.determinant(&z) << std::endl << "====================" << std::endl << std::endl;
     std::cout << "S:" << std::endl << res.S << "-------" << std::endl << s_soll << std::endl << "====================" << std::endl << std::endl;
-    std::cout << "V:" << std::endl << res.V << "-------" << std::endl << v_soll << std::endl << "====================" << std::endl << std::endl;
+
+
+    std::cout << "V:" << std::endl << res.V << "-------" << std::endl << v_soll  << std::endl;
+    std::cout << "det :" << res.V.determinant(&z) << ", " << v_soll.determinant(&z) << std::endl << "====================" << std::endl << std::endl;
 
 
     std::cout << u_soll * s_soll * v_soll.transpose();
@@ -353,6 +359,6 @@ TEST(Decomposition, SVD)
     auto correctV = res.V;
     //correctV.setColumn(1, (-1.0)*correctV.column(1));
 
-    std::cout << res.U * res.S * correctV.transpose();
+    std::cout << res.U * res.S * res.V.transpose();
 }
 
