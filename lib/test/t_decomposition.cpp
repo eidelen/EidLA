@@ -317,6 +317,30 @@ TEST(Decomposition, QRSignChanger)
     }
 }
 
+TEST(Decomposition, HouseHolderBatchTesting)
+{
+    size_t rows = 5;
+
+    for( int k = 0; k < 100; k++ )
+    {
+        auto x = Matrix<double>::random(rows, 1, -100.0, 100.0);
+
+        Decomposition::HouseholderResult res = Decomposition::householder(x);
+        auto p = Decomposition::householderMatrix(res.V, res.B);
+        ASSERT_TRUE( p.isOrthogonal(0.0001) );
+        ASSERT_TRUE( p.isSymmetric() );
+
+        // rx should be a multiple of e1 with length x -> rx = [ +/- norm(x), 0, 0, ... 0 ]
+        auto rx = p * x;
+
+        auto rxSoll = Matrix<double>(rows, 1);
+        rxSoll.fill(0.0);
+        rxSoll(0,0) = x.norm();
+
+        ASSERT_TRUE(rxSoll.compare(rx, true, 0.00001) || rxSoll.compare(rx*(-1.0),true, 0.00001) );
+    }
+}
+
 // http://mysite.science.uottawa.ca/phofstra/MAT2342/SVDproblems.pdf
 TEST(Decomposition, SVD)
 {

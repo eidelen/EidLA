@@ -93,6 +93,16 @@ public:
         Matrix<double> V; // Right singular vectors
     };
 
+    struct HouseholderResult
+    {
+        HouseholderResult(double b, Matrix<double> v) :
+        B(b), V(v)
+        {
+        }
+        double B;         // scalar
+        Matrix<double> V; // householder vector
+    };
+
 public:
     /**
      * LU decomposition of the matrix mat.
@@ -164,7 +174,28 @@ public:
      * @return Rayleigh quotient
      */
     template <class T>
-    static double rayleighQuotient(const Matrix<T>& mat, const Matrix<T> vec);
+    static double rayleighQuotient(const Matrix<T>& mat, const Matrix<T>& vec);
+
+    /**
+     * Computes the Householder vector and the corresponding scalar, which forms
+     * together the Householder matrix P. P reflects the vector x.
+     * @param x Vector.
+     * @return Householder result.
+     */
+    template <class T>
+    static HouseholderResult householder(const Matrix<T>& x);
+
+    /**
+     * Generate Householder matrix P from Householder vector and
+     * corresponding scalar value, such that
+     * P = I - b*v*v'
+     * @param v Householder vector.
+     * @param b Scalar value.
+     * @return Householder matrix.
+     */
+    template <class T>
+    static Matrix<double> householderMatrix(const Matrix<T>& v, double b);
+
 
     /**
      * QR decomposition, where the passed matrix A is decomposed into an
@@ -492,10 +523,37 @@ Decomposition::EigenPair Decomposition::powerIteration(const Matrix<T>& mat, siz
 
 // info: https://www.mathematik.uni-wuerzburg.de/~borzi/RQGradient_Chapter_10.pdf
 template <class T>
-double Decomposition::rayleighQuotient(const Matrix<T>& m, const Matrix<T> v)
+double Decomposition::rayleighQuotient(const Matrix<T>& m, const Matrix<T>& v)
 {
     Matrix<T> vT = v.transpose();
     return static_cast<double>((vT * m * v)(0, 0)) / static_cast<double>((vT * v)(0, 0));
+}
+
+template <class T>
+Decomposition::HouseholderResult Decomposition::householder(const Matrix<T>& x)
+{
+    // generate basis vector [1.0, 0, 0, ..]
+    Matrix<double> e(x.rows(),1);
+    e(0,0) = 1.0;
+
+    double sign = 1.0;
+    if( x(0,0) > 0.0 )
+        sign = -1.0;
+
+    // vh -> Householder vector
+    Matrix<double> v = x - (e*x.norm()*sign);
+
+    // scalar
+    double b = 2.0 / (v.transpose() * v)(0,0);
+
+    return HouseholderResult(b,v);
+}
+
+template <class T>
+Matrix<double> Decomposition::householderMatrix(const Matrix<T>& v, double b)
+{
+    Matrix<double> p = Matrix<double>::identity(v.rows()) - b * v * v.transpose();
+    return p;
 }
 
 // QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf
@@ -514,21 +572,10 @@ Decomposition::QRResult Decomposition::qr(const Matrix<T> mat, bool positive)
         // copy current column
         Matrix<double> x = r.subMatrix(i,i,m-i,1);
 
-        // generate basis vector [1.0, 0, 0, ..]
-        Matrix<double> e(m-i,1);
-        e(0,0) = 1.0;
-
-        double sign = 1.0;
-        if( x(0,0) > 0.0 )
-            sign = -1.0;
-
-        // vh -> Householder vector
-        Matrix<double> vh = x - (e*x.norm()*sign);
-
-        double c = 2.0 / (vh.transpose() * vh)(0,0);
+        HouseholderResult house = householder(x);
 
         // Householder matrix
-        Matrix<double> h = Matrix<double>::identity(vh.rows()) - c * vh * vh.transpose();
+        Matrix<double> h = householderMatrix(house.V, house.B);
 
         // create the matrix for next loop.
         Matrix<double> rSub = h * r.subMatrix(i,i, m-i, n-i);
