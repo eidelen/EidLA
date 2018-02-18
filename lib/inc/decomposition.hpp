@@ -103,6 +103,17 @@ public:
         Matrix<double> V; // householder vector
     };
 
+    struct DiagonalizationResult
+    {
+        DiagonalizationResult(Matrix<double> u, Matrix<double> d, Matrix<double> v)
+        : U(u), D(d), V(v)
+        {
+        }
+        Matrix<double> U; // Left orthogonal matrix
+        Matrix<double> D; // Bidiagonal matrix
+        Matrix<double> V; // Right orthogonal matrix
+    };
+
 public:
     /**
      * LU decomposition of the matrix mat.
@@ -195,6 +206,16 @@ public:
      */
     template <class T>
     static Matrix<double> householderMatrix(const Matrix<T>& v, double b);
+
+    /**
+     * Bidiagonalization of a Matrix A, so that
+     * U'*A*V = B,
+     * where B is bidiagonal.
+     * @param a Input matrix.
+     * @return Diagonalization result.
+     */
+    template <class T>
+    static DiagonalizationResult bidiagonalization(const Matrix<T>& a);
 
 
     /**
@@ -554,6 +575,72 @@ Matrix<double> Decomposition::householderMatrix(const Matrix<T>& v, double b)
 {
     Matrix<double> p = Matrix<double>::identity(v.rows()) - b * v * v.transpose();
     return p;
+}
+
+
+// Householder bidiagonalization, Matrix computation, 4th ed, Golub & Loan, p.284
+template <class T>
+Decomposition::DiagonalizationResult Decomposition::bidiagonalization(const Matrix<T>& a_m)
+{
+    size_t m = a_m.rows();
+    size_t n = a_m.cols();
+
+    if( m < n )
+    {
+        std::cout << "bidiagonalization: Invalid matrix dimension";
+        std::exit(-1);
+    }
+
+    Matrix<double> a = a_m;
+    Matrix<double> u = Matrix<double>::identity(m);
+    Matrix<double> v = Matrix<double>::identity(n);
+
+    for( size_t j = 0; j < n; j++)
+    {
+        // row direction
+        Matrix<double> x_r = a.subMatrix(j,j, m-j, 1);
+        HouseholderResult h_r = householder(x_r);
+        Matrix<double> h_mat_r = householderMatrix(h_r.V, h_r.B);
+
+        Matrix<double> a_sub_r = a.subMatrix(j,j, m-j, n-j);
+
+        // transform a with householder matrix
+        a_sub_r = h_mat_r * a_sub_r;
+        a.setSubMatrix(j,j, a_sub_r);
+
+        // This I do not understand -> todo: check with Simon Pezold
+        a.setSubMatrix(j+1,j,  h_r.V.subMatrix(1,0, m-j-1, 1) );
+
+        // concatenate householder matrix
+        Matrix<double> H_MAT_R = Matrix<double>::identity(m);
+        H_MAT_R.setSubMatrix(j,j,h_mat_r);
+        u = u * H_MAT_R;
+
+        /* Here seems to be something wrong
+        // column direction
+        if( j <= n-2 )
+        {
+            Matrix<double> x_c = a.subMatrix(j,j+1, 1, n-(j+1));
+            HouseholderResult h_c = householder(x_c.transpose());
+            Matrix<double> h_mat_c = householderMatrix(h_c.V, h_c.B);
+
+            Matrix<double> a_sub_c = a.subMatrix(j,j+1, m-j, n-j-1);
+            a_sub_c = a_sub_c * h_mat_c;
+            a.setSubMatrix(j, j+1, a_sub_c);
+
+            // This I do not understand -> todo: check with Simon Pezold
+            a.setSubMatrix(j,j+2,  h_c.V.subMatrix(1,0, n-j-2, 1).transpose() );
+
+            // concatenate householder matrix
+            Matrix<double> H_MAT_C = Matrix<double>::identity(n);
+            H_MAT_C.setSubMatrix(j,j,h_mat_c);
+            v = v * H_MAT_C;
+
+        }*/
+
+    }
+
+    return DiagonalizationResult(u,a,v);
 }
 
 // QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf

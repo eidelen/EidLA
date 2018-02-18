@@ -341,6 +341,26 @@ TEST(Decomposition, HouseHolderBatchTesting)
     }
 }
 
+TEST(Decomposition, BidiagonalizationBatchTest)
+{
+    size_t rows = 3;
+
+    for( int k = 0; k < 1; k++ )
+    {
+        auto a = Matrix<double>::random(rows, rows, -100.0, 100.0);
+
+        Decomposition::DiagonalizationResult res = Decomposition::bidiagonalization(a);
+
+        std::cout << "a: " << std::endl << a << std::endl << "v: " << std::endl << res.V << std::endl << "u: " << std::endl << res.U;
+
+        std::cout << std::endl << "b: " << std::endl << res.D << std::endl << "prod: " << std::endl << res.U.transpose() * a * res.V;
+
+        ASSERT_TRUE( res.V.isOrthogonal(0.0001) );
+        ASSERT_TRUE( res.U.isOrthogonal(0.0001) );
+        ASSERT_TRUE(res.D.compare( res.U.transpose() * a * res.V, true, 0.0001));
+    }
+}
+
 // http://mysite.science.uottawa.ca/phofstra/MAT2342/SVDproblems.pdf
 TEST(Decomposition, SVD)
 {
