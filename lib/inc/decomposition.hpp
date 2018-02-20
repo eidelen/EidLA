@@ -578,7 +578,9 @@ Matrix<double> Decomposition::householderMatrix(const Matrix<T>& v, double b)
 }
 
 
+// Sources:
 // Householder bidiagonalization, Matrix computation, 4th ed, Golub & Loan, p.284
+// documents/bidiagonalization.pdf -> Martin Plesinger
 template <class T>
 Decomposition::DiagonalizationResult Decomposition::bidiagonalization(const Matrix<T>& a_m)
 {
@@ -606,19 +608,15 @@ Decomposition::DiagonalizationResult Decomposition::bidiagonalization(const Matr
 
         // transform a with householder matrix
         a_sub_r = h_mat_r * a_sub_r;
-        a.setSubMatrix(j,j, a_sub_r);
+        a.setSubMatrix(j,j, a_sub_r); // place submatrix into a
 
-        // This I do not understand -> todo: check with Simon Pezold
-        a.setSubMatrix(j+1,j,  h_r.V.subMatrix(1,0, m-j-1, 1) );
-
-        // concatenate householder matrix
+        // concatenate householder matrix to u
         Matrix<double> H_MAT_R = Matrix<double>::identity(m);
         H_MAT_R.setSubMatrix(j,j,h_mat_r);
         u = u * H_MAT_R;
 
-        /* Here seems to be something wrong
         // column direction
-        if( j <= n-2 )
+        if( j < n-2 )
         {
             Matrix<double> x_c = a.subMatrix(j,j+1, 1, n-(j+1));
             HouseholderResult h_c = householder(x_c.transpose());
@@ -626,18 +624,13 @@ Decomposition::DiagonalizationResult Decomposition::bidiagonalization(const Matr
 
             Matrix<double> a_sub_c = a.subMatrix(j,j+1, m-j, n-j-1);
             a_sub_c = a_sub_c * h_mat_c;
-            a.setSubMatrix(j, j+1, a_sub_c);
+            a.setSubMatrix(j, j+1, a_sub_c); // place submatrix into a
 
-            // This I do not understand -> todo: check with Simon Pezold
-            a.setSubMatrix(j,j+2,  h_c.V.subMatrix(1,0, n-j-2, 1).transpose() );
-
-            // concatenate householder matrix
+            // concatenate householder matrix to v
             Matrix<double> H_MAT_C = Matrix<double>::identity(n);
-            H_MAT_C.setSubMatrix(j,j,h_mat_c);
-            v = v * H_MAT_C;
-
-        }*/
-
+            H_MAT_C.setSubMatrix(j+1,j+1,h_mat_c);
+            v =  v * H_MAT_C;
+        }
     }
 
     return DiagonalizationResult(u,a,v);

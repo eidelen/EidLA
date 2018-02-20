@@ -341,23 +341,106 @@ TEST(Decomposition, HouseHolderBatchTesting)
     }
 }
 
+bool testDiagonalizationResult( const Matrix<double>& a, Decomposition::DiagonalizationResult res)
+{
+    bool ok = true;
+
+    ok = ok && res.V.isOrthogonal(0.0001) ;
+    ok = ok && res.U.isOrthogonal(0.0001) ;
+    ok = ok && res.D.compare(  res.U.transpose() * a * res.V, true, 0.0001 );
+    ok = ok && a.compare(  res.U * res.D * res.V.transpose(), true, 0.0001 );
+
+    return ok;
+}
+
+TEST(Decomposition, BidiagonalizationSymmetric)
+{
+/* Octave example
+A =
+   6   8   8   7
+   7   8   6   5
+   4   2   3   7
+   9   1   4   8
+
+U =
+   0.4447496  -0.6879265  -0.0015212   0.5735439
+   0.5188745  -0.1063169   0.6637464  -0.5281161
+   0.2964997  -0.2746100  -0.7223026  -0.5612097
+   0.6671244   0.6633575  -0.1942097   0.2778209
+
+B =
+   13.49074  -18.90026    0.00000    0.00000
+    0.00000    6.65700   -4.13058    0.00000
+    0.00000    0.00000    5.03030    0.19847
+    0.00000    0.00000    0.00000    1.02931
+
+V =
+
+   1.00000   0.00000   0.00000   0.00000
+   0.00000  -0.47455   0.74583  -0.46748
+   0.00000  -0.54122   0.17160   0.82318
+   0.00000  -0.69418  -0.64365  -0.32223
+*/
+
+    // Compared to the example, signs might change
+    double aData[] = {6,8,8,7,  7,8,6,5,   4,2,3,7,   9,1,4,8};
+    auto a = Matrix<double>(4,4,aData);
+    Decomposition::DiagonalizationResult res = Decomposition::bidiagonalization(a);
+
+    ASSERT_TRUE(testDiagonalizationResult(a, res));
+}
+
+TEST(Decomposition, BidiagonalizationNonSymmetric)
+{
+/* Octave example
+A =
+           1           4           1           6
+          10           0           6           4
+           7          10           2           7
+           8           4           5           3
+           7          10           0           1
+
+
+U =
+   -0.061663      0.6189     0.44282     0.16385     0.62468
+    -0.61663    -0.50111     0.26481     0.53573     0.10737
+    -0.43164     0.58508   -0.019502     0.19214    -0.65884
+     -0.4933   -0.078335     0.32425     -0.8033   0.0097606
+    -0.43164      0.1319    -0.79263    -0.06282     0.40507
+
+B =
+      16.217     -15.114           0           0
+           0      8.8768     -6.5868           0
+           0           0      4.7876      5.4597
+           0           0           0      2.3784
+           0           0           0           0
+
+V =
+          -1          -0          -0          -0
+          -0     0.71806    -0.44909    -0.53171
+          -0     0.46918     0.87662    -0.10678
+          -0     0.51406    -0.17279     0.84017
+*/
+
+    // Compared to the example, signs might change
+    double aData[] = {1,4,1,6,    10,0,6,4,    7,10,2,7,    8,4,5,3,     7,10,0,1 };
+    auto a = Matrix<double>(4,4,aData);
+    Decomposition::DiagonalizationResult res = Decomposition::bidiagonalization(a);
+
+    ASSERT_TRUE(testDiagonalizationResult(a, res));
+}
+
+
 TEST(Decomposition, BidiagonalizationBatchTest)
 {
-    size_t rows = 3;
+    size_t rows = 6;
 
-    for( int k = 0; k < 1; k++ )
+    for( int k = 0; k < 200; k++ )
     {
         auto a = Matrix<double>::random(rows, rows, -100.0, 100.0);
 
         Decomposition::DiagonalizationResult res = Decomposition::bidiagonalization(a);
-
-        std::cout << "a: " << std::endl << a << std::endl << "v: " << std::endl << res.V << std::endl << "u: " << std::endl << res.U;
-
-        std::cout << std::endl << "b: " << std::endl << res.D << std::endl << "prod: " << std::endl << res.U.transpose() * a * res.V;
-
-        ASSERT_TRUE( res.V.isOrthogonal(0.0001) );
-        ASSERT_TRUE( res.U.isOrthogonal(0.0001) );
-        ASSERT_TRUE(res.D.compare( res.U.transpose() * a * res.V, true, 0.0001));
+        ASSERT_TRUE(testDiagonalizationResult(a, res));
     }
 }
 
