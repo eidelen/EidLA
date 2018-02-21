@@ -1514,9 +1514,15 @@ bool Matrix<T>::isOrthogonal(T customTolerance) const
 
     for( size_t i = 0; i < rows(); i++)
     {
-        // both row and column norm is 1.0 -> subtraction should be around zero
-        if( std::sqrt( std::abs(row(i).normSquare() - column(i).normSquare()) ) > customTolerance )
+        if(  std::abs(1.0 - row(i).norm() )  > customTolerance )
+        {
             return false;
+        }
+
+        if(  std::abs(1.0 - column(i).norm())  > customTolerance )
+        {
+            return false;
+        }
     }
 
     return true;

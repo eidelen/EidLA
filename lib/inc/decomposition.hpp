@@ -711,22 +711,18 @@ template <class T>
 Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
 {
     // U*S*V
-
-    Matrix<double> aaT = mat*mat.transpose();
     Matrix<double> aTa = mat.transpose()*mat;
 
-    // aaT and aTa are symmetric
-    std::vector<EigenPair> ep = eigen(aaT, QRAlgorithm);
-    //std::vector<EigenPair> ep_right = eigen(aTa, QRAlgorithm);
-
-
+    // aTa are symmetric
+    std::vector<EigenPair> ep = eigen(aTa, QRAlgorithm);
 
     // compute singular values -> S
+    // compute left orthogonal matrix  > U
     Matrix<double> s_diag_mat = Matrix<double>(mat.rows(), mat.cols());
     s_diag_mat.fill(0.0);
 
-    Matrix<double> u_left = Matrix<double>(s_diag_mat.rows(), s_diag_mat.rows());
-    Matrix<double> v_right = Matrix<double>(s_diag_mat.cols(), s_diag_mat.cols());
+    Matrix<double> u_left = Matrix<double>(s_diag_mat.rows(), s_diag_mat.rows()); u_left.fill(0.0);
+    Matrix<double> v_right = Matrix<double>(s_diag_mat.cols(), s_diag_mat.cols()); v_right.fill(0.0);
 
     for( size_t p = 0; p < ep.size(); p++ )
     {
@@ -734,7 +730,8 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
 
         if (tEigenValue < 0.0)
         {
-            std::cout << "Warning: Singular value is complex (square root of " << tEigenValue << "). Value set to 0.0"  << std::endl;
+            std::cout << "Warning: Singular value is complex (square root of " << tEigenValue << "). Value set to 0.0"
+                      << std::endl;
             s_diag_mat(p, p) = 0.0;
         }
         else
@@ -742,68 +739,23 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
             s_diag_mat(p, p) = std::sqrt(tEigenValue);
         }
 
-        // fix eigenvector signs in u -> first element always positive
         Matrix<double> eVect = ep.at(p).V;
-        if( eVect(0,0)  < 0.0 )
-            eVect = eVect * (-1.0);
+        v_right.setColumn(p, eVect);
 
-        u_left.setColumn(p, eVect);
-
-
-
-
-
-        // find right eigenvector of aTa based on already found eigenvalue of aaT
-        Matrix<double> coeff = aTa - (Matrix<double>::identity(aTa.cols()) * tEigenValue);
-
-        std::cout << "coeff " << std::endl << coeff << std::endl;
-
-        Matrix<double> a = Matrix<double>(coeff.rows(), coeff.cols() + 1);
-        a.fill(0.0);
-        a.setSubMatrix(0, 0,  coeff);
-
-        Matrix<double> ech = Transformation::echelon(a);
-
-        std::cout << "ech: " << std::endl << ech;
-
-        Matrix<double> ev = Matrix<double>(aTa.cols(), 1);
-        ev.fill(0.0);
-
-        // choose last element of unnomalized eigenvector as 1.0
-        ev( ev.rows()-1, 0) = 1.0;
-
-        // back-substitute
-        for( size_t k = 0; k < aTa.rows() - 1; k++ )
+        if( s_diag_mat(p,p) > 0.00001 ) // todo: find usueful concept for small numbers
         {
-            size_t rowToSubstitue = aTa.rows() - 2 - k;
-
-            // sum right of subst element
-            double accum = 0.0;
-            for( size_t i = 0; i < (k+1); i++ )
-            {
-                accum += ech(rowToSubstitue,rowToSubstitue+1+i) * ev(rowToSubstitue+1+i, 0);
-            }
-
-            double uknown = (accum) / ech(rowToSubstitue,rowToSubstitue) * (-1.0);
-
-
-            std::cout << "accum = " << accum << " , pivot = " << ech(rowToSubstitue,rowToSubstitue) << " , unknown = " << uknown << std::endl;
-
-            ev(rowToSubstitue,0) = uknown;
-
+            // find u based on v and s
+            u_left.setColumn( p, mat * eVect * (1.0 / s_diag_mat(p,p)));
         }
-
-        std::cout << "ev : " << ev.normalizeColumns().transpose() << std::endl;
-
-        std::cout << "ev check " << ((aTa * ev) - (ev*tEigenValue )).transpose()<< std::endl;
-
-        ev = ev.normalizeColumns();
-
-        // fix eigenvector signs in v -> first element always positive
-        if( ev(0,0)  < 0.0 )
-            ev = ev * (-1.0);
-
-        v_right.setColumn(p,ev);
+        else
+        {
+            // since singular value is zero, the column in u is created.
+            std::cout << "Warning: Singular value is zero. Column " << p << " of the orthogonal matrix U is made based on already existing columns." << std::endl;
+            for(size_t u_row = 0; u_row < u_left.rows(); u_row++)
+            {
+                u_left(u_row,p) = std::sqrt(1 - u_left.row( u_row ).normSquare());
+            }
+        }
     }
 
     return SVDResult(u_left, s_diag_mat, v_right);

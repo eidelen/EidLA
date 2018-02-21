@@ -244,12 +244,13 @@ TEST(Decomposition, QRDecomposition)
 
     auto mat = Matrix<double>(5, 3, matData);
 
+    /*
     double qData[] = {0.4927,-0.4806, -0.1780,-0.6015,-0.3644,
                       0.5478,-0.3583,0.5777,0.3760, 0.3104,
                       0.0768,0.4754,0.6343,-0.1497,-0.5859,
                       0.5523,0.3391,-0.4808,0.5071,-0.3026,
                       0.3824,0.5473,-0.0311,-0.4661, 0.5796};
-    auto qSoll = Matrix<double>(5,5,qData);
+    auto qSoll = Matrix<double>(5,5,qData); */
 
     double rData[] = {1.6536,1.1405,1.2569,
                       0, 0.9661, 0.6341,
@@ -260,9 +261,9 @@ TEST(Decomposition, QRDecomposition)
 
     Decomposition::QRResult res = Decomposition::qr(mat);
 
-    ASSERT_TRUE( rSoll.compare(res.R, true, 0.001));
-    ASSERT_TRUE( qSoll.compare(res.Q, true, 0.001));
-    ASSERT_TRUE( mat.compare( res.Q * res.R, true, 0.001));
+    ASSERT_TRUE( res.Q.isOrthogonal(0.01)); // directly comparing Q does not make sense, since signs can change
+    ASSERT_TRUE( rSoll.compare(res.R, true, 0.01));
+    ASSERT_TRUE( mat.compare( res.Q * res.R, true, 0.01));
 }
 
 TEST(Decomposition, QRDecompositionSpecialMatrix)
@@ -458,6 +459,7 @@ TEST(Decomposition, SVD)
     s_soll(0,0) = 2.0 * std::sqrt(2.0);
     s_soll(1,1) = std::sqrt(2.0);
 
+    /*
     double u_soll_data[] = {1.0/std::sqrt(6.0),   -1.0/std::sqrt(3.0),   1/std::sqrt(2.0),
                        2.0/std::sqrt(6.0),   1.0/std::sqrt(3.0),       0.0,
                        1.0/std::sqrt(6.0),   -1.0/std::sqrt(3.0),   -1.0/std::sqrt(2.0)};
@@ -466,26 +468,34 @@ TEST(Decomposition, SVD)
     double v_soll_data[] = {1.0/std::sqrt(6.0),   1.0/std::sqrt(3.0),    1/std::sqrt(2.0),
                             3.0/std::sqrt(12.0),   0.0,           -0.5,
                             1.0/std::sqrt(12.0),   -2.0/std::sqrt(6.0),   0.5};
-    auto v_soll = Matrix<double>(3,3,v_soll_data);
+    auto v_soll = Matrix<double>(3,3,v_soll_data); */
+
 
     Decomposition::SVDResult res = Decomposition::svd(mat);
 
-    bool z;
+    // U and V cannot be compared directly, because it can change in signs.
+    ASSERT_TRUE( res.U.isOrthogonal(0.001) );
+    ASSERT_TRUE( res.V.isOrthogonal(0.001) );
 
-    std::cout << "U:" << std::endl << res.U << "-------" << std::endl << u_soll << std::endl << std::endl;
-    std::cout << "det :" << res.U.determinant(&z) << ", " << u_soll.determinant(&z) << std::endl << "====================" << std::endl << std::endl;
-    std::cout << "S:" << std::endl << res.S << "-------" << std::endl << s_soll << std::endl << "====================" << std::endl << std::endl;
+    ASSERT_TRUE( s_soll.compare(res.S, true, 0.001) );
 
+    ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
+}
 
-    std::cout << "V:" << std::endl << res.V << "-------" << std::endl << v_soll  << std::endl;
-    std::cout << "det :" << res.V.determinant(&z) << ", " << v_soll.determinant(&z) << std::endl << "====================" << std::endl << std::endl;
+TEST(Decomposition, SVDBatch)
+{
+    size_t rows = 5;
 
+    for( int k = 0; k < 500; k++ )
+    {
+        auto a = Matrix<double>::random(rows, rows, -5.0, 5.0);
 
-    std::cout << u_soll * s_soll * v_soll.transpose();
+        Decomposition::SVDResult res = Decomposition::svd(a);
 
-    auto correctV = res.V;
-    //correctV.setColumn(1, (-1.0)*correctV.column(1));
-
-    std::cout << res.U * res.S * res.V.transpose();
+        // U and V cannot be compared directly, because it can change in signs.
+        ASSERT_TRUE( res.U.isOrthogonal(0.01) );
+        ASSERT_TRUE( res.V.isOrthogonal(0.01) );
+        ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.01 ) );
+    }
 }
 
