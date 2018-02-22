@@ -286,7 +286,7 @@ TEST(Decomposition, QRDecompositionSpecialMatrix)
 
 TEST(Decomposition, QRBatchTesting)
 {
-    for( int k = 0; k < 100; k++ )
+    for( int k = 0; k < 500; k++ )
     {
         auto m = Matrix<double>::random(5, 5, -100.0, 100.0);
 
@@ -317,6 +317,23 @@ TEST(Decomposition, QRSignChanger)
         ASSERT_TRUE(mat.compare(nextRes.Q * nextRes.R, true, 0.001));
     }
 }
+
+TEST(Decomposition, RQBatchTesting)
+{
+    for( int k = 0; k < 500; k++ )
+    {
+        auto m = Matrix<double>::random(6, 6, -10.0, 10.0);
+
+        Decomposition::QRResult res = Decomposition::rq(m);
+
+        auto R = res.R;
+        auto Q = res.Q;
+
+        ASSERT_TRUE( Q.isOrthogonal(0.001) );
+        ASSERT_TRUE( m.compare(R*Q, true, 0.001) );
+    }
+}
+
 
 TEST(Decomposition, HouseHolderBatchTesting)
 {

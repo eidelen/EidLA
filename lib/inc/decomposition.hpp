@@ -230,6 +230,18 @@ public:
     static QRResult qr(const Matrix<T> mat, bool positive = true);
 
     /**
+     * RQ decomposition, where the passed matrix A is decomposed into an
+     * upper triangle matrix R and an orthogonal matrix Q, such that
+     * A = R * Q.
+     * @param mat Matrix A
+     * @param positive If true, the diagonal elements of R are positive. This needs additional computation.
+     * @return QR decomposition
+     */
+    template <class T>
+    static QRResult rq(const Matrix<T> mat);
+
+
+    /**
      * The QR decomposition is not unique. Changing the sign of a row and
      * its corresponding column leads to another valid decomposition. This
      * function modifies an existing QR decomposition and returns another
@@ -686,6 +698,29 @@ Decomposition::QRResult Decomposition::qr(const Matrix<T> mat, bool positive)
     }
 
     return retResult;
+}
+
+template <class T>
+Decomposition::QRResult Decomposition::rq(const Matrix<T> mat)
+{
+    // info: https://math.stackexchange.com/questions/1640695/rq-decomposition
+    size_t m = mat.rows();
+
+    Matrix<double> p = Matrix<double>(m, m);
+    p.fill(0.0);
+    for( size_t i = 0; i < m; i++ )
+    {
+        p(i,m-1-i) = 1.0;
+    }
+
+    Matrix<double> ad = p * mat; // reverses the rows in mat
+
+    Decomposition::QRResult qrD = Decomposition::qr(ad.transpose());
+
+    Matrix<double> q = p * qrD.Q.transpose();
+    Matrix<double> r = p * qrD.R.transpose() * p;
+
+    return QRResult(q,r);
 }
 
 template <class T>
