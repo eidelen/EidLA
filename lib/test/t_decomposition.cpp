@@ -509,10 +509,9 @@ TEST(Decomposition, SVDBatch)
 
         Decomposition::SVDResult res = Decomposition::svd(a);
 
-        // U and V cannot be compared directly, because it can change in signs.
-        ASSERT_TRUE( res.U.isOrthogonal(0.01) );
-        ASSERT_TRUE( res.V.isOrthogonal(0.01) );
-        ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.01 ) );
+        ASSERT_TRUE( res.U.isOrthogonal(0.05) );
+        ASSERT_TRUE( res.V.isOrthogonal(0.05) );
+        ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.05 ) );
     }
 }
 

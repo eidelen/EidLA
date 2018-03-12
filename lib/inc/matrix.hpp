@@ -446,7 +446,6 @@ Matrix<T>::Matrix(size_t rows, size_t cols)
 : m_rows(rows), m_cols(cols), m_nbrOfElements(rows * cols)
 {
     m_data.reset(new T[m_nbrOfElements]);
-    fill(0);
 }
 
 //** Specific copy transformations - to be extended
@@ -820,9 +819,11 @@ Matrix<T> Matrix<T>::matMulR(const Matrix<T>& mat) const
         //Create a lookup table of the right matrix split to column vectors
         // -> this is helpful because this way the column vector is in a
         //    continous memory block.
+
         std::vector<Matrix<T>> lookup;
+        lookup.reserve(mat.cols());
         for (size_t k = 0; k < mat.cols(); k++)
-            lookup.push_back(mat.column(k));
+            lookup.emplace_back(mat.column(k)); //todo: the intermediate matrix column() is copied again
 
         for (size_t n = 0; n < mat.cols(); n++)
         {

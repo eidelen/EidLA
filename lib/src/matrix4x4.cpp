@@ -78,6 +78,9 @@ Matrix4x4::Matrix4x4(const Matrix4x4& mat)
     copyMatData(mat, *this);
 }
 
+Matrix4x4::~Matrix4x4()
+{
+}
 
 // https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
 

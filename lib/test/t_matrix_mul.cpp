@@ -92,3 +92,23 @@ TEST(MatMul, Division)
 
     ASSERT_TRUE(res.compare(soll));
 }
+
+
+TEST(MatMul, BatchMul)
+{
+    size_t dim = 6;
+    auto m1 = Matrix<double>::identity(dim);
+    auto m2 = Matrix<double>::identity(dim);
+    auto res = Matrix<double>::identity(dim);
+    auto soll = Matrix<double>::identity(dim);
+
+    for(size_t k = 0; k < 100000; k++)
+    {
+        m1(0,0) = k;
+        m2(0,0) = k;
+        soll(0,0) = k*k;
+
+        res = m1 * m2;
+        ASSERT_TRUE(res.compare(soll));
+    }
+}

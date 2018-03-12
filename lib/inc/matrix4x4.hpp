@@ -57,6 +57,8 @@ public:
 
     Matrix4x4(const Matrix4x4& mat);
 
+    virtual ~Matrix4x4();
+
     /**
      * Asignment operator: overwrite content of this matrix.
      * @param other

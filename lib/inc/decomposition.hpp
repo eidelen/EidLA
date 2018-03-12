@@ -478,7 +478,7 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
 
     while (go)
     {
-        Decomposition::QRResult qr = Decomposition::qr(a, true); // note: not important to have positive elements on diagonal of R
+        Decomposition::QRResult qr = Decomposition::qr(a, false); // note: not important to have positive elements on diagonal of R
 
         // check stopping criteria
         if( q_before.compare(qr.Q,true,precision))
@@ -567,6 +567,7 @@ Decomposition::HouseholderResult Decomposition::householder(const Matrix<T>& x)
 {
     // generate basis vector [1.0, 0, 0, ..]
     Matrix<double> e(x.rows(),1);
+    e.fill(0.0);
     e(0,0) = 1.0;
 
     double sign = 1.0;
