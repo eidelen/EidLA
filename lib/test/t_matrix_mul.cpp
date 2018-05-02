@@ -96,7 +96,7 @@ TEST(MatMul, Division)
 
 TEST(MatMul, BatchMul)
 {
-    size_t dim = 6;
+    size_t dim = 7;
     auto m1 = Matrix<double>::identity(dim);
     auto m2 = Matrix<double>::identity(dim);
     auto res = Matrix<double>::identity(dim);

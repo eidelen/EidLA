@@ -165,3 +165,64 @@ TEST(MatAdvanced, IsOrthogonal)
     mat(0,1) = 1.0;
     ASSERT_FALSE(mat.isOrthogonal());
 }
+
+TEST(MatAdvanced, L1NormMatrix)
+{
+    double matData[] = {1,-2,-3,  -4,5,6,  7,-8,9};
+    auto mat = Matrix<double>(3,3,matData);
+
+    double l1NormShould = 3 + 6 + 9; // third column abs sum
+
+    ASSERT_EQ( l1NormShould, mat.normL1() );
+}
+
+TEST(MatAdvanced, L1NormVector)
+{
+    double matData[] = {1,-2,-3};
+    auto mat = Matrix<double>(3,1,matData);
+
+    double l1NormShould = 1 + 2 + 3;
+
+    ASSERT_EQ( l1NormShould, mat.normL1() );
+}
+
+TEST(MatAdvanced, InfNormMatrix)
+{
+    double matData[] = {1,-2,-3,  -4,5,6,  7,-8,9};
+    auto mat = Matrix<double>(3,3,matData);
+
+    double infNormShould = 7 + 8 + 9;
+
+    ASSERT_EQ( infNormShould, mat.normInf() );
+}
+
+TEST(MatAdvanced, InfNormVector)
+{
+    double matData[] = {1,-2,-3};
+    auto mat = Matrix<double>(3,1,matData);
+
+    double infNormShould = 3;
+
+    ASSERT_EQ( infNormShould, mat.normInf() );
+}
+
+// source https://ch.mathworks.com/help/matlab/ref/norm.html
+TEST(MatAdvanced, L2NormMatrix)
+{
+    double matData[] = {2, 0, 1,    -1, 1, 0,   -3, 3, 0};
+    auto mat = Matrix<double>(3,3,matData);
+
+    double l2NormShould = 4.7234;
+
+    ASSERT_NEAR( l2NormShould, mat.normL2(), 0.001 );
+}
+
+TEST(MatAdvanced, L2NormVector)
+{
+    double matData[] = {3,-4};
+    auto mat = Matrix<double>(2,1,matData);
+
+    double l2Norm = 5;
+
+    ASSERT_EQ( l2Norm, mat.normL2() );
+}

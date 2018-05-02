@@ -187,3 +187,14 @@ TEST(Matrix, SetToDouble)
     mat.setToZero(0.06);
     ASSERT_TRUE( mat.compare(soll));
 }
+
+TEST(Matrix, Absolute)
+{
+    double data[] = {-1.0, 2.0,   5.0, -3.0};
+    auto mat = Matrix<double>(2,2,data);
+
+    double sollData[] = {1.0, 2.0,   5.0, 3.0};
+    auto soll = Matrix<double>(2,2,sollData);
+
+    soll.compare( mat.absolute() );
+}

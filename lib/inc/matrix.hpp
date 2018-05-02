@@ -411,6 +411,32 @@ public:
      */
     void setToZero( T threshold );
 
+    /**
+     * Computes the L1 norm of the matrix or vector.
+     * @return L1 norm
+     */
+    T normL1() const;
+
+    /**
+     * Computes the infinity norm of the matrix or vector.
+     * @return Infinity norm
+     */
+    T normInf() const;
+
+    /**
+     * Computes the Euclidean length of a vector. If this
+     * is a matrix, it computes the maximum of the matrix.
+     * @return Infinity norm
+     */
+    double normL2() const;
+
+    /**
+     * Returns a matrix with absolute
+     * values (all values are positive).
+     * @return Absolute matrix.
+     */
+    Matrix<T> absolute() const;
+
 protected:
 
     /**
@@ -1608,6 +1634,74 @@ void Matrix<T>::setToZero( T threshold )
                        else
                            return val;
                    });
+}
+
+template <class T>
+T Matrix<T>::normL1() const
+{
+    T norm = 0;
+    Matrix<T> thisAbs = this->absolute();
+
+    for( size_t c = 0; c < thisAbs.cols(); c++ )
+    {
+        T cSum = thisAbs.column(c).sum();
+        if( cSum > norm )
+            norm = cSum;
+    }
+
+    return norm;
+}
+
+template <class T>
+T Matrix<T>::normInf() const
+{
+    T norm = 0;
+    Matrix<T> thisAbs = this->absolute();
+
+    for( size_t c = 0; c < thisAbs.rows(); c++ )
+    {
+        T cSum = thisAbs.row(c).sum();
+        if( cSum > norm )
+            norm = cSum;
+    }
+
+    return norm;
+}
+
+template <class T>
+double Matrix<T>::normL2() const
+{
+    double normRet = 0;
+
+    if (cols() == 1 || rows() == 1)
+    {
+        // if vector
+        normRet = norm();
+    }
+    else
+    {
+        // if matrix -> max singular value
+        Decomposition::SVDResult svdR = Decomposition::svd( *this );
+
+        auto max = svdR.S.max();
+        normRet = std::get<2>(max);
+    }
+
+    return normRet;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::absolute() const
+{
+    Matrix<T> ret( this->rows(), this->cols() );
+    const T* src = this->data();
+    T* dst = ret.data();
+    for( size_t k = 0; k < ret.getNbrOfElements(); k++ )
+    {
+        dst[k] = std::abs(src[k]);
+    }
+
+    return ret;
 }
 
 #endif //MY_MATRIX_H
