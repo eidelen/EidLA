@@ -37,7 +37,10 @@ public:
     /**
      * Constructs a 4x4 identity double matrix.
      */
-    Matrix4x4();
+    Matrix4x4() : Matrix<double>(4,4)
+    {
+        setToIdentity();
+    }
 
     /**
      * Constructs a 4x4 double matrix with content.
@@ -46,7 +49,13 @@ public:
     Matrix4x4(  double m00, double m01, double m02, double m03,
                 double m10, double m11, double m12, double m13,
                 double m20, double m21, double m22, double m23,
-                double m30, double m31, double m32, double m33 );
+                double m30, double m31, double m32, double m33 ) : Matrix<double>(4,4)
+    {
+        setValue(0,0, m00); setValue(0,1, m01); setValue(0,2, m02); setValue(0,3, m03);
+        setValue(1,0, m10); setValue(1,1, m11); setValue(1,2, m12); setValue(1,3, m13);
+        setValue(2,0, m20); setValue(2,1, m21); setValue(2,2, m22); setValue(2,3, m23);
+        setValue(3,0, m30); setValue(3,1, m31); setValue(3,2, m32); setValue(3,3, m33);
+    }
 
     /**
      * Copy constructor.
@@ -55,23 +64,53 @@ public:
     template <class R>
     Matrix4x4(const Matrix<R>& mat);
 
-    Matrix4x4(const Matrix4x4& mat);
+    Matrix4x4(const Matrix4x4& mat) : Matrix<double>(4,4)
+    {
+        copyMatData(mat, *this);
+    }
 
-    virtual ~Matrix4x4();
-
-    /**
-     * Asignment operator: overwrite content of this matrix.
-     * @param other
-     * @return
-     */
-    Matrix4x4& operator=(const Matrix4x4& other);
+    virtual ~Matrix4x4()
+    {
+    }
 
     /**
      * Asignment operator: overwrite content of this matrix.
      * @param other
      * @return
      */
-    Matrix4x4& operator=(const Matrix<double>& other);
+    Matrix4x4& operator=(const Matrix4x4& other)
+    {
+        if (this != &other) // self-assignment check expected
+        {
+            // copy data
+            copyMatData(other, *this);
+        }
+
+        return *this;
+    }
+
+    /**
+     * Asignment operator: overwrite content of this matrix.
+     * @param other
+     * @return
+     */
+    Matrix4x4& operator=(const Matrix<double>& other)
+    {
+        if (this != &other) // self-assignment check expected
+        {
+            if( Matrix::equalDimension(*this, other) )
+            {
+                copyMatData(other, *this);
+            }
+            else
+            {
+                std::cout << "Cannot assign Matrix4x4 from matrix with unequal dimension" << std::endl;
+                std::exit(-1);
+            }
+        }
+
+        return *this;
+    }
 
     /**
      * This function returns the upper left 3x3
@@ -79,7 +118,10 @@ public:
      * this is the rotation matrix.
      * @return Rotation matrix.
      */
-    Matrix<double> getRotation() const;
+    Matrix<double> getRotation() const
+    {
+        return subMatrix(0, 0, 3, 3);
+    }
 
     /**
      * This function returns the most right column.
@@ -87,20 +129,46 @@ public:
      * the translation vector.
      * @return Translation vector.
      */
-    Matrix<double> getTranslation() const;
+    Matrix<double> getTranslation() const
+    {
+        return subMatrix(0,3,3,1);
+    }
 
     /**
      * Sets the 3x3 upper left rotation matrix.
      * @param rot 3x3 rotation matrix.
      */
-    void setRotation( const Matrix<double>& rot );
+    void setRotation( const Matrix<double>& rot )
+    {
+        if( rot.cols() != 3 || rot.rows() != 3 )
+        {
+            std::cout << "Rotation matrix has wrong dimension";
+            std::exit(-1);
+        }
+
+        const double* src = rot.data();
+        double* dst = data();
+
+        std::copy(src, src+3, dst);
+        std::copy(src+3, src+6, dst+4);
+        std::copy(src+6, src+9, dst+8);
+    }
 
     /**
      * Sets the most right column, which is the
      * translation vector.
      * @param trans Translation vector.
      */
-    void setTranslation( const Matrix<double>& trans);
+    void setTranslation( const Matrix<double>& trans)
+    {
+        if( trans.cols() != 1 || trans.rows() != 3 )
+        {
+            std::cout << "Translation vector has wrong dimension";
+            std::exit(-1);
+        }
+
+        setTranslation( trans(0,0), trans(1,0), trans(2,0) );
+    }
 
     /**
      * Sets the most right column, which is the
@@ -109,34 +177,58 @@ public:
      * @param y
      * @param z
      */
-    void setTranslation( double x, double y, double z);
-
-    /**
-     * Matrix multiplication
-     * @param mat
-     * @return Product of two 4x4 matrix
-     */
-    Matrix4x4 operator*(const Matrix4x4& mat) const;
-    template <class R>
-    Matrix<double> operator*(const Matrix<R>& mat) const;
+    void setTranslation( double x, double y, double z)
+    {
+        setValue(0,3,  x);
+        setValue(1,3,  y);
+        setValue(2,3,  z);
+        setValue(3,3,  1.0);
+    }
 
     /**
      * Rotate around the z-axis.
      * @param radian Rotation angle.
+     * info: https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
      */
-    void rotZ(double radian);
+    void rotZ(double radian)
+    {
+        Matrix4x4 rotZMat( std::cos(radian), -std::sin(radian), 0.0, 0.0,
+                           std::sin(radian), std::cos(radian), 0.0, 0.0,
+                           0.0, 0.0, 1.0, 0.0,
+                           0.0, 0.0, 0.0, 1.0);
+
+        *this = rotZMat * (*this);
+    }
 
     /**
      * Rotate around the y-axis.
      * @param radian Rotation angle.
+     * https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
      */
-    void rotY(double radian);
+    void rotY(double radian)
+    {
+        Matrix4x4 rotYMat( std::cos(radian), 0.0, std::sin(radian), 0.0,
+                           0.0, 1.0, 0.0, 0.0,
+                           -std::sin(radian), 0.0, std::cos(radian), 0.0,
+                           0.0, 0.0, 0.0, 1.0 );
+
+        *this = rotYMat * (*this);
+    }
 
     /**
      * Rotate around the x-axis.
      * @param radian Rotation angle.
+     * https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
      */
-    void rotX(double radian);
+    void rotX(double radian)
+    {
+        Matrix4x4 rotXMat( 1.0, 0.0, 0.0, 0.0,
+                           0.0, std::cos(radian), -std::sin(radian), 0.0,
+                           0.0, std::sin(radian),  std::cos(radian), 0.0,
+                           0.0, 0.0, 0.0, 1.0 );
+
+        *this = rotXMat * (*this);
+    }
 
     /**
      * Computes the inverse of this 4x4 matrix,
@@ -144,8 +236,18 @@ public:
      * In that way, the invert of the 3x3 rot-mat
      * can be computed fast.
      * @return Inverse of the rigid transformation.
+     * note: https://math.stackexchange.com/questions/1234948/inverse-of-a-rigid-transformation
      */
-    Matrix4x4 inverted_rg() const;
+    Matrix4x4 inverted_rg() const
+    {
+        Matrix<double> rotMat = subMatrix(0,0,3,3).transpose();
+        Matrix<double> transVect = (rotMat*(-1)) * subMatrix(0,3,3,1);
+
+        Matrix4x4 ret;
+        ret.setRotation( rotMat );
+        ret.setTranslation(transVect);
+        return ret;
+    }
 };
 
 
@@ -164,12 +266,6 @@ Matrix4x4::Matrix4x4(const Matrix<R>& mat)
         std::cout << "Cannot create Matrix4x4 from matrix with unequal dimension" << std::endl;
         std::exit(-1);
     }
-}
-
-template <class R>
-Matrix<double> Matrix4x4::operator*(const Matrix<R>& mat) const
-{
-    return matMulR(mat);
 }
 
 #endif //MY_AFFINE_H
