@@ -32,6 +32,6 @@ class SquareMatrixException: public std::exception
     {
         return "Square matrix expected";
     }
-} squareMatEx;
+} squareMatException;
 
 #endif //MY_EXCEPTIONS_H

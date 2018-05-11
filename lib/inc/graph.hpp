@@ -49,7 +49,7 @@ public:
         if(!m_graph.isSquare())
         {
             std::cerr << "Invalid graph matrix. Matrix needs to be of type  m x m" << std::endl;
-            throw squareMatEx;
+            throw squareMatException;
         }
     }
 

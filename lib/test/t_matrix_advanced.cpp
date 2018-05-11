@@ -217,6 +217,7 @@ TEST(MatAdvanced, L2NormMatrix)
     ASSERT_NEAR( l2NormShould, mat.normL2(), 0.001 );
 }
 
+// from documents/norms.pdf
 TEST(MatAdvanced, L2NormVector)
 {
     double matData[] = {3,-4};
@@ -225,4 +226,14 @@ TEST(MatAdvanced, L2NormVector)
     double l2Norm = 5;
 
     ASSERT_EQ( l2Norm, mat.normL2() );
+}
+
+// from documents/norms.pdf
+TEST(MatAdvanced, ConditionNumbers)
+{
+    double matData[] = {2, -1, 1,   1, 0, 1,   3, -1, 4};
+    auto mat = Matrix<double>(3,3, matData);
+
+    ASSERT_NEAR( 6 * 4.5, mat.conditionNumberL1(), 0.001);
+    ASSERT_NEAR( 8 * 3.5, mat.conditionNumberInf(), 0.001);
 }
