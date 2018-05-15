@@ -368,3 +368,35 @@ TEST(Matrix, SaveLoadDouble)
 
     ASSERT_TRUE(save.compare(load));
 }
+
+
+#ifdef OPENCVEIDLA
+TEST(MATRIX, FromOpenCV)
+{
+    double matDataD[] = { 1,2,  3,4,  5,6,  7,8};
+    cv::Mat opencvMatD(2,4,CV_64F, matDataD); // double
+    float matDataF[] = { 1,2,  3,4,  5,6,  7,8};
+    cv::Mat opencvMatF(2,4,CV_32F, matDataF); // float
+    int matDataI[] = { 1,2,  3,4,  5,6,  7,8};
+    cv::Mat opencvMatI(2,4,CV_32S, matDataI); // int
+
+    Matrix<double> shouldBeMatD(2,4, matDataD);
+    Matrix<float> shouldBeMatF(2,4, matDataF);
+    Matrix<int> shouldBeMatI(2,4, matDataI);
+
+    Matrix<double> fromOpenCV( opencvMatD );
+    ASSERT_TRUE( fromOpenCV.compare(shouldBeMatD) );
+
+    Matrix<float> fromOpenCVF( opencvMatF );
+    ASSERT_TRUE( fromOpenCVF.compare(shouldBeMatF) );
+
+    Matrix<int> fromOpenCVI( opencvMatI );
+    ASSERT_TRUE( fromOpenCVI.compare(shouldBeMatI) );
+}
+
+TEST(MATRIX, ToOpenCV)
+{
+    ASSERT_TRUE(false);
+}
+
+#endif // OPENCVEIDLA

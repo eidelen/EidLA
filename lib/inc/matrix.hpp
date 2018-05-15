@@ -33,8 +33,11 @@
 #include <fstream>
 #include <algorithm>
 
-
 #include <smmintrin.h> // SSE4
+
+#ifdef OPENCVEIDLA
+#include <opencv2/core/core.hpp>
+#endif // OPENCVEIDLA
 
 template <class T>
 class Matrix
@@ -74,6 +77,10 @@ public:
      * @param filepath
      */
     Matrix(const std::string& filepath);
+
+#ifdef OPENCVEIDLA
+    Matrix( const cv::Mat& mat);
+#endif // OPENCVEIDLA
 
     /**
      * Asignment operator: overwrite content of this matrix.
@@ -528,6 +535,44 @@ Matrix<T>::Matrix(const std::string& filepath)
     // allocates and overwrites
     load(filepath);
 }
+
+#ifdef OPENCVEIDLA
+template <class T>
+Matrix<T>::Matrix(const cv::Mat& mat)
+: Matrix<T>(mat.rows, mat.cols)
+{
+    // check the matrix type
+    uchar depth = mat.type() & CV_MAT_DEPTH_MASK;
+
+    for(size_t m = 0; m < mat.rows; m++)
+    {
+        for (size_t n = 0; n < mat.cols; n++)
+        {
+            T value;
+            if( depth == CV_32S )
+            {
+                value = mat.at<int>(m, n);
+            }
+            else if( depth == CV_32F )
+            {
+                value = mat.at<float>(m, n);
+            }
+            else if( depth == CV_64F)
+            {
+                value = mat.at<double>(m, n);
+            }
+            else
+            {
+                std::cerr << "Unsupported OpenCV matrix type";
+                return;
+            }
+
+            (*this)(m, n) = value;
+        }
+    }
+
+}
+#endif // OPENCVEIDLA
 
 template <class T>
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other)
