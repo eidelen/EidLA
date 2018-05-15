@@ -438,6 +438,18 @@ public:
     double normL2() const;
 
     /**
+     * Computes the L1 norm condition number.
+     * @return L1 condition number
+     */
+    double conditionNumberL1() const;
+
+    /**
+     * Computes the infinity norm condition number.
+     * @return Infinity condition number
+     */
+    double conditionNumberInf() const;
+
+    /**
      * Returns a matrix with absolute
      * values (all values are positive).
      * @return Absolute matrix.
@@ -1747,6 +1759,44 @@ Matrix<T> Matrix<T>::absolute() const
     }
 
     return ret;
+}
+
+template <class T>
+double Matrix<T>::conditionNumberL1() const
+{
+    bool invertable;
+    Matrix<T> invMat = this->inverted(&invertable);
+
+    if( !invertable )
+    {
+        std::cerr << "conditionNumberL1: matrix not invertable";
+        return 0.0;
+    }
+
+    double n = normL1();
+    double ni = invMat.normL1();
+    return n * ni;
+}
+
+/**
+ * Computes the infinity norm condition number.
+ * @return Infinity condition number
+ */
+template <class T>
+double Matrix<T>::conditionNumberInf() const
+{
+    bool invertable;
+    Matrix<T> invMat = this->inverted(&invertable);
+
+    if( !invertable )
+    {
+        std::cerr << "conditionNumberInf: matrix not invertable";
+        return 0.0;
+    }
+
+    double n = normInf();
+    double ni = invMat.normInf();
+    return n * ni;
 }
 
 #endif //MY_MATRIX_H

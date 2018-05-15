@@ -515,3 +515,20 @@ TEST(Decomposition, SVDBatch)
     }
 }
 
+TEST(Decomposition, SVDCompression)
+{
+    // third line is almost linear combination of both upper
+    // therefore, using first two singular values should lead to a accurate representation of the matrix.
+    double data[] = {1, 0, 0,   0, 1, 0,   1, 1, 0.01}; // third line is almost linear combination of both upper
+    Matrix<double> mat(3,3, data);
+
+    Decomposition::SVDResult res = Decomposition::svd(mat);
+
+    ASSERT_TRUE( res.U.isOrthogonal(0.05) );
+    ASSERT_TRUE( res.V.isOrthogonal(0.05) );
+    ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.05 ) );
+
+    auto compressed = res.U.subMatrix(0,0,3,2) * res.S.subMatrix(0,0,2,2) * res.V.transpose().subMatrix(0,0,2,3);
+
+    ASSERT_TRUE( mat.compare(compressed, true, 0.01));
+}
