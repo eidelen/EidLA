@@ -79,6 +79,10 @@ public:
     Matrix(const std::string& filepath);
 
 #ifdef OPENCVEIDLA
+    /**
+     * Constructs a matrix from an OpenCV matrix.
+     * @param mat OpenCV matrix
+     */
     Matrix( const cv::Mat& mat);
 #endif // OPENCVEIDLA
 
@@ -456,6 +460,15 @@ public:
      */
     Matrix<T> absolute() const;
 
+#ifdef OPENCVEIDLA
+    /**
+     * Returns an OpenCV matrix of this
+     * matrix.
+     * @return OpendCV matrix.
+     */
+    cv::Mat toOpenCVMatrix( ) const;
+#endif // OPENCVEIDLA
+
 protected:
 
     /**
@@ -469,6 +482,11 @@ protected:
     T elementwiseMultiplyAndSum(const T* arr1, const T* arr2, size_t length) const;
 
     T* getRowPtr(size_t row);
+    const T* getRowPtr(size_t row) const;
+
+#ifdef OPENCVEIDLA
+    cv::Mat createOpenCVMat( ) const;
+#endif // OPENCVEIDLA
 
 protected:
     size_t m_rows;
@@ -477,6 +495,16 @@ protected:
     std::shared_ptr<T> m_data;
     size_t             m_nbrOfElements;
 };
+
+
+#ifdef OPENCVEIDLA
+template <>
+inline cv::Mat Matrix<double>::createOpenCVMat( ) const;
+template <>
+inline cv::Mat Matrix<float>::createOpenCVMat( ) const;
+template <>
+inline cv::Mat Matrix<int>::createOpenCVMat( ) const;
+#endif // OPENCVEIDLA
 
 template <>
 inline int Matrix<int>::elementwiseMultiplyAndSum(const int* arr1, const int* arr2, size_t length) const;
@@ -538,7 +566,7 @@ Matrix<T>::Matrix(size_t rows, size_t cols, const T* data)
 : Matrix<T>(rows, cols)
 {
     T* dst = this->data();
-    std::copy(data, data + this->getNbrOfElements(), this->data());
+    std::copy(data, data + this->getNbrOfElements(), dst);
 }
 
 template <class T>
@@ -553,36 +581,11 @@ template <class T>
 Matrix<T>::Matrix(const cv::Mat& mat)
 : Matrix<T>(mat.rows, mat.cols)
 {
-    // check the matrix type
-    uchar depth = mat.type() & CV_MAT_DEPTH_MASK;
-
     for(size_t m = 0; m < mat.rows; m++)
     {
-        for (size_t n = 0; n < mat.cols; n++)
-        {
-            T value;
-            if( depth == CV_32S )
-            {
-                value = mat.at<int>(m, n);
-            }
-            else if( depth == CV_32F )
-            {
-                value = mat.at<float>(m, n);
-            }
-            else if( depth == CV_64F)
-            {
-                value = mat.at<double>(m, n);
-            }
-            else
-            {
-                std::cerr << "Unsupported OpenCV matrix type";
-                return;
-            }
-
-            (*this)(m, n) = value;
-        }
+        const T* src = mat.ptr<T>(m); // pointer to row m
+        std::copy(src, src + mat.cols, this->getRowPtr(m));
     }
-
 }
 #endif // OPENCVEIDLA
 
@@ -1170,6 +1173,12 @@ std::tuple<size_t, size_t, T> Matrix<T>::min() const
 
 template <class T>
 T* Matrix<T>::getRowPtr(size_t row)
+{
+    return data() + row * cols();
+}
+
+template <class T>
+const T* Matrix<T>::getRowPtr(size_t row) const
 {
     return data() + row * cols();
 }
@@ -1798,5 +1807,79 @@ double Matrix<T>::conditionNumberInf() const
     double ni = invMat.normInf();
     return n * ni;
 }
+
+#ifdef OPENCVEIDLA
+
+
+// general case -> see template specializations below
+
+template <class T>
+cv::Mat Matrix<T>::toOpenCVMatrix( ) const
+{
+    return createOpenCVMat();
+}
+
+// general case, return double matrix -> see template specializations below
+template <class T>
+inline cv::Mat Matrix<T>::createOpenCVMat( ) const
+{
+    cv::Mat oMat(rows(),cols(),CV_64F);
+
+    for(size_t m = 0; m < rows(); m++)
+    {
+        for(size_t n = 0; n < cols(); n++)
+        {
+            oMat.at<double>(m,n) = (*this)(m,n);
+        }
+    }
+
+    return oMat;
+}
+
+template <>
+inline cv::Mat Matrix<double>::createOpenCVMat( ) const
+{
+    cv::Mat oMat(rows(),cols(),CV_64F);
+
+    for(size_t m = 0; m < rows(); m++)
+    {
+        double* dst = oMat.ptr<double>(m);
+        std::copy(getRowPtr(m), getRowPtr(m) + cols(), dst);
+    }
+
+    return oMat;
+}
+
+template <>
+inline cv::Mat Matrix<float>::createOpenCVMat( ) const
+{
+    cv::Mat oMat(rows(),cols(),CV_32F);
+
+    for(size_t m = 0; m < rows(); m++)
+    {
+        float* dst = oMat.ptr<float>(m);
+        std::copy(getRowPtr(m), getRowPtr(m) + cols(), dst);
+    }
+
+    return oMat;
+}
+
+
+template <>
+inline cv::Mat Matrix<int>::createOpenCVMat( ) const
+{
+    cv::Mat oMat(rows(),cols(),CV_32S);
+
+    for(size_t m = 0; m < rows(); m++)
+    {
+        int* dst = oMat.ptr<int>(m);
+        std::copy(getRowPtr(m), getRowPtr(m) + cols(), dst);
+    }
+
+    return oMat;
+}
+
+
+#endif // OPENCVEIDLA
 
 #endif //MY_MATRIX_H

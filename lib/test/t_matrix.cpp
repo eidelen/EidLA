@@ -396,7 +396,30 @@ TEST(MATRIX, FromOpenCV)
 
 TEST(MATRIX, ToOpenCV)
 {
-    ASSERT_TRUE(false);
+    double matDataD[] = { 1,2,  3,4,  5,6,  7,8};
+    Matrix<double> shouldBeMatD(2,4, matDataD);
+
+    float matDataF[] = { 1,2,  3,4,  5,6,  7,8};
+    Matrix<float> shouldBeMatF(2,4, matDataF);
+
+    int matDataI[] = { 1,2,  3,4,  5,6,  7,8};
+    Matrix<int> shouldBeMatI(2,4, matDataI);
+
+    short matDataShort[] = { 1,2,  3,4,  5,6,  7,8};
+    Matrix<short > shouldBeMatShort(2,4, matDataShort);
+
+    cv::Mat cvMatD = shouldBeMatD.toOpenCVMatrix();
+    cv::Mat cvMatF = shouldBeMatF.toOpenCVMatrix();
+    cv::Mat cvMatI = shouldBeMatI.toOpenCVMatrix();
+    cv::Mat cvMatSD = shouldBeMatShort.toOpenCVMatrix();
+
+    // uses template specializations
+    ASSERT_TRUE( Matrix<double>(cvMatD).compare(shouldBeMatD) );
+    ASSERT_TRUE( Matrix<float>(cvMatF).compare(shouldBeMatF) );
+    ASSERT_TRUE( Matrix<int>(cvMatI).compare(shouldBeMatI) );
+
+    // uses general implementation -> double returned
+    ASSERT_TRUE( Matrix<double>(cvMatSD).compare(shouldBeMatD) );
 }
 
 #endif // OPENCVEIDLA
