@@ -198,3 +198,70 @@ TEST(Matrix, Absolute)
 
     soll.compare( mat.absolute() );
 }
+
+TEST(Matrix, Mean)
+{
+    double data[] = {-1, -3, 2, 4};
+    auto mat = Matrix<double>(2,2,data);
+
+    ASSERT_FLOAT_EQ(0.5, mat.mean());
+}
+
+TEST(Matrix, Normalize)
+{
+    double data[] = {0,1,2,3};
+    auto mat = Matrix<double>(2,2,data);
+
+    double sollData[] = {-1, -1.0/3.0, 1.0/3.0, 1};
+    auto soll = Matrix<double>(2,2,sollData);
+
+    double scale, mean;
+
+    auto normMat = mat.normalize(mean,scale);
+
+    ASSERT_TRUE( soll.compare( normMat));
+    ASSERT_FLOAT_EQ( 1.5, mean );
+    ASSERT_FLOAT_EQ( 1.0/3.0 * 2.0 , scale);
+
+    // recover original matrix
+    auto denormMat = normMat.denormalize(mean,scale);
+    ASSERT_TRUE( mat.compare(denormMat));
+}
+
+TEST(Matrix, NormalizeSpecial)
+{
+    // same values
+    double data[] = {5, 5, 5, 5};
+    auto mat = Matrix<double>(2,2,data);
+
+    double sollData[] = {0, 0, 0, 0};
+    auto soll = Matrix<double>(2,2,sollData);
+
+    double scale, mean;
+
+    auto normMat = mat.normalize(mean,scale);
+
+    ASSERT_TRUE( soll.compare( normMat));
+    ASSERT_FLOAT_EQ( 5, mean );
+    ASSERT_FLOAT_EQ( 1.0 , scale);
+
+    // recover original matrix
+    auto denormMat = normMat.denormalize(mean,scale);
+    ASSERT_TRUE( mat.compare(denormMat));
+}
+
+TEST(Matrix, NormalizeBatch)
+{
+    for( int i = 0; i < 100; i++ )
+    {
+        // same values
+        auto mat = Matrix<double>::random(5,5,-100,100);
+
+        double scale, mean;
+        auto normMat = mat.normalize(mean, scale);
+
+        // recover original matrix
+        auto denormMat = normMat.denormalize(mean, scale);
+        ASSERT_TRUE(mat.compare(denormMat, true, 0.0001));
+    }
+}

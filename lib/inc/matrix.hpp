@@ -286,6 +286,12 @@ public:
     std::tuple<size_t, size_t, T> min() const;
 
     /**
+     * Computes the mean of all matrix elements.
+     * @return Mean value.
+     */
+    double mean() const;
+
+    /**
      * Swap rows m1 and m2
      * @param m1
      * @param m2
@@ -333,6 +339,23 @@ public:
      * @return
      */
     Matrix<double> normalizeColumns() const;
+
+    /**
+     * Normalizes the matrix so that the elements are in
+     * the range of -1 to +1.
+     * @param mean On return, the applied mean.
+     * @param scale On return, the applied scale.
+     * @return Normalized Matrix
+     */
+    Matrix<double> normalize(double& mean, double& scale) const;
+
+    /**
+     * Denormalizes the matrix.
+     * @param mean The mean
+     * @param scale The scale
+     * @return Denormalized matrix
+     */
+    Matrix<double> denormalize(double mean, double scale) const;
 
 
     /**
@@ -1172,6 +1195,12 @@ std::tuple<size_t, size_t, T> Matrix<T>::min() const
 }
 
 template <class T>
+double Matrix<T>::mean() const
+{
+    return static_cast<double>(sum()) / static_cast<double>(getNbrOfElements());
+}
+
+template <class T>
 T* Matrix<T>::getRowPtr(size_t row)
 {
     return data() + row * cols();
@@ -1381,6 +1410,56 @@ Matrix<double> Matrix<T>::normalizeColumns() const
     }
 
     return retMat;
+}
+
+template <class T>
+Matrix<double> Matrix<T>::normalize(double& mean, double& scale) const
+{
+    double minP = std::get<2>(this->min());
+    double maxP = std::get<2>(this->max());
+    mean = this->mean();
+
+    double diff = maxP - minP;
+
+
+    if( diff < std::numeric_limits<double>::min())
+    {
+        // all value are identical -> do not apply scale
+        scale = 1.0;
+    }
+    else
+    {
+        scale = 2.0 / diff;
+    }
+
+
+    Matrix<double> ret(this->rows(), this->cols());
+
+    const T* src = this->data();
+    double* dst = ret.data();
+
+    for( size_t i = 0; i < getNbrOfElements(); i++ )
+    {
+        dst[i] = (src[i] - mean) * scale;
+    }
+
+    return ret;
+}
+
+template <class T>
+Matrix<double> Matrix<T>::denormalize(double mean, double scale) const
+{
+    Matrix<double> ret(this->rows(), this->cols());
+
+    const T *src = this->data();
+    double *dst = ret.data();
+
+    for (size_t i = 0; i < getNbrOfElements(); i++)
+    {
+        dst[i] = src[i] / scale + mean;
+    }
+
+    return ret;
 }
 
 template <class T>
