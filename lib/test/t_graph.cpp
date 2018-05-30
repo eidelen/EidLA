@@ -29,12 +29,46 @@ TEST(Graph, DirectConnected)
     Matrix<double> gMat = Matrix<double>(3,3, gData);
 
     Graph g = Graph(gMat);
+    ASSERT_TRUE( g.isDirectedGraph() );
 
-    ASSERT_TRUE( g.isDirectlyConnected(0,1) );
-    ASSERT_TRUE( g.isDirectlyConnected(1,2) );
-    ASSERT_TRUE( g.isDirectlyConnected(2,0) );
+    ASSERT_TRUE(g.isAdjacent(0, 1) );
+    ASSERT_TRUE(g.isAdjacent(1, 2) );
+    ASSERT_TRUE(g.isAdjacent(2, 0) );
 
-    ASSERT_FALSE( g.isDirectlyConnected(1,0) );
-    ASSERT_FALSE( g.isDirectlyConnected(2,1) );
-    ASSERT_FALSE( g.isDirectlyConnected(0,2) );
+    ASSERT_FALSE(g.isAdjacent(1, 0) );
+    ASSERT_FALSE(g.isAdjacent(2, 1) );
+    ASSERT_FALSE(g.isAdjacent(0, 2) );
+
+    g.toUndirectedGraph();
+    ASSERT_FALSE( g.isDirectedGraph() );
+
+    ASSERT_TRUE(g.isAdjacent(0, 1) );
+    ASSERT_TRUE(g.isAdjacent(1, 2) );
+    ASSERT_TRUE(g.isAdjacent(2, 0) );
+
+    ASSERT_TRUE(g.isAdjacent(1, 0) );
+    ASSERT_TRUE(g.isAdjacent(2, 1) );
+    ASSERT_TRUE(g.isAdjacent(0, 2) );
+}
+
+/*
+
+ v0 ----> v1 ----> v2 ----> v1
+
+ */
+
+TEST(Graph, Connected)
+{
+    double gData[] = {0,1,0,  0,0,1,  0,1,0};
+    Matrix<double> gMat = Matrix<double>(3,3, gData);
+
+    Graph g = Graph(gMat);
+
+    ASSERT_TRUE(g.isConnected(0, 1) );
+    ASSERT_TRUE(g.isConnected(0, 2) );
+    ASSERT_TRUE(g.isConnected(1, 2) );
+    ASSERT_TRUE(g.isConnected(2, 1) );
+
+    ASSERT_FALSE(g.isConnected(2, 0) );
+    ASSERT_FALSE(g.isConnected(1, 0) );
 }
