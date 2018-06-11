@@ -29,7 +29,7 @@
 int main(int argc, char* argv[])
 {
     // read example image with OpenCV
-    cv::Mat rawImg_cv = cv::imread("ins.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat rawImg_cv = cv::imread("in.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     if( !rawImg_cv.data )
     {
         std::cerr << "Cannot load image from file";
@@ -38,13 +38,18 @@ int main(int argc, char* argv[])
 
     // transform cv-matrix to EidLA matrix
     Matrix<uchar> rawImg_char( rawImg_cv );
-    Matrix<double> rawImg(rawImg_char);
+
+    // normalize
+    double mean;
+    double scale;
+    Matrix<double> rawImgNorm(rawImg_char.normalize(mean,scale).transpose());
 
     // SVD decomposition
-    Decomposition::SVDResult deco = Decomposition::svd(rawImg);
+    Decomposition::SVDResult deco = Decomposition::svd(rawImgNorm);
+
 
     // check if decomposition is correct
-    if( !rawImg.compare(deco.U * deco.S * deco.V.transpose(), true, 0.05 ) )
+    if( !rawImgNorm.compare(deco.U * deco.S * deco.V.transpose(), true, 0.05 ) )
     {
         std::cerr << "SVD decompsition failed";
         return -2;
@@ -53,7 +58,11 @@ int main(int argc, char* argv[])
     float reducing = 0.2;
     size_t mods = std::round(deco.S.cols() * (1.0 - reducing));
 
-    Matrix<double> compressed = deco.U.subMatrix(0,0,rawImg.rows(),mods) * deco.S.subMatrix(0,0,mods,mods) * deco.V.transpose().subMatrix(0,0,mods,rawImg.cols());
+    Matrix<double> compressed = deco.U.subMatrix(0,0,rawImgNorm.rows(),mods) * deco.S.subMatrix(0,0,mods,mods) * deco.V.transpose().subMatrix(0,0,mods,rawImgNorm.cols());
+    compressed = compressed.denormalize(mean, scale);
+
+    std::cout << compressed;
+
     // correct values
     for( size_t i = 0; i < compressed.getNbrOfElements(); i++ )
         if( compressed.data()[i] > 255.0 )
@@ -61,9 +70,8 @@ int main(int argc, char* argv[])
         else if( compressed.data()[i] < 0.0 )
             compressed.data()[i] = 0;
 
-    Matrix<uchar> compressed_uchar( compressed );
 
-    std::cout << compressed_uchar;
+    Matrix<uchar> compressed_uchar( compressed.transpose() );
 
     cv::Mat compressed_cv = compressed_uchar.toOpenCVMatrix();
 

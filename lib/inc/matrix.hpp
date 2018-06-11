@@ -1997,6 +1997,20 @@ inline cv::Mat Matrix<int>::createOpenCVMat( ) const
     return oMat;
 }
 
+template <>
+inline cv::Mat Matrix<uchar>::createOpenCVMat( ) const
+{
+    cv::Mat oMat(rows(),cols(),CV_8UC1);
+
+    for(size_t m = 0; m < rows(); m++)
+    {
+        uchar* dst = oMat.ptr<uchar>(m);
+        std::copy(getRowPtr(m), getRowPtr(m) + cols(), dst);
+    }
+
+    return oMat;
+}
+
 
 #endif // OPENCVEIDLA
 

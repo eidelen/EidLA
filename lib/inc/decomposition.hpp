@@ -781,22 +781,12 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
     for( size_t p = 0; p < ep.size(); p++ )
     {
         double tEigenValue = ep.at(p).L; // left and right eigenvalues should be equal
-
-        if (tEigenValue < 0.0)
-        {
-            std::cout << "Warning: Singular value is complex (square root of " << tEigenValue << "). Value set to 0.0"
-                      << std::endl;
-            s_diag_mat(p, p) = 0.0;
-        }
-        else
-        {
-            s_diag_mat(p, p) = std::sqrt(tEigenValue);
-        }
+        s_diag_mat(p, p) = std::sqrt(std::abs(tEigenValue));
 
         Matrix<double> eVect = ep.at(p).V;
         v_right.setColumn(p, eVect);
 
-        if( s_diag_mat(p,p) > 0.00001 ) // todo: find usueful concept for small numbers
+        if( s_diag_mat(p,p) > 0.0 )
         {
             // find u based on v and s
             u_left.setColumn( p, mat * eVect * (1.0 / s_diag_mat(p,p)));
