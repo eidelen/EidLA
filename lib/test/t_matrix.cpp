@@ -194,7 +194,9 @@ TEST(Matrix, Diagonal)
     int  diagData[3] = {1, 3, 5};
     auto diagSoll    = Matrix<int>(3, 1, diagData);
 
-    ASSERT_TRUE(diagSoll.compare(in.diagonal()));
+    Matrix<int> diagResult = in.diagonal();
+
+    ASSERT_TRUE(diagSoll.compare(diagResult));
 }
 
 TEST(Matrix, Sum)
@@ -423,3 +425,38 @@ TEST(MATRIX, ToOpenCV)
 }
 
 #endif // OPENCVEIDLA
+
+TEST(Matrix, MoveDataAssignement)
+{
+    Matrix<double> in = Matrix<double>::random(10, 10, -10.0, +10.0);
+    double* data_addr_in = in.data();
+
+    Matrix<double> copy_in(in);
+
+    Matrix<double> mv;
+    mv = std::move(in);
+
+    // check that data array addresses are equal
+    double* data_addr_mv = mv.data();
+    ASSERT_EQ(data_addr_in, data_addr_mv);
+
+    // check that content is correct
+    ASSERT_TRUE( copy_in.compare(mv));
+}
+
+TEST(Matrix, MoveDataConstructor)
+{
+    Matrix<double> in = Matrix<double>::random(10, 10, -10.0, +10.0);
+    double* data_addr_in = in.data();
+
+    Matrix<double> copy_in(in);
+
+    Matrix<double> mv = std::move(in);
+
+    // check that data array addresses are equal
+    double* data_addr_mv = mv.data();
+    ASSERT_EQ(data_addr_in, data_addr_mv);
+
+    // check that content is correct
+    ASSERT_TRUE( copy_in.compare(mv));
+}

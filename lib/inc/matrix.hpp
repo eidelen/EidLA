@@ -43,6 +43,9 @@ template <class T>
 class Matrix
 {
 public:
+
+    Matrix();
+
     /**
      * Constructs a matrix of size rows x cols and sets
      * all values to 0.
@@ -59,6 +62,12 @@ public:
     Matrix(const Matrix<R>& mat);
 
     Matrix(const Matrix<T>& mat);
+
+    /**
+     * Move constructor
+     * @param other
+     */
+    Matrix(Matrix&& other);
 
     /**
      * Constructs a m x n matrix and assigns
@@ -78,6 +87,7 @@ public:
      */
     Matrix(const std::string& filepath);
 
+
 #ifdef OPENCVEIDLA
     /**
      * Constructs a matrix from an OpenCV matrix.
@@ -92,6 +102,8 @@ public:
      * @return
      */
     Matrix<T>& operator=(const Matrix<T>& other);
+
+    Matrix<T>& operator=(Matrix<T>&& other);
 
     virtual ~Matrix();
 
@@ -538,32 +550,35 @@ inline double Matrix<double>::elementwiseMultiplyAndSum(const double* arr1, cons
  */
 
 template <class T>
+Matrix<T>::Matrix()
+: m_rows(0), m_cols(0), m_nbrOfElements(0)
+{
+    m_data.reset();
+}
+
+template <class T>
 Matrix<T>::Matrix(size_t rows, size_t cols)
 : m_rows(rows), m_cols(cols), m_nbrOfElements(rows * cols)
 {
     m_data.reset(new T[m_nbrOfElements]);
 }
 
-//** Specific copy transformations - to be extended
+
+template <class T, class R>
+void copyMatData(const Matrix<T>& src, Matrix<R>& dst)
+{
+    const T* srcPtr = src.data();
+    R*       dstPtr = dst.data();
+    std::copy(srcPtr, srcPtr + src.getNbrOfElements(), dstPtr);
+}
 
 template <class T>
 void copyMatData(const Matrix<T>& src, Matrix<T>& dst)
 {
     const T* srcPtr = src.data();
     T*       dstPtr = dst.data();
-    std::copy(srcPtr, srcPtr + src.getNbrOfElements(), dstPtr);
+    std::memcpy(dstPtr, srcPtr, dst.getNbrOfElements() * sizeof(T));
 }
-
-inline void copyMatData(const Matrix<int>& src, Matrix<double>& dst)
-{
-    const int* srcPtr = src.data();
-    double*    dstPtr = dst.data();
-
-    for (size_t i = 0; i < src.getNbrOfElements(); i++)
-        dstPtr[i] = static_cast<double>(srcPtr[i]);
-}
-
-//**
 
 template <class T>
 template <class R>
@@ -582,6 +597,15 @@ Matrix<T>::Matrix(const Matrix<T>& mat)
     // if you have a compile error here, you have to extend the
     // copyMatData function with the particular types.
     copyMatData(mat, *this);
+}
+
+template <class T>
+Matrix<T>::Matrix(Matrix&& other)
+{
+    this->m_data          = std::move( other.m_data );
+    this->m_rows          = other.rows();
+    this->m_cols          = other.cols();
+    this->m_nbrOfElements = m_rows * m_cols;
 }
 
 template <class T>
@@ -629,6 +653,21 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& other)
 
         // copy data
         copyMatData(other, *this);
+    }
+
+    return *this;
+}
+
+template <class T>
+Matrix<T>& Matrix<T>::operator=(Matrix<T>&& other)
+{
+    if (this != &other) // self-assignment check expected
+    {
+        this->m_data = std::move( other.m_data );
+
+        m_rows          = other.rows();
+        m_cols          = other.cols();
+        m_nbrOfElements = m_rows * m_cols;
     }
 
     return *this;
@@ -947,7 +986,7 @@ Matrix<T> Matrix<T>::matMulR(const Matrix<T>& mat) const
         }
     }
 
-    return res;
+    return std::move(res);
 }
 
 template <class T>

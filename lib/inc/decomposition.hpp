@@ -54,10 +54,17 @@ public:
 
     struct QRResult
     {
-        QRResult(Matrix<double> q, Matrix<double> r)
+        QRResult(const Matrix<double>& q, const Matrix<double>& r)
         : Q(q), R(r)
         {
         }
+
+        QRResult(Matrix<double>&& q, Matrix<double>&& r)
+        {
+            Q = std::move(q);
+            R = std::move(r);
+        }
+
         QRResult(const QRResult& qr)
                 : Q(qr.Q), R(qr.R)
         {
@@ -75,6 +82,17 @@ public:
 
             this->Q = other.Q;
             this->R = other.R;
+            return *this;
+        }
+
+        QRResult& operator=(QRResult&& other)
+        {
+            // check for self-assignment
+            if(&other == this)
+                return *this;
+
+            this->Q = std::move(other.Q);
+            this->R = std::move(other.R);
             return *this;
         }
 
@@ -227,7 +245,7 @@ public:
      * @return QR decomposition
      */
     template <class T>
-    static QRResult qr(const Matrix<T> mat, bool positive = true);
+    static QRResult qr(const Matrix<T>& mat, bool positive = true);
 
     /**
      * RQ decomposition, where the passed matrix A is decomposed into an
@@ -238,7 +256,7 @@ public:
      * @return QR decomposition
      */
     template <class T>
-    static QRResult rq(const Matrix<T> mat);
+    static QRResult rq(const Matrix<T>& mat);
 
 
     /**
@@ -651,7 +669,7 @@ Decomposition::DiagonalizationResult Decomposition::bidiagonalization(const Matr
 
 // QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf
 template <class T>
-Decomposition::QRResult Decomposition::qr(const Matrix<T> mat, bool positive)
+Decomposition::QRResult Decomposition::qr(const Matrix<T>& mat, bool positive)
 {
     Matrix<double> r = mat;
     size_t m = r.rows();
@@ -683,7 +701,7 @@ Decomposition::QRResult Decomposition::qr(const Matrix<T> mat, bool positive)
         q = q * H;
     }
 
-    QRResult retResult(q,r);
+    QRResult retResult(std::move(q),std::move(r));
 
     if( positive )
     {
@@ -691,18 +709,18 @@ Decomposition::QRResult Decomposition::qr(const Matrix<T> mat, bool positive)
         // the diagonal elements on r are chosen to be positive.
         for (size_t i = 0; i < m; i++)
         {
-            if (r(i, i) < 0)
+            if (retResult.R(i, i) < 0)
             {
                 retResult = qrSignModifier(retResult.Q, retResult.R, i);
             }
         }
     }
 
-    return retResult;
+    return std::move(retResult);
 }
 
 template <class T>
-Decomposition::QRResult Decomposition::rq(const Matrix<T> mat)
+Decomposition::QRResult Decomposition::rq(const Matrix<T>& mat)
 {
     // info: https://math.stackexchange.com/questions/1640695/rq-decomposition
     size_t m = mat.rows();
@@ -738,7 +756,7 @@ Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const 
     for( size_t i = 0; i < R.cols(); i++)
         R(row,i) = -R(row,i);
 
-    return QRResult(Q,R);
+    return QRResult(std::move(Q),std::move(R));
 }
 
 #include "solve.hpp"
