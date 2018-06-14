@@ -23,13 +23,12 @@
 
 #include <iostream>
 #include <opencv2/highgui/highgui.hpp>
-
 #include "matrix.hpp"
 
 int main(int argc, char* argv[])
 {
-    // read example image with OpenCV
-    cv::Mat rawImg_cv = cv::imread("in.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    // read image with OpenCV
+    cv::Mat rawImg_cv = cv::imread("ins.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     if( !rawImg_cv.data )
     {
         std::cerr << "Cannot load image from file";
@@ -37,73 +36,52 @@ int main(int argc, char* argv[])
     }
 
     // transform cv-matrix to EidLA matrix
-    Matrix<uchar> rawImg_char( rawImg_cv );
+    Matrix<uchar> rawImg( rawImg_cv );
 
-    // normalize
-    double mean;
-    double scale;
-    Matrix<double> rawImgNorm(rawImg_char.normalize(mean,scale).transpose());
+    // normalize the image (transpose -> needs to be higher than wide)
+    double mean, scale;
+    Matrix<double> normalized(rawImg.normalize(mean,scale).transpose());
 
     // SVD decomposition
-    Decomposition::SVDResult deco = Decomposition::svd(rawImgNorm);
+    Decomposition::SVDResult deco = Decomposition::svd(normalized);
 
+    // as the SVD decomposition may take several hours, it makes sense
+    // to keep the resulting matrices
+    deco.S.save("S.mat"); deco.U.save("U.mat"); deco.V.save("V.mat");
 
-    // check if decomposition is correct
-    if( !rawImgNorm.compare(deco.U * deco.S * deco.V.transpose(), true, 0.05 ) )
+    // generate several compressed images, by increasing the number of mods used
+    // for the reconstruction.
+    for( size_t mods = 1; mods < deco.S.cols(); mods++)
     {
-        std::cerr << "SVD decompsition failed";
-        return -2;
+        // create compressed image
+        Matrix<double> compressed =
+                deco.U.subMatrix(0, 0, normalized.rows(), mods) * deco.S.subMatrix(0, 0, mods, mods) *
+                deco.V.transpose().subMatrix(0, 0, mods, normalized.cols());
+
+        // denormalize the compressed image
+        compressed = compressed.denormalize(mean, scale);
+
+        // correct pixel values if out of range
+        for (size_t i = 0; i < compressed.getNbrOfElements(); i++)
+            if (compressed.data()[i] > 255.0)
+                compressed.data()[i] = 255;
+            else if (compressed.data()[i] < 0.0)
+                compressed.data()[i] = 0;
+
+        // compute compression rate
+        size_t compressNumberOfPixels = normalized.rows()*mods + mods*mods + mods*normalized.cols();
+        double compressionRatio = static_cast<double>(compressNumberOfPixels)/static_cast<double>(normalized.getNbrOfElements());
+
+        // generate file name
+        std::string wName("m_");
+        wName.append(std::to_string(mods));
+        wName.append("_red_");
+        wName.append(std::to_string(compressionRatio));
+        wName.append(".png");
+
+        // save the image
+        cv::imwrite(wName, compressed.transpose().toOpenCVMatrix());
     }
-
-    float reducing = 0.2;
-    size_t mods = std::round(deco.S.cols() * (1.0 - reducing));
-
-    Matrix<double> compressed = deco.U.subMatrix(0,0,rawImgNorm.rows(),mods) * deco.S.subMatrix(0,0,mods,mods) * deco.V.transpose().subMatrix(0,0,mods,rawImgNorm.cols());
-    compressed = compressed.denormalize(mean, scale);
-
-    std::cout << compressed;
-
-    // correct values
-    for( size_t i = 0; i < compressed.getNbrOfElements(); i++ )
-        if( compressed.data()[i] > 255.0 )
-            compressed.data()[i] = 255;
-        else if( compressed.data()[i] < 0.0 )
-            compressed.data()[i] = 0;
-
-
-    Matrix<uchar> compressed_uchar( compressed.transpose() );
-
-    cv::Mat compressed_cv = compressed_uchar.toOpenCVMatrix();
-
-    cv::imshow("compressed", compressed_cv);
-    cv::waitKey(0);
-/*
-
-    TEST(Decomposition, SVDCompression)
-    {
-        // third line is almost linear combination of both upper
-        // therefore, using first two singular values should lead to a accurate representation of the matrix.
-        double data[] = {1, 0, 0,   0, 1, 0,   1, 1, 0.01}; // third line is almost linear combination of both upper
-        Matrix<double> mat(3,3, data);
-
-        Decomposition::SVDResult res = Decomposition::svd(mat);
-
-        ASSERT_TRUE( res.U.isOrthogonal(0.05) );
-        ASSERT_TRUE( res.V.isOrthogonal(0.05) );
-        ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.05 ) );
-
-        auto compressed = res.U.subMatrix(0,0,3,2) * res.S.subMatrix(0,0,2,2) * res.V.transpose().subMatrix(0,0,2,3);
-
-        ASSERT_TRUE( mat.compare(compressed, true, 0.01));
-    }
-
-
-
-    if(! image.data )                              // Check for invalid input
-    {
-        cout <<  "Could not open or find the image" << std::endl ;
-        return -1;
-    }*/
 
     return 0;
 }

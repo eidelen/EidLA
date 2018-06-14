@@ -188,10 +188,11 @@ public:
      * @param mat  Matrix of which to perform Eigen decomposition.
      * @param maxIteration Maximum number of power iterations. If precision not reached, no Eigen pair was found.
      * @param precision Power iteration stops when the Eigen value change is below the passed precision value
+     * @param showProgress Prints the progress of the algorithm
      * @return Eigen pairs
      */
     template <class T>
-    static std::vector<EigenPair> qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision);
+    static std::vector<EigenPair> qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision, bool showProgress = false);
 
 
     /**
@@ -403,7 +404,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
         {
             case QRAlgorithm:
                 // QR algorithm
-                ret = qrAlgorithm(cMat, 50,std::numeric_limits<double>::epsilon());
+                ret = qrAlgorithm(cMat, 50,std::numeric_limits<double>::epsilon(), true);
                 break;
 
             case PowerIterationAndHotellingsDeflation:
@@ -480,7 +481,7 @@ Decomposition::EigenPair Decomposition::rayleighIteration(const Matrix<T>& mat, 
 }
 
 template <class T>
-std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision)
+std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision, bool showProgress)
 {
     // https://en.wikipedia.org/wiki/QR_algorithm
     std::vector<EigenPair> ret;
@@ -517,6 +518,11 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
 
             a = qr.R * qr.Q; // iteratively converge to a - diag(a) are eigenvalues
             qProd = qProd * qr.Q; // accumlate q transformations to get eigenvectors
+
+            if( showProgress )
+            {
+                std::cout << "qrAlgorithm progress = " << static_cast<double>(nbrOfIterations) / static_cast<double> (maxIteration) << std::endl;
+            }
 
             q_before = qr.Q;
             nbrOfIterations++;
