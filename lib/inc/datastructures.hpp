@@ -87,7 +87,7 @@ public:
         return true;
     }
 
-    ssize_t getEmptyChildIdx()
+    ssize_t getEmptyChildIdx() const
     {
         ssize_t idx = -1;
         for( ssize_t i = 0; i < m_children.size(); i++ )
@@ -97,16 +97,110 @@ public:
         return -1;
     }
 
+    HeapNode<T,C>* find(T val)
+    {
+        // if val is bigger than the value in this node,
+        // the value val cannot be found further down this node.
+        if( m_value < val )
+            return nullptr;
+
+        if( m_value == val )
+            return this;
+
+        for( HeapNode<T,C>* e : m_children )
+        {
+            if (e != nullptr)
+            {
+                HeapNode<T, C> *found = e->find(val);
+                if (found != nullptr)
+                    return found;
+
+            }
+        }
+
+        return nullptr;
+    }
+
     std::vector<HeapNode<T,C>*> m_children;
     T m_value;
 };
+
+
+template <typename T, size_t C>
+std::ostream& operator<<(std::ostream& os, const HeapNode<T,C>* node)
+{
+    os << "(" << node->m_value;
+
+    for( const HeapNode<T,C>* e : node->m_children )
+        if( e!= nullptr )
+            os << e;
+        else
+            os << "(-)";
+
+    os << ")";
+
+    return os;
+}
 
 template <typename T, size_t C>
 class Heap
 {
 public:
-    HeapNode<T,C>* root;
+    Heap() : m_root(nullptr)
+    {
+
+    }
+
+    ~Heap()
+    {
+        delete m_root;
+    }
+
+    HeapNode<T,C>* m_root;
+
+    void insert(T val)
+    {
+        if( !m_root )
+        {
+            // first element -> root does not exist yet
+            m_root = new HeapNode<T,C>(val);
+        }
+        else
+        {
+            // try to insert
+            if(!(m_root->insert(val)))
+            {
+                // insert does not work ->
+                // val will become the new root element.
+                HeapNode<T,C>* tmp = m_root;
+                m_root = new HeapNode<T,C>(val);
+                m_root->m_children.at(0) = tmp;
+            }
+        }
+    }
+
+    HeapNode<T,C>* find( T val )
+    {
+        if( !m_root )
+        {
+            return nullptr;
+        }
+        else
+        {
+            return m_root->find(val);
+        }
+    };
+
+
+
 
 };
+
+template <typename T, size_t C>
+std::ostream& operator<<(std::ostream& os, const Heap<T,C>* heap)
+{
+    os << heap->m_root << std::endl;
+    return os;
+}
 
 #endif //MY_DATASTRUCTURES_H
