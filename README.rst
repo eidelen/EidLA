@@ -127,6 +127,15 @@ Matrix transformations
     
     // Eigen value and Eigen vector computation. Only works for symmetric matrices (yet).
     std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(mat);
+    
+
+Example Application
+-------------------
+
+Image compression by applying SVD (singular value decomposition). The computation of this 700 x 500 image took about 14 hours :)
+
+.. image:: http://eidelen.diffuse.ch/svd_example.png
+   :width: 500pt
 
 
 License
