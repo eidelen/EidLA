@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <inc/datastructures.hpp>
+#include "matrix.hpp"
 
 TEST(Heap, NodeConstructor)
 {
@@ -71,5 +72,31 @@ TEST(Heap, Find)
 
     ASSERT_TRUE(heap->find(-1) == nullptr);
 
+    delete heap;
 
+}
+
+TEST(Heap, BigHeap)
+{
+    Matrix<int> data = Matrix<int>::random(10000, 1, 0, 10000);
+    Heap<int, 2>* binaryHeap = new Heap<int, 2>();
+
+    for(size_t i = 0; i < data.getNbrOfElements(); i++)
+        binaryHeap->insert(data.data()[i]);
+
+    // assure max is in root
+    auto max = data.max();
+    ASSERT_EQ( std::get<2>(max), binaryHeap->m_root->m_value);
+
+    // assure all values in heap
+    for(size_t i = 0; i < data.getNbrOfElements(); i++)
+    {
+        int val = data.data()[i];
+        ASSERT_TRUE( binaryHeap->find(val) != nullptr );
+    }
+
+    // value -1 not in heap
+    ASSERT_TRUE( binaryHeap->find(-1) == nullptr );
+
+    delete binaryHeap;
 }
