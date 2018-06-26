@@ -532,3 +532,64 @@ TEST(Decomposition, SVDCompression)
 
     ASSERT_TRUE( mat.compare(compressed, true, 0.01));
 }
+
+TEST(Decomposition, SortEigenPair)
+{
+    Matrix<double> ev1 = Matrix<double>::random(3,1,0.0,10.0);
+    Decomposition::EigenPair ep1(ev1, 1.0, true);
+
+    Matrix<double> ev2 = Matrix<double>::random(3,1,0.0,10.0);
+    Decomposition::EigenPair ep2(ev2, 2.0, true);
+
+    Matrix<double> ev3 = Matrix<double>::random(3,1,0.0,10.0);
+    Decomposition::EigenPair ep3(ev3, 3.0, true);
+
+    std::vector<Decomposition::EigenPair> vec;
+    vec.push_back(ep3);
+    vec.push_back(ep1);
+    vec.push_back(ep2);
+
+    Decomposition::sortDescending(vec);
+
+    ASSERT_FLOAT_EQ( ep3.L, vec.at(0).L );
+    ASSERT_FLOAT_EQ( ep2.L, vec.at(1).L );
+    ASSERT_FLOAT_EQ( ep1.L, vec.at(2).L );
+
+    ASSERT_TRUE( ep1.V.compare(vec.at(2).V)) ;
+    ASSERT_TRUE( ep2.V.compare(vec.at(1).V)) ;
+    ASSERT_TRUE( ep3.V.compare(vec.at(0).V)) ;
+
+    Decomposition::sortAscending(vec);
+
+    ASSERT_FLOAT_EQ( ep3.L, vec.at(2).L );
+    ASSERT_FLOAT_EQ( ep2.L, vec.at(1).L );
+    ASSERT_FLOAT_EQ( ep1.L, vec.at(0).L );
+
+    ASSERT_TRUE( ep1.V.compare(vec.at(0).V)) ;
+    ASSERT_TRUE( ep2.V.compare(vec.at(1).V)) ;
+    ASSERT_TRUE( ep3.V.compare(vec.at(2).V)) ;
+}
+
+TEST(Decomposition, FilterEigenPair)
+{
+    Matrix<double> ev1 = Matrix<double>::random(3,1,0.0,10.0);
+    Decomposition::EigenPair ep1(ev1, 1.0, true);
+
+    Matrix<double> ev2 = Matrix<double>::random(3,1,0.0,10.0);
+    Decomposition::EigenPair ep2(ev2, 2.0, true);
+
+    Matrix<double> ev3 = Matrix<double>::random(3,1,0.0,10.0);
+    Decomposition::EigenPair ep3(ev3, 3.0, true);
+
+    std::vector<Decomposition::EigenPair> vec;
+    vec.push_back(ep3);
+    vec.push_back(ep1);
+    vec.push_back(ep2);
+
+    Decomposition::filter(vec, 2.1);
+
+    ASSERT_FLOAT_EQ( ep3.L, vec.at(0).L );
+    ASSERT_TRUE( ep3.V.compare(vec.at(0).V)) ;
+
+    ASSERT_EQ(1, vec.size());
+}

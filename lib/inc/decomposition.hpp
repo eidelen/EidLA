@@ -52,6 +52,29 @@ public:
         bool           Valid; // Is eigen pair valid? It is if precision was reached.
     };
 
+    static void sortDescending(std::vector<EigenPair>& pairs)
+    {
+        std::sort(pairs.begin(), pairs.end(), [](const EigenPair& a, const EigenPair& b)
+        {
+            return a.L > b.L;
+        });
+    }
+
+    static void sortAscending(std::vector<EigenPair>& pairs)
+    {
+        std::sort(pairs.begin(), pairs.end(), [](const EigenPair& a, const EigenPair& b)
+        {
+            return a.L < b.L;
+        });
+    }
+
+    static void filter(std::vector<EigenPair>& pairs, double eigenValueThreshold)
+    {
+        std::vector<EigenPair> copyEP = pairs;
+        pairs.clear();
+        std::copy_if (copyEP.begin(), copyEP.end(), std::back_inserter(pairs), [eigenValueThreshold](EigenPair i){return i.L >= eigenValueThreshold; } );
+    }
+
     struct QRResult
     {
         QRResult(const Matrix<double>& q, const Matrix<double>& r)
@@ -792,7 +815,7 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
         Matrix<double> eVect = ep.at(p).V;
         v_right.setColumn(p, eVect);
 
-        if( s_diag_mat(p,p) > 0.0 )
+        if( s_diag_mat(p,p) > 0.000001 ) // todo: introduce concept for small numbers
         {
             // find u based on v and s
             u_left.setColumn( p, mat * eVect * (1.0 / s_diag_mat(p,p)));
