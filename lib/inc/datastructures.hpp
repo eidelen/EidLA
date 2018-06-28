@@ -41,32 +41,6 @@ public:
             delete e;
     }
 
-    virtual bool compareFunction(T a, T b)
-    {
-        return a > b;
-    }
-
-    virtual size_t childToReplace()
-    {
-        // find the index of the child to replace. in max heap,
-        // it is the child with the smallest value.
-
-        size_t smallest_idx = 0;
-        T smallestVal = std::numeric_limits<T>::max();
-
-        for( size_t i = 0; i < m_children.size(); i++ )
-        {
-            T cVal = m_children.at(i)->m_value;
-            if( cVal < smallestVal )
-            {
-                smallestVal = cVal;
-                smallest_idx = i;
-            }
-        }
-
-        return smallest_idx;
-    }
-
     bool insert(T val)
     {
         // val must be smaller or equal to this node's value
@@ -77,7 +51,7 @@ public:
         ssize_t newChildIdx = getEmptyChildIdx();
         if( newChildIdx >= 0 )
         {
-            m_children[newChildIdx] = new HeapNode<T,C>(val);
+            m_children[newChildIdx] = createNode(val);
             return true;
         }
 
@@ -91,11 +65,10 @@ public:
             }
         }
 
-
         // the value is bigger than any of the children ones, but smaller or equal
         // of the this node. replace the smallest child with the new value node.
         size_t smallest_idx = childToReplace();
-        HeapNode<T,C>* newNode = new HeapNode<T,C>(val);
+        HeapNode<T,C>* newNode = createNode(val);
         newNode->m_children.at(0) = m_children.at(smallest_idx);
         m_children.at(smallest_idx) = newNode;
 
@@ -129,11 +102,40 @@ public:
                 HeapNode<T, C> *found = e->find(val);
                 if (found != nullptr)
                     return found;
-
             }
         }
 
         return nullptr;
+    }
+
+    virtual bool compareFunction(T a, T b)
+    {
+        return a > b;
+    }
+
+    virtual size_t childToReplace()
+    {
+        // find the index of the child to replace. in max heap,
+        // it is the child with the smallest value.
+        size_t smallest_idx = 0;
+        T smallestVal = std::numeric_limits<T>::max();
+
+        for( size_t i = 0; i < m_children.size(); i++ )
+        {
+            T cVal = m_children.at(i)->m_value;
+            if( cVal < smallestVal )
+            {
+                smallestVal = cVal;
+                smallest_idx = i;
+            }
+        }
+
+        return smallest_idx;
+    }
+
+    virtual HeapNode<T,C>* createNode(T val)
+    {
+        return new HeapNode<T,C>(val);
     }
 
 public:
@@ -157,6 +159,98 @@ public:
     {
         return a < b;
     }
+
+    size_t childToReplace() override
+    {
+        // find the index of the child to replace. in min heap,
+        // it is the child with the biggest value.
+        size_t biggest_idx = 0;
+        T biggest_val = std::numeric_limits<T>::min();
+
+        for( size_t i = 0; i < this->m_children.size(); i++ )
+        {
+            T cVal = this->m_children.at(i)->m_value;
+            if( cVal < biggest_val )
+            {
+                biggest_val = cVal;
+                biggest_idx = i;
+            }
+        }
+
+        return biggest_idx;
+    }
+
+    virtual HeapNode<T,C>* createNode(T val) override
+    {
+        return new HeapNodeMin<T,C>(val);
+    }
+};
+
+enum class HeapType
+{
+    Max,
+    Min
+};
+
+template <typename T, size_t C>
+class Heap
+{
+
+public:
+
+    Heap(HeapType heapType = HeapType::Max) : m_root(nullptr), m_type(heapType)
+    {
+    }
+
+    ~Heap()
+    {
+        delete m_root;
+    }
+
+    void insert(T val)
+    {
+        if( !m_root )
+        {
+            // first element -> root does not exist yet
+            m_root = createNode(val);
+        }
+        else
+        {
+            // try to insert
+            if(!(m_root->insert(val)))
+            {
+                // insert does not work ->
+                // val will become the new root element.
+                HeapNode<T,C>* tmp = m_root;
+                m_root = createNode(val);
+                m_root->m_children.at(0) = tmp;
+            }
+        }
+    }
+
+    HeapNode<T,C>* find( T val )
+    {
+        if( !m_root )
+        {
+            return nullptr;
+        }
+        else
+        {
+            return m_root->find(val);
+        }
+    };
+
+    HeapNode<T,C>* m_root;
+    HeapType m_type;
+
+private:
+    HeapNode<T,C>* createNode(T val)
+    {
+        if( m_type == HeapType::Max )
+            return new HeapNode<T,C>(val);
+        else
+            return new HeapNodeMin<T,C>(val);
+    }
 };
 
 
@@ -175,65 +269,6 @@ std::ostream& operator<<(std::ostream& os, const HeapNode<T,C>* node)
 
     return os;
 }
-
-
-enum class HeapType
-{
-    Max,
-    Min
-};
-
-template <typename T, size_t C>
-class Heap
-{
-
-public:
-    Heap(HeapType heapType = HeapType::Max) : m_root(nullptr)
-    {
-
-    }
-
-    ~Heap()
-    {
-        delete m_root;
-    }
-
-    HeapNode<T,C>* m_root;
-    HeapType m_type;
-
-    void insert(T val)
-    {
-        if( !m_root )
-        {
-            // first element -> root does not exist yet
-            m_root = new HeapNode<T,C>(val);
-        }
-        else
-        {
-            // try to insert
-            if(!(m_root->insert(val)))
-            {
-                // insert does not work ->
-                // val will become the new root element.
-                HeapNode<T,C>* tmp = m_root;
-                m_root = new HeapNode<T,C>(val);
-                m_root->m_children.at(0) = tmp;
-            }
-        }
-    }
-
-    HeapNode<T,C>* find( T val )
-    {
-        if( !m_root )
-        {
-            return nullptr;
-        }
-        else
-        {
-            return m_root->find(val);
-        }
-    };
-};
 
 template <typename T, size_t C>
 std::ostream& operator<<(std::ostream& os, const Heap<T,C>* heap)
