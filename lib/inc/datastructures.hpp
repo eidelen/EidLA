@@ -41,10 +41,36 @@ public:
             delete e;
     }
 
+    virtual bool compareFunction(T a, T b)
+    {
+        return a > b;
+    }
+
+    virtual size_t childToReplace()
+    {
+        // find the index of the child to replace. in max heap,
+        // it is the child with the smallest value.
+
+        size_t smallest_idx = 0;
+        T smallestVal = std::numeric_limits<T>::max();
+
+        for( size_t i = 0; i < m_children.size(); i++ )
+        {
+            T cVal = m_children.at(i)->m_value;
+            if( cVal < smallestVal )
+            {
+                smallestVal = cVal;
+                smallest_idx = i;
+            }
+        }
+
+        return smallest_idx;
+    }
+
     bool insert(T val)
     {
         // val must be smaller or equal to this node's value
-        if( val > m_value )
+        if( compareFunction(val, m_value) )
             return false;
 
         // if empty child place, put it there
@@ -65,21 +91,10 @@ public:
             }
         }
 
+
         // the value is bigger than any of the children ones, but smaller or equal
         // of the this node. replace the smallest child with the new value node.
-        size_t smallest_idx;
-        T smallestVal = std::numeric_limits<T>::max();
-
-        for( size_t i = 0; i < m_children.size(); i++ )
-        {
-            T cVal = m_children.at(i)->m_value;
-            if( cVal < smallestVal )
-            {
-                smallestVal = cVal;
-                smallest_idx = i;
-            }
-        }
-
+        size_t smallest_idx = childToReplace();
         HeapNode<T,C>* newNode = new HeapNode<T,C>(val);
         newNode->m_children.at(0) = m_children.at(smallest_idx);
         m_children.at(smallest_idx) = newNode;
@@ -101,7 +116,7 @@ public:
     {
         // if val is bigger than the value in this node,
         // the value val cannot be found further down this node.
-        if( m_value < val )
+        if( compareFunction(val, m_value) )
             return nullptr;
 
         if( m_value == val )
@@ -121,8 +136,27 @@ public:
         return nullptr;
     }
 
+public:
     std::vector<HeapNode<T,C>*> m_children;
     T m_value;
+};
+
+template <typename T, size_t C>
+class HeapNodeMin: public HeapNode<T,C>
+{
+public:
+    HeapNodeMin( T value ) : HeapNode<T,C>(value)
+    {
+    }
+
+    ~HeapNodeMin()
+    {
+    }
+
+    bool compareFunction(T a, T b) override
+    {
+        return a < b;
+    }
 };
 
 
@@ -142,11 +176,19 @@ std::ostream& operator<<(std::ostream& os, const HeapNode<T,C>* node)
     return os;
 }
 
+
+enum class HeapType
+{
+    Max,
+    Min
+};
+
 template <typename T, size_t C>
 class Heap
 {
+
 public:
-    Heap() : m_root(nullptr)
+    Heap(HeapType heapType = HeapType::Max) : m_root(nullptr)
     {
 
     }
@@ -157,6 +199,7 @@ public:
     }
 
     HeapNode<T,C>* m_root;
+    HeapType m_type;
 
     void insert(T val)
     {
@@ -190,10 +233,6 @@ public:
             return m_root->find(val);
         }
     };
-
-
-
-
 };
 
 template <typename T, size_t C>
