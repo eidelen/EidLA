@@ -419,7 +419,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
     }
 
     Matrix<double> cMat(mat);
-    std::vector<EigenPair> ret;
+    std::vector<EigenPair> pairs;
 
     if( cMat.isSymmetric() )
     {
@@ -427,7 +427,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
         {
             case QRAlgorithm:
                 // QR algorithm
-                ret = qrAlgorithm(cMat, 50,std::numeric_limits<double>::epsilon(), true);
+                pairs = qrAlgorithm(cMat, 50,std::numeric_limits<double>::epsilon(), true);
                 break;
 
             case PowerIterationAndHotellingsDeflation:
@@ -438,7 +438,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
                     EigenPair ePair = powerIteration(cMat, 50,std::numeric_limits<double>::epsilon());
                     if (ePair.Valid)
                     {
-                        ret.push_back(ePair);
+                        pairs.push_back(ePair);
 
                         // Hotelling's deflation -> remove found Eigen pair from cMat
                         cMat = cMat - (ePair.L * ePair.V * ePair.V.transpose());
@@ -452,10 +452,12 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
         std::cout << "Warning: The Eigen decomposition of non-symmetric matrices does not work yet properly in this library!!" << std::endl;
 
         // compute the largest eigenvalue
-        ret.push_back(powerIteration(cMat, 30,std::numeric_limits<double>::epsilon()));
+        pairs.push_back(powerIteration(cMat, 30,std::numeric_limits<double>::epsilon()));
     }
 
-    return ret;
+    sortDescending(pairs);
+
+    return pairs;
 }
 
 template <class T>
