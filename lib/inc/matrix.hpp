@@ -32,6 +32,7 @@
 #include <random>
 #include <fstream>
 #include <algorithm>
+#include <cstring>
 
 #include <smmintrin.h> // SSE4
 

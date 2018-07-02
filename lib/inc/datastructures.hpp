@@ -43,7 +43,7 @@ public:
 
     bool insert(T val)
     {
-        // val must be smaller or equal to this node's value
+        // val must be smaller/bigger or equal to this node's value
         if( compareFunction(val, m_value) )
             return false;
 
@@ -65,12 +65,12 @@ public:
             }
         }
 
-        // the value is bigger than any of the children ones, but smaller or equal
-        // of the this node. replace the smallest child with the new value node.
-        size_t smallest_idx = childToReplace();
+        // the value is bigger/smaller than any of the children ones, but smaller/bigger or equal
+        // of the this node. replace the smallest/biggest child with the new value node.
+        size_t replace_idx = childToReplace();
         HeapNode<T,C>* newNode = createNode(val);
-        newNode->m_children.at(0) = m_children.at(smallest_idx);
-        m_children.at(smallest_idx) = newNode;
+        newNode->m_children.at(0) = m_children.at(replace_idx);
+        m_children.at(replace_idx) = newNode;
 
         return true;
     }
@@ -87,7 +87,7 @@ public:
 
     HeapNode<T,C>* find(T val)
     {
-        // if val is bigger than the value in this node,
+        // if val is bigger/smaller than the value in this node,
         // the value val cannot be found further down this node.
         if( compareFunction(val, m_value) )
             return nullptr;
@@ -108,21 +108,38 @@ public:
         return nullptr;
     }
 
-    virtual bool compareFunction(T a, T b)
+    virtual bool compareFunction(T a, T b) const = 0;
+    virtual size_t childToReplace() const = 0;
+    virtual HeapNode<T,C>* createNode(T val) const = 0;
+
+public:
+    std::vector<HeapNode<T,C>*> m_children;
+    T m_value;
+};
+
+template <typename T, size_t C>
+class HeapNodeMax: public HeapNode<T,C>
+{
+public:
+    HeapNodeMax( T value ) : HeapNode<T,C>(value)
+    {
+    }
+
+    bool compareFunction(T a, T b) const override
     {
         return a > b;
     }
 
-    virtual size_t childToReplace()
+    size_t childToReplace() const override
     {
         // find the index of the child to replace. in max heap,
         // it is the child with the smallest value.
         size_t smallest_idx = 0;
         T smallestVal = std::numeric_limits<T>::max();
 
-        for( size_t i = 0; i < m_children.size(); i++ )
+        for( size_t i = 0; i < this->m_children.size(); i++ )
         {
-            T cVal = m_children.at(i)->m_value;
+            T cVal = this->m_children.at(i)->m_value;
             if( cVal < smallestVal )
             {
                 smallestVal = cVal;
@@ -133,14 +150,10 @@ public:
         return smallest_idx;
     }
 
-    virtual HeapNode<T,C>* createNode(T val)
+    virtual HeapNode<T,C>* createNode(T val) const override
     {
-        return new HeapNode<T,C>(val);
+        return new HeapNodeMax<T,C>(val);
     }
-
-public:
-    std::vector<HeapNode<T,C>*> m_children;
-    T m_value;
 };
 
 template <typename T, size_t C>
@@ -151,16 +164,12 @@ public:
     {
     }
 
-    ~HeapNodeMin()
-    {
-    }
-
-    bool compareFunction(T a, T b) override
+    bool compareFunction(T a, T b) const override
     {
         return a < b;
     }
 
-    size_t childToReplace() override
+    size_t childToReplace() const override
     {
         // find the index of the child to replace. in min heap,
         // it is the child with the biggest value.
@@ -170,7 +179,7 @@ public:
         for( size_t i = 0; i < this->m_children.size(); i++ )
         {
             T cVal = this->m_children.at(i)->m_value;
-            if( cVal < biggest_val )
+            if( cVal > biggest_val )
             {
                 biggest_val = cVal;
                 biggest_idx = i;
@@ -180,7 +189,7 @@ public:
         return biggest_idx;
     }
 
-    virtual HeapNode<T,C>* createNode(T val) override
+    virtual HeapNode<T,C>* createNode(T val) const override
     {
         return new HeapNodeMin<T,C>(val);
     }
@@ -247,7 +256,7 @@ private:
     HeapNode<T,C>* createNode(T val)
     {
         if( m_type == HeapType::Max )
-            return new HeapNode<T,C>(val);
+            return new HeapNodeMax<T,C>(val);
         else
             return new HeapNodeMin<T,C>(val);
     }

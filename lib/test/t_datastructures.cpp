@@ -4,7 +4,7 @@
 
 TEST(Heap, NodeConstructor)
 {
-    HeapNode<int,4> node(5);
+    HeapNodeMax<int,4> node(5);
 
     ASSERT_EQ( node.m_children.size(), 4 );
     ASSERT_EQ( node.m_value, 5 );
@@ -16,7 +16,7 @@ TEST(Heap, NodeConstructor)
 TEST(Heap, NodeInsert)
 {
     std::vector<int> data = {3,2,0,1};
-    HeapNode<int,3> root(4);
+    HeapNodeMax<int,3> root(4);
 
     for( int i : data )
         ASSERT_TRUE(root.insert(i));
