@@ -157,3 +157,52 @@ TEST(Heap, BigMinHeap)
 
     delete binaryHeap;
 }
+
+TEST(Heap, NodeDepth)
+{
+    HeapNode<int,2>* root = new HeapNodeMax<int,2>(5);
+    ASSERT_EQ( root->depth(), 1);
+
+    ASSERT_TRUE(root->insert(0));
+    ASSERT_EQ( root->depth(), 2);
+
+    ASSERT_TRUE(root->insert(4));
+    ASSERT_EQ( root->depth(), 2);
+    ASSERT_TRUE(root->insert(3));
+    ASSERT_TRUE(root->insert(2));
+    ASSERT_TRUE(root->insert(1));
+
+    ASSERT_EQ( root->depth(), 4 );
+    ASSERT_EQ( root->m_children.at(0)->depth(), 1);
+    ASSERT_EQ( root->m_children.at(1)->depth(), 3);
+
+    delete root;
+
+
+    HeapNode<int,1>* listNode = new HeapNodeMax<int,1>(10);
+    listNode->insert(9);
+    listNode->insert(8);
+    listNode->insert(7);
+    listNode->insert(6);
+
+    ASSERT_EQ( listNode->depth(), 5);
+
+    delete listNode;
+}
+
+TEST(Heap, Balance)
+{
+    Matrix<int> data = Matrix<int>::random(20, 1, 0, 1000);
+    Heap<int, 3>* binaryHeap = new Heap<int, 3>(HeapType::Min);
+
+    for(size_t i = 0; i < data.getNbrOfElements(); i++)
+        binaryHeap->insert(data.data()[i]);
+
+    for( const HeapNode<int,3>* n: binaryHeap->m_root->m_children )
+        std::cout << "Child depth = " << n->depth() << std::endl;
+
+    std::cout << binaryHeap << std::endl;
+
+
+    delete binaryHeap;
+}

@@ -35,7 +35,7 @@ public:
         std::fill(m_children.begin(), m_children.end(), nullptr );
     }
 
-    ~HeapNode()
+    virtual ~HeapNode()
     {
         for( HeapNode<T,C>* e : m_children )
             delete e;
@@ -106,6 +106,23 @@ public:
         }
 
         return nullptr;
+    }
+
+    size_t depth() const
+    {
+        // Find max depth among children
+        size_t maxDepth = 0;
+        for( HeapNode<T,C>* e : m_children )
+        {
+            if( e != nullptr )
+            {
+                size_t cDepth = e->depth();
+                if( cDepth > maxDepth )
+                    maxDepth = cDepth;
+            }
+        }
+
+        return maxDepth + 1;
     }
 
     virtual bool compareFunction(T a, T b) const = 0;
