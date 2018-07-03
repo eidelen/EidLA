@@ -30,7 +30,7 @@ template <typename T, size_t C>
 class HeapNode
 {
 public:
-    HeapNode( T value ) : m_children(C), m_value(value)
+    HeapNode( T value ) : m_children(C), m_value(value), m_nbrOfElements(1)
     {
         std::fill(m_children.begin(), m_children.end(), nullptr );
     }
@@ -52,6 +52,7 @@ public:
         if( newChildIdx >= 0 )
         {
             m_children[newChildIdx] = createNode(val);
+            m_nbrOfElements++;
             return true;
         }
 
@@ -61,6 +62,12 @@ public:
         {
             if( e->insert(val) )
             {
+                // reorder children according to their number of containing elements, so that
+                // the next insertion is first tried at the child with the least amount of elements.
+                // this keeps the heap balanced
+                std::sort( m_children.begin(), m_children.end(), sortChildren );
+
+                m_nbrOfElements++;
                 return true;
             }
         }
@@ -69,9 +76,11 @@ public:
         // of the this node. replace the smallest/biggest child with the new value node.
         size_t replace_idx = childToReplace();
         HeapNode<T,C>* newNode = createNode(val);
+        newNode->m_nbrOfElements = 1 + m_children.at(replace_idx)->m_nbrOfElements; // overtake number of elements from former node
         newNode->m_children.at(0) = m_children.at(replace_idx);
         m_children.at(replace_idx) = newNode;
 
+        m_nbrOfElements++;
         return true;
     }
 
@@ -131,7 +140,15 @@ public:
 
 public:
     std::vector<HeapNode<T,C>*> m_children;
+    size_t m_nbrOfElements;
     T m_value;
+
+private:
+    static bool sortChildren(const HeapNode<T,C>* a, const HeapNode<T,C>* b)
+    {
+        return a->m_nbrOfElements < b->m_nbrOfElements;
+    }
+
 };
 
 template <typename T, size_t C>
@@ -249,6 +266,7 @@ public:
                 // val will become the new root element.
                 HeapNode<T,C>* tmp = m_root;
                 m_root = createNode(val);
+                m_root->m_nbrOfElements = 1 + tmp->m_nbrOfElements; // overtake number of elements
                 m_root->m_children.at(0) = tmp;
             }
         }
