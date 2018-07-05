@@ -62,11 +62,7 @@ public:
         {
             if( e->insert(val) )
             {
-                // reorder children according to their number of containing elements, so that
-                // the next insertion is first tried at the child with the least amount of elements.
-                // this keeps the heap balanced
-                std::sort( m_children.begin(), m_children.end(), sortChildren );
-
+                reorderChildren();
                 m_nbrOfElements++;
                 return true;
             }
@@ -79,6 +75,7 @@ public:
         newNode->m_nbrOfElements = 1 + m_children.at(replace_idx)->m_nbrOfElements; // overtake number of elements from former node
         newNode->m_children.at(0) = m_children.at(replace_idx);
         m_children.at(replace_idx) = newNode;
+        reorderChildren();
 
         m_nbrOfElements++;
         return true;
@@ -147,6 +144,14 @@ private:
     static bool sortChildren(const HeapNode<T,C>* a, const HeapNode<T,C>* b)
     {
         return a->m_nbrOfElements < b->m_nbrOfElements;
+    }
+
+    void reorderChildren()
+    {
+        // reorder children according to their number of containing elements, so that
+        // the next insertion is first tried at the child with the least amount of elements.
+        // this keeps the heap balanced
+        std::sort( m_children.begin(), m_children.end(), sortChildren );
     }
 
 };
@@ -283,6 +288,14 @@ public:
             return m_root->find(val);
         }
     };
+
+    size_t size() const
+    {
+        if( m_root == nullptr )
+            return 0;
+
+        return m_root->m_nbrOfElements;
+    }
 
     HeapNode<T,C>* m_root;
     HeapType m_type;

@@ -63,10 +63,12 @@ TEST(Heap, BigHeap)
     Matrix<int> data = Matrix<int>::random(nbrOfElementsToInsert, 1, 0, 10000);
     Heap<int, 2>* binaryHeap = new Heap<int, 2>();
 
+    ASSERT_EQ(binaryHeap->size(), 0);
+
     for(size_t i = 0; i < data.getNbrOfElements(); i++)
         binaryHeap->insert(data.data()[i]);
 
-    ASSERT_EQ( binaryHeap->m_root->m_nbrOfElements, nbrOfElementsToInsert );
+    ASSERT_EQ(binaryHeap->size(), nbrOfElementsToInsert);
 
     // assure max is in root
     auto max = data.max();
@@ -177,17 +179,15 @@ TEST(Heap, NodeDepth)
     delete listNode;
 }
 
-
-
 TEST(Heap, Balance)
 {
-    Matrix<int> data = Matrix<int>::random(300, 1, 0, 1000);
-    Heap<int, 3>* binaryHeap = new Heap<int, 3>(HeapType::Min);
+    Matrix<int> data = Matrix<int>::random(16, 1, 0, 100);
+    Heap<int, 2>* binaryHeap = new Heap<int, 2>(HeapType::Max);
 
     for(size_t i = 0; i < data.getNbrOfElements(); i++)
         binaryHeap->insert(data.data()[i]);
 
-    for( const HeapNode<int,3>* n: binaryHeap->m_root->m_children )
+    for( const HeapNode<int,2>* n: binaryHeap->m_root->m_children )
         std::cout << "Child depth = " << n->depth() << ", nbr of elements = " << n->m_nbrOfElements << std::endl;
 
     delete binaryHeap;
