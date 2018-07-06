@@ -334,4 +334,64 @@ std::ostream& operator<<(std::ostream& os, const Heap<T,C>* heap)
     return os;
 }
 
+
+template <typename T>
+class BSTNode
+{
+
+public:
+
+    BSTNode<T>* m_left;
+    BSTNode<T>* m_right;
+    T m_val;
+
+    BSTNode( const T& val) : m_left(nullptr), m_right(nullptr), m_val(val)
+    {
+    }
+
+    ~BSTNode()
+    {
+        if(m_left)
+            delete m_left;
+        if(m_right)
+            delete m_right;
+    }
+
+    void insert(const T& val)
+    {
+        if( val < m_val )
+            left_insert(val);
+        else if( val > m_val )
+            right_insert(val);
+    }
+
+private:
+
+    void left_insert(const T& val)
+    {
+        if( m_left )
+        {
+           m_left->insert(val);
+        }
+        else
+        {
+            // left node free.
+            m_left = new BSTNode<T>(val);
+        }
+    }
+
+    void right_insert(const T& val)
+    {
+        if( m_right )
+        {
+            m_right->insert(val);
+        }
+        else
+        {
+            // right node free.
+            m_right = new BSTNode<T>(val);
+        }
+    }
+};
+
 #endif //MY_DATASTRUCTURES_H

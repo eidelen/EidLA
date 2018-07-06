@@ -192,3 +192,25 @@ TEST(Heap, Balance)
 
     delete binaryHeap;
 }
+
+
+TEST(BST, NodeConstruct)
+{
+    BSTNode<int>* node = new BSTNode<int>(5);
+
+    ASSERT_EQ(node->m_val, 5);
+    ASSERT_TRUE(node->m_right == nullptr);
+    ASSERT_TRUE(node->m_left == nullptr);
+
+    node->insert(5); // again 5 -> nothing happens
+    ASSERT_TRUE(node->m_right == nullptr);
+    ASSERT_TRUE(node->m_left == nullptr);
+
+    node->insert(6);
+    ASSERT_EQ(node->m_right->m_val,6);
+
+    node->insert(4);
+    ASSERT_EQ(node->m_right->m_val, 6);
+
+    delete node;
+}
