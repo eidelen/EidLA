@@ -214,3 +214,84 @@ TEST(BST, NodeConstruct)
 
     delete node;
 }
+
+BST<int>* getTestBST()
+{
+    BST<int>* bst = new BST<int>();
+    int data[] = {8,3,10,1,6,14,13,5,9,12};
+    for( const int& k : data )
+    {
+        bst->insert(k);
+    }
+
+    return bst;
+}
+
+TEST(BST, Insert)
+{
+    auto bst = getTestBST();
+
+    ASSERT_EQ( bst->m_root->m_val, 8 );
+
+    ASSERT_EQ( bst->m_root->m_left->m_val, 3 );
+    ASSERT_EQ( bst->m_root->m_right->m_val, 10 );
+
+    ASSERT_EQ( bst->m_root->m_left->m_left->m_val, 1);
+    ASSERT_EQ( bst->m_root->m_left->m_left->m_left, nullptr);
+    ASSERT_EQ( bst->m_root->m_left->m_left->m_right, nullptr);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_val, 6);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_right, nullptr);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_left->m_val, 5);
+
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_val, 14 );
+    ASSERT_EQ( bst->m_root->m_right->m_left->m_val, 9 );
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_left->m_val, 13 );
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_right, nullptr );
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_left->m_left->m_val, 12 );
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_left->m_right, nullptr );
+
+    delete bst;
+}
+
+TEST(BST, Search)
+{
+    auto bst = getTestBST();
+    int bstVals[] = {8,3,10,1,6,14,13,5,9,12};
+
+    for( const int& k : bstVals )
+    {
+        ASSERT_TRUE( bst->search(k) );
+    }
+
+    ASSERT_FALSE( bst->search(20) );
+    ASSERT_FALSE( bst->search(0) );
+
+    delete bst;
+}
+
+TEST(BST, Remove)
+{
+    auto bst = getTestBST();
+
+    // remove when no child -> delete node
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_left->m_val, 5);
+    bst->remove(5);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_left, nullptr);
+
+    // remove when 1 child -> replace node with child node
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_val, 14 );
+    bst->remove(14);
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_val, 13 ); // 13 was only child of 14, therefore it was replaced
+
+    // remove when 2 children -> replace node left most element of right subtree
+    // 10 is replaced with 12
+    ASSERT_EQ( bst->m_root->m_right->m_val, 10 );
+    bst->remove(10);
+    ASSERT_EQ( bst->m_root->m_right->m_val, 12 );
+    ASSERT_EQ( bst->m_root->m_right->m_left->m_val, 9 );
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_val, 13 );
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_left, nullptr );
+    ASSERT_EQ( bst->m_root->m_right->m_right->m_right, nullptr );
+
+    delete bst;
+}

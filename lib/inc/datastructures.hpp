@@ -252,7 +252,8 @@ public:
 
     ~Heap()
     {
-        delete m_root;
+        if(m_root)
+            delete m_root;
     }
 
     void insert(T val)
@@ -365,6 +366,36 @@ public:
             right_insert(val);
     }
 
+    bool search( const T& val ) const
+    {
+        if( val == m_val )
+            return true;
+
+        // run down left branch
+        if( val < m_val && m_left != nullptr )
+            return m_left->search(val);
+
+        // run down right branch
+        if( val > m_val && m_right != nullptr )
+            return m_right->search(val);
+
+        return false;
+    }
+
+    void remove( const T& val )
+    {
+        // a node can be removed only by its parent
+        if( val > m_val )
+        {
+            right_remove(val);
+        }
+        else if( val < m_val )
+        {
+            left_remove(val);
+        }
+
+    }
+
 private:
 
     void left_insert(const T& val)
@@ -392,6 +423,140 @@ private:
             m_right = new BSTNode<T>(val);
         }
     }
+
+    void right_remove(const T& val)
+    {
+        if( m_right && m_right->m_val == val )
+        {
+            // node m_right has to be removed
+
+            // case 1: no child -> just delete node
+            if (m_right->m_left == nullptr && m_right->m_right == nullptr)
+            {
+                delete m_right;
+                m_right = nullptr;
+            }
+            else if ((m_right->m_left != nullptr && m_right->m_right == nullptr) ||
+                     (m_right->m_left == nullptr && m_right->m_right != nullptr))
+            {
+                // case 2: 1 child -> replace node with child
+
+                BSTNode<T> *childNode = std::max(m_right->m_left, m_right->m_right);
+
+                // remove m_right (set children null so that they are not deleted)
+                m_right->m_left = nullptr;
+                m_right->m_right = nullptr;
+                delete m_right;
+
+                m_right = childNode;
+            }
+            else if(m_right->m_left != nullptr && m_right->m_right != nullptr)
+            {
+                // case 3: 2 children -> replace with left most child of right branch
+                BSTNode<T>* childNode = m_right->m_right;
+                while(childNode->m_left != nullptr)
+                    childNode = childNode->m_left;
+
+                m_right->m_val = childNode->m_val;
+
+                // remove the copied node from below
+                m_right->remove(childNode->m_val);
+            }
+        }
+        else
+        {
+            m_right->remove(val);
+        }
+    }
+
+    void left_remove(const T& val)
+    {
+        if (m_left && m_left->m_val == val)
+        {
+            // node m_left has to be removed
+
+            if (m_left->m_left == nullptr && m_left->m_right == nullptr)
+            {
+                // case 1: no child -> just delete node
+                delete m_left;
+                m_left = nullptr;
+            }
+            else if ((m_left->m_left != nullptr && m_left->m_right == nullptr) ||
+                     (m_left->m_left == nullptr && m_left->m_right != nullptr))
+            {
+                // case 2: 1 child -> replace node with child
+
+                BSTNode<T> *childNode = std::max(m_left->m_left, m_left->m_right);
+
+                // remove m_left (set children null so that they are not deleted)
+                m_left->m_left = nullptr;
+                m_left->m_right = nullptr;
+                delete m_left;
+
+                m_left = childNode;
+            }
+            else if(m_left->m_left != nullptr && m_left->m_right != nullptr)
+            {
+                // case 3: 2 children -> replace with left most child of right branch
+                BSTNode<T>* childNode = m_left->m_right;
+                while(childNode->m_left != nullptr)
+                    childNode = childNode->m_left;
+
+                m_left->m_val = childNode->m_val;
+
+                // remove the copied node from below
+                m_left->remove(childNode->m_val);
+            }
+        }
+        else
+        {
+            m_left->remove(val);
+        }
+    }
+};
+
+template <typename T>
+class BST
+{
+public:
+    BST() : m_root(nullptr)
+    {
+
+    }
+
+    ~BST()
+    {
+        if( m_root )
+            delete m_root;
+    }
+
+    void insert( const T& val )
+    {
+        if( m_root == nullptr )
+        {
+            m_root = new BSTNode<T>(val);
+        }
+        else
+        {
+            m_root->insert(val);
+        }
+    }
+
+    bool search( const T& val ) const
+    {
+        if( m_root == nullptr )
+            return false;
+
+        return m_root->search(val);
+    }
+
+    void remove( const T& val )
+    {
+        if( m_root != nullptr )
+            m_root->remove(val);
+    }
+
+    BSTNode<T>* m_root;
 };
 
 #endif //MY_DATASTRUCTURES_H
