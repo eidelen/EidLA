@@ -218,7 +218,7 @@ TEST(BST, NodeConstruct)
 BST<int>* getTestBST()
 {
     BST<int>* bst = new BST<int>();
-    int data[] = {8,3,10,1,6,14,13,5,9,12};
+    int data[] = {8,3,10,1,6,14,13,4,9,12,7};
     for( const int& k : data )
     {
         bst->insert(k);
@@ -240,8 +240,8 @@ TEST(BST, Insert)
     ASSERT_EQ( bst->m_root->m_left->m_left->m_left, nullptr);
     ASSERT_EQ( bst->m_root->m_left->m_left->m_right, nullptr);
     ASSERT_EQ( bst->m_root->m_left->m_right->m_val, 6);
-    ASSERT_EQ( bst->m_root->m_left->m_right->m_right, nullptr);
-    ASSERT_EQ( bst->m_root->m_left->m_right->m_left->m_val, 5);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_left->m_val, 4);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_right->m_val, 7);
 
     ASSERT_EQ( bst->m_root->m_right->m_right->m_val, 14 );
     ASSERT_EQ( bst->m_root->m_right->m_left->m_val, 9 );
@@ -256,7 +256,7 @@ TEST(BST, Insert)
 TEST(BST, Search)
 {
     auto bst = getTestBST();
-    int bstVals[] = {8,3,10,1,6,14,13,5,9,12};
+    int bstVals[] = {8,3,10,1,6,14,13,4,9,12,7};
 
     for( const int& k : bstVals )
     {
@@ -269,14 +269,41 @@ TEST(BST, Search)
     delete bst;
 }
 
+TEST(BST, NodeType)
+{
+    auto bst = getTestBST();
+
+    ASSERT_EQ( BSTNode<int>::getNodeType(nullptr), BSTNode<int>::NodeType::NoNode);
+    ASSERT_EQ( BSTNode<int>::getNodeType( bst->m_root ), BSTNode<int>::NodeType::TwoChildren);
+    ASSERT_EQ( BSTNode<int>::getNodeType( bst->m_root->m_left->m_left ), BSTNode<int>::NodeType::NoChild);
+    ASSERT_EQ( BSTNode<int>::getNodeType( bst->m_root->m_right->m_right ), BSTNode<int>::NodeType::OnlyLeftChild);
+
+    bst->insert(2);
+    ASSERT_EQ( BSTNode<int>::getNodeType( bst->m_root->m_left->m_left ), BSTNode<int>::NodeType::OnlyRightChild);
+}
+
+TEST(BST, LeftMostChild)
+{
+    auto bst = getTestBST();
+    ASSERT_EQ(bst->m_root->getLeftMostChild()->m_val, 1);
+    ASSERT_EQ(bst->m_root->m_right->getLeftMostChild()->m_val, 9);
+    ASSERT_EQ(bst->m_root->m_right->m_right->getLeftMostChild()->m_val, 12);
+    ASSERT_EQ(bst->m_root->m_right->m_right->getLeftMostChild()->getLeftMostChild()->m_val, 12);
+}
+
 TEST(BST, Remove)
 {
     auto bst = getTestBST();
 
     // remove when no child -> delete node
-    ASSERT_EQ( bst->m_root->m_left->m_right->m_left->m_val, 5);
-    bst->remove(5);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_left->m_val, 4);
+    bst->remove(4);
     ASSERT_EQ( bst->m_root->m_left->m_right->m_left, nullptr);
+
+    // remove when 1 child -> 6 replaced by 7
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_val, 6);
+    bst->remove(6);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_val, 7);
 
     // remove when 1 child -> replace node with child node
     ASSERT_EQ( bst->m_root->m_right->m_right->m_val, 14 );
@@ -292,6 +319,11 @@ TEST(BST, Remove)
     ASSERT_EQ( bst->m_root->m_right->m_right->m_val, 13 );
     ASSERT_EQ( bst->m_root->m_right->m_right->m_left, nullptr );
     ASSERT_EQ( bst->m_root->m_right->m_right->m_right, nullptr );
+
+    bst->remove(12);
+    ASSERT_EQ( bst->m_root->m_right->m_left->m_val, 9 );
+    ASSERT_EQ( bst->m_root->m_right->m_val, 13 );
+    ASSERT_EQ( bst->m_root->m_right->m_right, nullptr );
 
     delete bst;
 }

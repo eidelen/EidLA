@@ -352,6 +352,7 @@ public:
 
     ~BSTNode()
     {
+
         if(m_left)
             delete m_left;
         if(m_right)
@@ -382,18 +383,77 @@ public:
         return false;
     }
 
-    void remove( const T& val )
+    BSTNode<T>* remove( const T& val )
     {
-        // a node can be removed only by its parent
-        if( val > m_val )
+        if( val == m_val )
         {
-            right_remove(val);
+            return removeMySelf();
         }
-        else if( val < m_val )
+        else if( m_right != nullptr && val > m_val )
         {
-            left_remove(val);
+            BSTNode<T>* newRight = m_right->remove(val);
+            if( newRight == nullptr )
+                delete m_right;
+
+            m_right = newRight;
+        }
+        else if( m_left != nullptr && val < m_val )
+        {
+            // Problem here!
+
+            BSTNode<T>* newLeft = m_left->remove(val);
+            if( newLeft == nullptr )
+                delete m_left;
+
+            m_left = newLeft;
         }
 
+        return this;
+    }
+
+    enum class NodeType
+    {
+        NoNode,
+        NoChild,
+        OnlyLeftChild,
+        OnlyRightChild,
+        TwoChildren
+    };
+
+    static NodeType getNodeType( BSTNode<T>* node )
+    {
+        if( node == nullptr )
+            return NodeType::NoNode;
+
+        if( node->m_left == nullptr && node->m_right == nullptr )
+            return NodeType::NoChild;
+
+        if( node->m_left != nullptr && node->m_right == nullptr )
+            return NodeType::OnlyLeftChild;
+
+        if( node->m_left == nullptr && node->m_right != nullptr )
+            return NodeType::OnlyRightChild;
+
+        if( node->m_left != nullptr && node->m_right != nullptr )
+            return NodeType::TwoChildren;
+
+        return NodeType::NoNode;
+    }
+
+    BSTNode<T>* getLeftMostChild()
+    {
+        BSTNode<T>* lChild = this;
+        while(lChild->m_left != nullptr)
+            lChild = lChild->m_left;
+
+        return lChild;
+    }
+
+    void deleteButNotChildren()
+    {
+        this->m_right = nullptr;
+        this->m_left = nullptr;
+        delete this;
     }
 
 private:
@@ -424,95 +484,50 @@ private:
         }
     }
 
-    void right_remove(const T& val)
+    BSTNode<T>* removeMySelf()
     {
-        if( m_right && m_right->m_val == val )
+        NodeType type = getNodeType(this);
+        if( type == NodeType::NoChild )
         {
-            // node m_right has to be removed
-
-            // case 1: no child -> just delete node
-            if (m_right->m_left == nullptr && m_right->m_right == nullptr)
-            {
-                delete m_right;
-                m_right = nullptr;
-            }
-            else if ((m_right->m_left != nullptr && m_right->m_right == nullptr) ||
-                     (m_right->m_left == nullptr && m_right->m_right != nullptr))
-            {
-                // case 2: 1 child -> replace node with child
-
-                BSTNode<T> *childNode = std::max(m_right->m_left, m_right->m_right);
-
-                // remove m_right (set children null so that they are not deleted)
-                m_right->m_left = nullptr;
-                m_right->m_right = nullptr;
-                delete m_right;
-
-                m_right = childNode;
-            }
-            else if(m_right->m_left != nullptr && m_right->m_right != nullptr)
-            {
-                // case 3: 2 children -> replace with left most child of right branch
-                BSTNode<T>* childNode = m_right->m_right;
-                while(childNode->m_left != nullptr)
-                    childNode = childNode->m_left;
-
-                m_right->m_val = childNode->m_val;
-
-                // remove the copied node from below
-                m_right->remove(childNode->m_val);
-            }
+            return nullptr;
         }
-        else
+        else if( type == NodeType::OnlyRightChild )
         {
-            m_right->remove(val);
+            copyNode(m_right, this);
+
+            // Problem here!
+           // m_right->m_left = nullptr;
+           // m_right->m_right = nullptr;
+           // delete m_right;
         }
+        else if( type == NodeType::OnlyLeftChild )
+        {
+            copyNode(m_left, this);
+
+            // Problem here!
+           // m_left->m_left = nullptr;
+           // m_left->m_right = nullptr;
+           // delete m_left;
+        }
+        else if( type == NodeType::TwoChildren )
+        {
+            // copy left most child of right brunch but keep this children
+            m_val = m_right->getLeftMostChild()->m_val;
+
+            // delete copied node beneath
+            m_right = m_right->remove(m_val);
+        }
+
+        return this;
     }
 
-    void left_remove(const T& val)
+    static void copyNode( const BSTNode<T>* src, BSTNode<T>* dst )
     {
-        if (m_left && m_left->m_val == val)
-        {
-            // node m_left has to be removed
-
-            if (m_left->m_left == nullptr && m_left->m_right == nullptr)
-            {
-                // case 1: no child -> just delete node
-                delete m_left;
-                m_left = nullptr;
-            }
-            else if ((m_left->m_left != nullptr && m_left->m_right == nullptr) ||
-                     (m_left->m_left == nullptr && m_left->m_right != nullptr))
-            {
-                // case 2: 1 child -> replace node with child
-
-                BSTNode<T> *childNode = std::max(m_left->m_left, m_left->m_right);
-
-                // remove m_left (set children null so that they are not deleted)
-                m_left->m_left = nullptr;
-                m_left->m_right = nullptr;
-                delete m_left;
-
-                m_left = childNode;
-            }
-            else if(m_left->m_left != nullptr && m_left->m_right != nullptr)
-            {
-                // case 3: 2 children -> replace with left most child of right branch
-                BSTNode<T>* childNode = m_left->m_right;
-                while(childNode->m_left != nullptr)
-                    childNode = childNode->m_left;
-
-                m_left->m_val = childNode->m_val;
-
-                // remove the copied node from below
-                m_left->remove(childNode->m_val);
-            }
-        }
-        else
-        {
-            m_left->remove(val);
-        }
+        dst->m_val = src->m_val;
+        dst->m_left = src->m_left;
+        dst->m_right = src->m_right;
     }
+
 };
 
 template <typename T>
