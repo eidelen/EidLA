@@ -352,7 +352,6 @@ public:
 
     ~BSTNode()
     {
-
         if(m_left)
             delete m_left;
         if(m_right)
@@ -493,21 +492,25 @@ private:
         }
         else if( type == NodeType::OnlyRightChild )
         {
+            // keep for deletion
+            BSTNode<T>* tmp = m_right;
+
+            // overtake content and children of right child
+            // note: m_right will be modified too
             copyNode(m_right, this);
 
-            // Problem here!
-           // m_right->m_left = nullptr;
-           // m_right->m_right = nullptr;
-           // delete m_right;
+            tmp->deleteButNotChildren();
         }
         else if( type == NodeType::OnlyLeftChild )
         {
+            // keep for deletion
+            BSTNode<T>* tmp = m_left;
+
+            // overtake content and children of left child
+            // note: m_left will be modified too
             copyNode(m_left, this);
 
-            // Problem here!
-           // m_left->m_left = nullptr;
-           // m_left->m_right = nullptr;
-           // delete m_left;
+            tmp->deleteButNotChildren();
         }
         else if( type == NodeType::TwoChildren )
         {

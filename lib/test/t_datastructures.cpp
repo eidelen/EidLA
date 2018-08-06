@@ -291,6 +291,32 @@ TEST(BST, LeftMostChild)
     ASSERT_EQ(bst->m_root->m_right->m_right->getLeftMostChild()->getLeftMostChild()->m_val, 12);
 }
 
+TEST(BST, FindRemoveProblem)
+{
+    // linked list
+    BSTNode<int>* root = new BSTNode<int>(0);
+    root->insert(1);
+    root->insert(2);
+    root->insert(3);
+
+    ASSERT_EQ(root->m_val, 0);
+    ASSERT_EQ(root->m_left, nullptr);
+
+    ASSERT_EQ(root->m_right->m_val, 1);
+    ASSERT_EQ(root->m_right->m_left, nullptr);
+
+    ASSERT_EQ(root->m_right->m_right->m_val, 2);
+    ASSERT_EQ(root->m_right->m_right->m_left, nullptr);
+
+    ASSERT_EQ(root->m_right->m_right->m_right->m_val, 3);
+    ASSERT_EQ(root->m_right->m_right->m_right->m_left, nullptr);
+    ASSERT_EQ(root->m_right->m_right->m_right->m_right, nullptr);
+
+    root->remove(1);
+
+    delete root;
+}
+
 TEST(BST, Remove)
 {
     auto bst = getTestBST();
