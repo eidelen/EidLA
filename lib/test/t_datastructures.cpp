@@ -250,6 +250,13 @@ TEST(BST, Insert)
     ASSERT_EQ( bst->m_root->m_right->m_right->m_left->m_left->m_val, 12 );
     ASSERT_EQ( bst->m_root->m_right->m_right->m_left->m_right, nullptr );
 
+    // insert second time the same element does not work
+    ASSERT_FALSE(bst->insert(8));
+    ASSERT_FALSE(bst->insert(13));
+
+    // insert new element works
+    ASSERT_TRUE(bst->insert(100));
+
     delete bst;
 }
 
@@ -260,11 +267,11 @@ TEST(BST, Search)
 
     for( const int& k : bstVals )
     {
-        ASSERT_TRUE( bst->search(k) );
+        ASSERT_TRUE( bst->find(k) );
     }
 
-    ASSERT_FALSE( bst->search(20) );
-    ASSERT_FALSE( bst->search(0) );
+    ASSERT_FALSE( bst->find(20) );
+    ASSERT_FALSE( bst->find(0) );
 
     delete bst;
 }
@@ -289,32 +296,6 @@ TEST(BST, LeftMostChild)
     ASSERT_EQ(bst->m_root->m_right->getLeftMostChild()->m_val, 9);
     ASSERT_EQ(bst->m_root->m_right->m_right->getLeftMostChild()->m_val, 12);
     ASSERT_EQ(bst->m_root->m_right->m_right->getLeftMostChild()->getLeftMostChild()->m_val, 12);
-}
-
-TEST(BST, FindRemoveProblem)
-{
-    // linked list
-    BSTNode<int>* root = new BSTNode<int>(0);
-    root->insert(1);
-    root->insert(2);
-    root->insert(3);
-
-    ASSERT_EQ(root->m_val, 0);
-    ASSERT_EQ(root->m_left, nullptr);
-
-    ASSERT_EQ(root->m_right->m_val, 1);
-    ASSERT_EQ(root->m_right->m_left, nullptr);
-
-    ASSERT_EQ(root->m_right->m_right->m_val, 2);
-    ASSERT_EQ(root->m_right->m_right->m_left, nullptr);
-
-    ASSERT_EQ(root->m_right->m_right->m_right->m_val, 3);
-    ASSERT_EQ(root->m_right->m_right->m_right->m_left, nullptr);
-    ASSERT_EQ(root->m_right->m_right->m_right->m_right, nullptr);
-
-    root->remove(1);
-
-    delete root;
 }
 
 TEST(BST, Remove)
@@ -353,3 +334,89 @@ TEST(BST, Remove)
 
     delete bst;
 }
+
+TEST(BST, RemoveRoot)
+{
+    auto bst = getTestBST();
+
+    ASSERT_EQ( bst->m_root->m_right->m_left->m_val, 9 );
+    ASSERT_EQ( bst->m_root->m_val, 8 );
+
+    // root 8 replaced by 9
+    bst->remove(8);
+
+    ASSERT_EQ( bst->m_root->m_val, 9 );
+    ASSERT_EQ( bst->m_root->m_right->m_left, nullptr);
+
+    delete bst;
+}
+
+TEST(BST, RemoveAllElements)
+{
+    BST<int>* bst = new BST<int>();
+    bst->insert(1);
+    bst->insert(2);
+
+    bst->remove(1);
+    bst->remove(2);
+
+    ASSERT_EQ(bst->m_root, nullptr);
+
+    delete bst;
+}
+
+TEST(BST, Size)
+{
+    auto bst = getTestBST();
+    ASSERT_EQ(bst->size(), 11);
+
+    int testBSTContent[] = {3,10,1,6,14,13,4,9,8,12,7};
+
+    for( int k = 0; k < 11; k++ )
+    {
+        bst->remove( testBSTContent[k] );
+        ASSERT_EQ(bst->size(), 11-1-k);
+    }
+
+    delete bst;
+}
+
+
+TEST(BST, SpeedCheck)
+{
+    // Compare lookup time between binary heap and tree
+    size_t nbrOfElementsToInsert = 20000;
+    Matrix<int> data = Matrix<int>::random(nbrOfElementsToInsert, 1, 0, 1000000);
+
+
+    std::chrono::steady_clock::time_point t_begin = std::chrono::steady_clock::now();
+    Heap<int, 2>* binaryHeap = new Heap<int, 2>();
+    for (size_t i = 0; i < data.getNbrOfElements(); i++)
+        binaryHeap->insert(data.data()[i]);
+    std::chrono::steady_clock::time_point t_end = std::chrono::steady_clock::now();
+    std::cout << "Insert binary heap: " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << std::endl;
+
+    t_begin = std::chrono::steady_clock::now();
+    for (size_t i = 0; i < data.getNbrOfElements(); i++)
+        ASSERT_NE(binaryHeap->find(data.data()[i]), nullptr);
+    t_end = std::chrono::steady_clock::now();
+    std::cout << "Search binary heap: " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << std::endl;
+
+
+    t_begin = std::chrono::steady_clock::now();
+    BST<int>* bst = new BST<int>();
+    for (size_t i = 0; i < data.getNbrOfElements(); i++)
+        bst->insert(data.data()[i]);
+    t_end = std::chrono::steady_clock::now();
+    std::cout << "Insert binary search tree: " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << std::endl;
+
+    t_begin = std::chrono::steady_clock::now();
+    for (size_t i = 0; i < data.getNbrOfElements(); i++)
+        ASSERT_TRUE(bst->find(data.data()[i]));
+    t_end = std::chrono::steady_clock::now();
+    std::cout << "Search binary search tree: " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << std::endl;
+
+    delete binaryHeap;
+    delete bst;
+}
+

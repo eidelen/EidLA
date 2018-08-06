@@ -358,12 +358,23 @@ public:
             delete m_right;
     }
 
-    void insert(const T& val)
+    bool insert(const T& val)
     {
-        if( val < m_val )
-            left_insert(val);
-        else if( val > m_val )
-            right_insert(val);
+        bool insertResult;
+        if(val == m_val)
+        {
+            // no two same values in the bst
+            insertResult = false;
+        }
+        else
+        {
+            if (val < m_val)
+                m_left = insertToNode(m_left, val, insertResult);
+            else if (val > m_val)
+                m_right = insertToNode(m_right, val, insertResult);
+        }
+
+        return insertResult;
     }
 
     bool search( const T& val ) const
@@ -382,15 +393,16 @@ public:
         return false;
     }
 
-    BSTNode<T>* remove( const T& val )
+    BSTNode<T>* remove( const T& val, bool& removeResult )
     {
         if( val == m_val )
         {
+            removeResult = true;
             return removeMySelf();
         }
         else if( m_right != nullptr && val > m_val )
         {
-            BSTNode<T>* newRight = m_right->remove(val);
+            BSTNode<T>* newRight = m_right->remove(val, removeResult);
             if( newRight == nullptr )
                 delete m_right;
 
@@ -398,9 +410,7 @@ public:
         }
         else if( m_left != nullptr && val < m_val )
         {
-            // Problem here!
-
-            BSTNode<T>* newLeft = m_left->remove(val);
+            BSTNode<T>* newLeft = m_left->remove(val, removeResult);
             if( newLeft == nullptr )
                 delete m_left;
 
@@ -457,30 +467,20 @@ public:
 
 private:
 
-    void left_insert(const T& val)
+    static BSTNode<T>* insertToNode(BSTNode<T>* node, const T& val, bool& insertResult)
     {
-        if( m_left )
+        if( node )
         {
-           m_left->insert(val);
+            insertResult = node->insert(val);
         }
         else
         {
-            // left node free.
-            m_left = new BSTNode<T>(val);
+            // free spot -> add a new node
+            node = new BSTNode<T>(val);
+            insertResult = true;
         }
-    }
 
-    void right_insert(const T& val)
-    {
-        if( m_right )
-        {
-            m_right->insert(val);
-        }
-        else
-        {
-            // right node free.
-            m_right = new BSTNode<T>(val);
-        }
+        return node;
     }
 
     BSTNode<T>* removeMySelf()
@@ -496,7 +496,6 @@ private:
             BSTNode<T>* tmp = m_right;
 
             // overtake content and children of right child
-            // note: m_right will be modified too
             copyNode(m_right, this);
 
             tmp->deleteButNotChildren();
@@ -507,7 +506,6 @@ private:
             BSTNode<T>* tmp = m_left;
 
             // overtake content and children of left child
-            // note: m_left will be modified too
             copyNode(m_left, this);
 
             tmp->deleteButNotChildren();
@@ -518,7 +516,8 @@ private:
             m_val = m_right->getLeftMostChild()->m_val;
 
             // delete copied node beneath
-            m_right = m_right->remove(m_val);
+            bool notUsed;
+            m_right = m_right->remove(m_val,notUsed);
         }
 
         return this;
@@ -537,9 +536,8 @@ template <typename T>
 class BST
 {
 public:
-    BST() : m_root(nullptr)
+    BST() : m_root(nullptr), m_size(0)
     {
-
     }
 
     ~BST()
@@ -548,19 +546,27 @@ public:
             delete m_root;
     }
 
-    void insert( const T& val )
+    bool insert( const T& val )
     {
+        bool insertOk;
+
         if( m_root == nullptr )
         {
             m_root = new BSTNode<T>(val);
+            m_size = 1;
+            insertOk = true;
         }
         else
         {
-            m_root->insert(val);
+            insertOk = m_root->insert(val);
+            if(insertOk)
+                m_size++;
         }
+
+        return insertOk;
     }
 
-    bool search( const T& val ) const
+    bool find( const T& val ) const
     {
         if( m_root == nullptr )
             return false;
@@ -568,13 +574,27 @@ public:
         return m_root->search(val);
     }
 
-    void remove( const T& val )
+    bool remove( const T& val )
     {
+        bool removeRes = false;
+
         if( m_root != nullptr )
-            m_root->remove(val);
+        {
+            m_root = m_root->remove(val, removeRes);
+            if( removeRes )
+                m_size--;
+        }
+
+        return removeRes;
+    }
+
+    size_t size() const
+    {
+        return m_size;
     }
 
     BSTNode<T>* m_root;
+    size_t m_size;
 };
 
 #endif //MY_DATASTRUCTURES_H
