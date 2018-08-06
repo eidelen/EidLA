@@ -593,8 +593,35 @@ public:
         return m_size;
     }
 
+    void print()
+    {
+        std::cout << "Number of elements: " << this->size() << std::endl;
+        print("", m_root, false);
+    }
+
     BSTNode<T>* m_root;
     size_t m_size;
+
+private:
+
+    // from java implementation: https://stackoverflow.com/a/42449385/2631225
+    void print(const std::string& prefix, const BSTNode<int>* node, bool isLeft)
+    {
+        if (node != nullptr)
+        {
+            std::cout << prefix;
+
+            std::cout << (isLeft ? "├──" : "└──");
+
+            // print the value of the node
+            std::cout << node->m_val << std::endl;
+
+            // enter the next tree level
+            print(prefix + (isLeft ? "│   " : "    "), node->m_left, true);
+            print(prefix + (isLeft ? "│   " : "    "), node->m_right, false);
+        }
+    }
 };
+
 
 #endif //MY_DATASTRUCTURES_H

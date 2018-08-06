@@ -420,3 +420,15 @@ TEST(BST, SpeedCheck)
     delete bst;
 }
 
+
+TEST(BST, Print)
+{
+    auto bst = getTestBST();
+    bst->print();
+
+    std::cout << std::endl << std::endl;
+
+    bst->remove(10);
+    bst->print();
+}
+
