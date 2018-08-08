@@ -476,3 +476,45 @@ TEST(BST, BalanceFactor)
     delete bst;
 }
 
+TEST(BST, TreeRotation)
+{
+    // example https://en.wikipedia.org/wiki/Tree_rotation#/media/File:Tree_Rotations.gif
+    BST<int>* bst = new BST<int>();
+    bst->insert(5); bst->insert(3); bst->insert(7); bst->insert(2); bst->insert(4);
+
+    ASSERT_FALSE( bst->m_root->m_left->m_left->rotateRight() );
+    ASSERT_TRUE( bst->m_root->rotateRight() );
+
+    ASSERT_EQ( bst->m_root->m_val, 3);
+    ASSERT_EQ( bst->m_root->m_left->m_val, 2);
+    ASSERT_EQ( bst->m_root->m_right->m_val, 5);
+    ASSERT_EQ( bst->m_root->m_right->m_left->m_val, 4);
+
+    // rotate back -> bst is again original
+    ASSERT_TRUE( bst->m_root->rotateLeft() );
+    ASSERT_EQ( bst->m_root->m_val, 5);
+    ASSERT_EQ( bst->m_root->m_right->m_val, 7);
+    ASSERT_EQ( bst->m_root->m_left->m_val, 3);
+    ASSERT_EQ( bst->m_root->m_left->m_left->m_val, 2);
+    ASSERT_EQ( bst->m_root->m_left->m_right->m_val, 4);
+
+    delete bst;
+}
+
+TEST(BST, Flatten)
+{
+    BST<int>* bst = new BST<int>();
+    bst->insert(5); bst->insert(3); bst->insert(7); bst->insert(2); bst->insert(4);
+
+    bst->m_root->flatten();
+    bst->print();
+
+    ASSERT_EQ(bst->m_root->m_val, 2);
+    ASSERT_EQ(bst->m_root->m_right->m_val, 3);
+    ASSERT_EQ(bst->m_root->m_right->m_right->m_val, 4);
+    ASSERT_EQ(bst->m_root->m_right->m_right->m_right->m_val, 5);
+    ASSERT_EQ(bst->m_root->m_right->m_right->m_right->m_right->m_val, 7);
+
+    delete bst;
+}
+

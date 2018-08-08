@@ -496,6 +496,64 @@ public:
         return 1 + std::max( leftHeight, rightHeight );
     }
 
+    bool rotateRight()
+    {
+        // check if rotation possible
+        if( m_left == nullptr )
+            return false;
+
+        // create a new node insert in the right branch
+        BSTNode<T>* downNode = new BSTNode<T>(m_val);
+        downNode->m_right = m_right;
+        downNode->m_left = m_left->m_right;
+        m_right = downNode;
+
+        // copy the value of the left child
+        m_val = m_left->m_val;
+
+        // connect the left branch to left grand child
+        BSTNode<T>* keepForDeletion = m_left;
+        m_left = m_left->m_left;
+
+        keepForDeletion->deleteButNotChildren();
+
+        return true;
+    };
+
+    bool rotateLeft()
+    {
+        // check if rotation possible
+        if( m_right == nullptr )
+            return false;
+
+        // create a new node insert in the left branch
+        BSTNode<T>* downNode = new BSTNode<T>(m_val);
+        downNode->m_left = m_left;
+        downNode->m_right = m_right->m_left;
+        m_left = downNode;
+
+        // copy the value of the right child
+        m_val = m_right->m_val;
+
+        // connect the right branch to right grand child
+        BSTNode<T>* keepForDeletion = m_right;
+        m_right = m_right->m_right;
+
+        keepForDeletion->deleteButNotChildren();
+
+        return true;
+    };
+
+    /**
+     * Degenerating the tree to a ascending linked list
+     */
+    void flatten()
+    {
+        while( this->rotateRight() ) {}
+
+        if( m_right != nullptr )
+            m_right->flatten();
+    }
 
 
 private:
