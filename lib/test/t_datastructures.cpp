@@ -385,7 +385,7 @@ TEST(BST, Size)
 TEST(BST, SpeedCheck)
 {
     // Compare lookup time between binary heap and tree
-    size_t nbrOfElementsToInsert = 20000;
+    size_t nbrOfElementsToInsert = 10000;
     Matrix<int> data = Matrix<int>::random(nbrOfElementsToInsert, 1, 0, 1000000);
 
 
@@ -518,3 +518,36 @@ TEST(BST, Flatten)
     delete bst;
 }
 
+TEST(BST, MaxNumberOfElements)
+{
+    ASSERT_EQ( BSTNode<int>::getMaxNumberOfNodes(0), 0);
+    ASSERT_EQ( BSTNode<int>::getMaxNumberOfNodes(1), 1);
+    ASSERT_EQ( BSTNode<int>::getMaxNumberOfNodes(2), 3);
+    ASSERT_EQ( BSTNode<int>::getMaxNumberOfNodes(3), 7);
+}
+
+TEST(BST, MinHeight)
+{
+    ASSERT_EQ( BSTNode<int>::getCompactHeight(0), 0);
+    ASSERT_EQ( BSTNode<int>::getCompactHeight(1), 1);
+    ASSERT_EQ( BSTNode<int>::getCompactHeight(2), 2);
+    ASSERT_EQ( BSTNode<int>::getCompactHeight(3), 2);
+    ASSERT_EQ( BSTNode<int>::getCompactHeight(4), 3);
+    ASSERT_EQ( BSTNode<int>::getCompactHeight(6), 3);
+    ASSERT_EQ( BSTNode<int>::getCompactHeight(7), 3);
+    ASSERT_EQ( BSTNode<int>::getCompactHeight(8), 4);
+}
+
+TEST(BST, NodesLowestLayer)
+{
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(0), 0);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(1), 1);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(2), 1);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(3), 2);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(4), 1);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(5), 2);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(6), 3);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(7), 4);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(8), 1);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(10), 2);
+}

@@ -25,6 +25,7 @@
 #define MY_DATASTRUCTURES_H
 
 #include <vector>
+#include <cmath>
 
 template <typename T, size_t C>
 class HeapNode
@@ -555,6 +556,42 @@ public:
             m_right->flatten();
     }
 
+    /**
+     * Compute the maximum number of nodes in a tree
+     * with a certain height.
+     * @param height
+     * @return Max number of elements.
+     */
+    static size_t getMaxNumberOfNodes(size_t height)
+    {
+        if( height == 0 )
+            return 0;
+
+        return -(1-std::pow(2,height));
+    }
+
+    /**
+     * Compute the height of a compact bst for
+     * a certain number of nodes.
+     * @param nbrNodes Number of nodes.
+     * @return Min height.
+     */
+    static size_t getCompactHeight(size_t nbrNodes)
+    {
+        double height = std::log2(nbrNodes+1.0); // -1 removed, as we start at height 1
+        return (size_t) std::ceil(height);
+    }
+
+    /**
+     * Compute the number of nodes in the lowest layer when
+     * dealing with a compact tree.
+     * @param nbrNodes
+     * @return
+     */
+    static size_t getCompactNbrNodesLowestLayer(size_t nbrNodes)
+    {
+
+    }
 
 private:
 
@@ -620,7 +657,6 @@ private:
         dst->m_left = src->m_left;
         dst->m_right = src->m_right;
     }
-
 };
 
 template <typename T>
