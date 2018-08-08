@@ -345,8 +345,9 @@ public:
     BSTNode<T>* m_left;
     BSTNode<T>* m_right;
     T m_val;
+    size_t m_balanceFactor;
 
-    BSTNode( const T& val) : m_left(nullptr), m_right(nullptr), m_val(val)
+    BSTNode( const T& val) : m_left(nullptr), m_right(nullptr), m_val(val), m_balanceFactor(0)
     {
     }
 
@@ -464,6 +465,38 @@ public:
         this->m_left = nullptr;
         delete this;
     }
+
+    size_t height( ) const
+    {
+        size_t leftHeight = 0;
+        size_t rightHeight = 0;
+
+        if( m_left != nullptr )
+            leftHeight = m_left->height();
+
+        if( m_right != nullptr )
+            rightHeight = m_right->height();
+
+        return 1 + std::max( leftHeight, rightHeight );
+    }
+
+    size_t updateBalanceFactors( )
+    {
+        size_t leftHeight = 0;
+        size_t rightHeight = 0;
+
+        if( m_left != nullptr )
+            leftHeight = m_left->updateBalanceFactors();
+
+        if( m_right != nullptr )
+            rightHeight = m_right->updateBalanceFactors();
+
+        m_balanceFactor = rightHeight - leftHeight;
+
+        return 1 + std::max( leftHeight, rightHeight );
+    }
+
+
 
 private:
 
@@ -593,7 +626,23 @@ public:
         return m_size;
     }
 
-    void print()
+    size_t height() const
+    {
+        size_t s = 0;
+
+        if( m_root != nullptr )
+            s = m_root->height();
+
+        return s;
+    }
+
+    void computeBalanceFactors()
+    {
+        if( m_root != nullptr )
+            m_root->updateBalanceFactors();
+    }
+
+    void print() const
     {
         std::cout << "Number of elements: " << this->size() << std::endl;
         print("", m_root, false);
@@ -605,7 +654,7 @@ public:
 private:
 
     // from java implementation: https://stackoverflow.com/a/42449385/2631225
-    void print(const std::string& prefix, const BSTNode<int>* node, bool isLeft)
+    void print(const std::string& prefix, const BSTNode<T>* node, bool isLeft) const
     {
         if (node != nullptr)
         {

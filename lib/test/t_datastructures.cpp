@@ -420,7 +420,6 @@ TEST(BST, SpeedCheck)
     delete bst;
 }
 
-
 TEST(BST, Print)
 {
     auto bst = getTestBST();
@@ -430,5 +429,50 @@ TEST(BST, Print)
 
     bst->remove(10);
     bst->print();
+}
+
+TEST(BST, Height)
+{
+    BST<int>* bst = new BST<int>();
+
+    ASSERT_EQ(bst->height(), 0);
+
+    bst->insert(10);
+    ASSERT_EQ(bst->height(), 1);
+
+    bst->insert(11);
+    bst->insert(5);
+    ASSERT_EQ(bst->height(), 2);
+
+    bst->insert(4);
+    bst->insert(6);
+    ASSERT_EQ(bst->height(), 3);
+
+    bst->insert(3);
+    ASSERT_EQ(bst->height(), 4);
+
+    bst->print();
+
+    delete bst;
+}
+
+TEST(BST, BalanceFactor)
+{
+    BST<int>* bst = new BST<int>();
+    bst->insert(10);
+    bst->insert(11);
+    bst->insert(5);
+    bst->insert(4);
+    bst->insert(6);
+    bst->insert(3);
+
+    bst->computeBalanceFactors();
+
+    ASSERT_EQ(bst->m_root->m_balanceFactor, -2);
+    ASSERT_EQ(bst->m_root->m_right->m_balanceFactor, 0);
+    ASSERT_EQ(bst->m_root->m_left->m_balanceFactor, -1);
+    ASSERT_EQ(bst->m_root->m_left->m_left->m_balanceFactor, -1);
+
+    delete bst;
 }
 
