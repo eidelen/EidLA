@@ -795,43 +795,14 @@ public:
         size_t nNodesLowestLayer = BSTNode<T>::getCompactNbrNodesLowestLayer(nNodes);
 
         // left rotations on first nNodesLowestLayer on every odd node from root
-        BSTNode<T>* nextRot = m_root;
-        for( size_t k = 0; k < nNodesLowestLayer; k++ )
+        rotateBackbone(m_root, nNodesLowestLayer);
+
+        size_t times = nNodes - nNodesLowestLayer;
+        while( times > 1 )
         {
-            if( nextRot != nullptr && nextRot->m_right != nullptr )
-            {
-                // do before rotation
-                BSTNode<T>* nextOdd = nextRot->m_right->m_right;
-
-                nextRot->rotateLeft();
-                nextRot = nextOdd;
-            }
-
+            times = times / 2;
+            rotateBackbone(m_root, times);
         }
-
-        print();
-
-        // left rotate every odd node till height is as expected
-        size_t expectedHeight = BSTNode<T>::getCompactHeight(nNodes);
-        size_t currentHeight = height();
-
-        size_t times = nNodes;
-
-        while( height() > expectedHeight )
-        {
-            BSTNode<T>* nRot = m_root;
-
-            while( nRot != nullptr && nRot->m_right != nullptr  )
-            {
-                // do before rotation
-                BSTNode<T>* nextOdd = nRot->m_right->m_right;
-                nRot->rotateLeft();
-                nRot = nextOdd;
-
-                print();
-            }
-        }
-
     }
 
     bool compare(const BST<T>* bst)
@@ -843,6 +814,13 @@ public:
             return false;
 
         return m_root->compare(bst->m_root);
+    }
+
+    bool isBalanced()
+    {
+        size_t actualHeight = height();
+        size_t balancedHeight = BSTNode<T>::getCompactHeight(size());
+        return actualHeight == balancedHeight;
     }
 
     BSTNode<T>* m_root;
@@ -865,6 +843,17 @@ private:
             // enter the next tree level
             print(prefix + (isLeft ? "│   " : "    "), node->m_left, true);
             print(prefix + (isLeft ? "│   " : "    "), node->m_right, false);
+        }
+    }
+
+    void rotateBackbone(BSTNode<T>* root, size_t count)
+    {
+        BSTNode<T>* rotNode = root;
+        for( size_t k = 0; k < count; k++ )
+        {
+            BSTNode<T>* nextRot = rotNode->m_right->m_right;
+            rotNode->rotateLeft();
+            rotNode = nextRot;
         }
     }
 

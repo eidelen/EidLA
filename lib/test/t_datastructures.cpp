@@ -597,10 +597,56 @@ TEST(BST, Balance)
     for( int k : cmpData )
         cmp->insert(k);
 
+    ASSERT_FALSE(bst->isBalanced());
     bst->balance();
+    ASSERT_TRUE(bst->isBalanced());
 
     ASSERT_TRUE( bst->compare(cmp));
 
     delete bst;
     delete cmp;
+}
+
+TEST(BST, IsBalanced)
+{
+    BST<int>* bst = new BST<int>();
+
+    ASSERT_TRUE(bst->isBalanced());
+
+    bst->insert(5);
+    ASSERT_TRUE(bst->isBalanced());
+
+    bst->insert(6);
+    ASSERT_TRUE(bst->isBalanced());
+
+    bst->insert(4);
+    ASSERT_TRUE(bst->isBalanced());
+
+    bst->insert(3);
+    ASSERT_TRUE(bst->isBalanced());
+
+    bst->insert(2);
+    ASSERT_FALSE(bst->isBalanced());
+
+    delete bst;
+}
+
+TEST(BST, BatchBalancing)
+{
+    size_t runs = 100;
+    size_t bstSize = 1024;
+
+    for(int k = 0; k < runs; k++)
+    {
+        // random data to random bst
+        Matrix<int> rData = Matrix<int>::random(bstSize,1, 0, 100000);
+        BST<int>* bst = new BST<int>();
+        for(size_t i = 0; i < bstSize; i++)
+            bst->insert(rData(i,0));
+
+        bst->balance();
+        ASSERT_TRUE(bst->isBalanced());
+
+        delete bst;
+    }
 }
