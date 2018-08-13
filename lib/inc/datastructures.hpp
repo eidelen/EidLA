@@ -431,7 +431,7 @@ public:
         TwoChildren
     };
 
-    static NodeType getNodeType( BSTNode<T>* node )
+    static NodeType getNodeType( const BSTNode<T>* node )
     {
         if( node == nullptr )
             return NodeType::NoNode;
@@ -584,13 +584,49 @@ public:
 
     /**
      * Compute the number of nodes in the lowest layer when
-     * dealing with a compact tree.
+     * dealing with a compact tree. If the lowest layer is full,
+     * zero is returned.
      * @param nbrNodes
      * @return
      */
     static size_t getCompactNbrNodesLowestLayer(size_t nbrNodes)
     {
+        if( nbrNodes == 0)
+            return 0;
 
+        size_t expectedHeight = getCompactHeight(nbrNodes);
+        size_t possibleNodes = getMaxNumberOfNodes(expectedHeight);
+
+        if( possibleNodes == nbrNodes )
+            return 0;
+
+        size_t freeNodesInLastLayer = possibleNodes - nbrNodes;
+        size_t usedNodesInLastLayer = std::pow(2, expectedHeight - 1) - freeNodesInLastLayer;
+
+        return usedNodesInLastLayer;
+    }
+
+    bool compare(const BSTNode<T>* node)
+    {
+        // "this" cannot be null
+        if( node == nullptr )
+            return false;
+
+        if( node->m_val != m_val )
+            return false;
+
+        if( getNodeType(this) != getNodeType(node) )
+            return false;
+
+        if( m_left != nullptr )
+            if( !m_left->compare(node->m_left) )
+                return false;
+
+        if( m_right != nullptr )
+            if( !m_right->compare(node->m_right) )
+                return false;
+
+        return true;
     }
 
 private:
@@ -742,6 +778,73 @@ public:
         print("", m_root, false);
     }
 
+    /**
+     * Form a balanced tree
+     * Info: DAY-STOUT-WARREN algorithm http://www.smunlisted.com/day-stout-warren-dsw-algorithm.html
+     */
+    void balance()
+    {
+        if( m_root == nullptr )
+            return;
+
+        // step 1 -> make a linked list
+        m_root->flatten();
+
+        // step 2 -> form balanced tree
+        size_t nNodes = size();
+        size_t nNodesLowestLayer = BSTNode<T>::getCompactNbrNodesLowestLayer(nNodes);
+
+        // left rotations on first nNodesLowestLayer on every odd node from root
+        BSTNode<T>* nextRot = m_root;
+        for( size_t k = 0; k < nNodesLowestLayer; k++ )
+        {
+            if( nextRot != nullptr && nextRot->m_right != nullptr )
+            {
+                // do before rotation
+                BSTNode<T>* nextOdd = nextRot->m_right->m_right;
+
+                nextRot->rotateLeft();
+                nextRot = nextOdd;
+            }
+
+        }
+
+        print();
+
+        // left rotate every odd node till height is as expected
+        size_t expectedHeight = BSTNode<T>::getCompactHeight(nNodes);
+        size_t currentHeight = height();
+
+        size_t times = nNodes;
+
+        while( height() > expectedHeight )
+        {
+            BSTNode<T>* nRot = m_root;
+
+            while( nRot != nullptr && nRot->m_right != nullptr  )
+            {
+                // do before rotation
+                BSTNode<T>* nextOdd = nRot->m_right->m_right;
+                nRot->rotateLeft();
+                nRot = nextOdd;
+
+                print();
+            }
+        }
+
+    }
+
+    bool compare(const BST<T>* bst)
+    {
+        if( m_root == nullptr && bst->m_root == nullptr )
+            return true;
+
+        if( m_root == nullptr && bst->m_root != nullptr )
+            return false;
+
+        return m_root->compare(bst->m_root);
+    }
+
     BSTNode<T>* m_root;
     size_t m_size;
 
@@ -764,6 +867,7 @@ private:
             print(prefix + (isLeft ? "│   " : "    "), node->m_right, false);
         }
     }
+
 };
 
 

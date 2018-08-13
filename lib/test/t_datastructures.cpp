@@ -541,13 +541,66 @@ TEST(BST, MinHeight)
 TEST(BST, NodesLowestLayer)
 {
     ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(0), 0);
-    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(1), 1);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(1), 0);
     ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(2), 1);
-    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(3), 2);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(3), 0);
     ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(4), 1);
     ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(5), 2);
     ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(6), 3);
-    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(7), 4);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(7), 0);
     ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(8), 1);
-    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(10), 2);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(10), 3);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(12), 5);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(14), 7);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(15), 0);
+    ASSERT_EQ( BSTNode<int>::getCompactNbrNodesLowestLayer(16), 1);
+}
+
+TEST(BST, Compare)
+{
+    BST<int>* bst0 = new BST<int>();
+    int d0[] = {1,0,2,3,4};
+    for( int k : d0 )
+        bst0->insert(k);
+
+    BST<int>* bst1 = new BST<int>();
+    int d1[] = {1,0,2,4,3};
+    for( int k : d1 )
+        bst1->insert(k);
+
+    BST<int>* bst2 = new BST<int>();
+    int d2[] = {1,2,3,4,0};
+    for( int k : d2 )
+        bst2->insert(k);
+
+    ASSERT_FALSE(bst0->compare( bst1 ));
+    ASSERT_FALSE(bst1->compare( bst0 ));
+
+    ASSERT_TRUE(bst0->compare( bst2 ));
+    ASSERT_TRUE(bst2->compare( bst0 ));
+
+    delete bst0;
+    delete bst1;
+    delete bst2;
+}
+
+// http://www.smunlisted.com/day-stout-warren-dsw-algorithm.html
+TEST(BST, Balance)
+{
+    BST<int>* bst = new BST<int>();
+    int data[] = {10,5,7,20,15,30,25,40,23};
+    for( int k : data )
+        bst->insert(k);
+
+    BST<int>* cmp = new BST<int>();
+    int cmpData[] = {23,15,30,7,20,25,40,5,10};
+    for( int k : cmpData )
+        cmp->insert(k);
+
+    bst->balance();
+
+    ASSERT_TRUE( bst->compare(cmp));
+
+    delete bst;
+    delete cmp;
 }
