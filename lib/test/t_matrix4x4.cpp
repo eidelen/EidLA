@@ -204,9 +204,17 @@ TEST(Matrix4x4, SetAndGetTranslation)
     double transData[] = {1,2,3};
     auto trans = Matrix<double>(3,1, transData);
 
+    double transData4[] = {1,2,3,1.0};
+    auto trans4 = Matrix<double>(4,1, transData4);
+
     Matrix4x4 t = Matrix4x4();
     t.setTranslation(trans);
     auto transGet = t.getTranslation();
+
+    ASSERT_TRUE(trans.compare(transGet));
+
+    t.setTranslation(trans4);
+    transGet = t.getTranslation();
 
     ASSERT_TRUE(trans.compare(transGet));
 
@@ -215,4 +223,12 @@ TEST(Matrix4x4, SetAndGetTranslation)
     auto getTrans2 = t2.getTranslation();
 
     ASSERT_TRUE(trans.compare(getTrans2));
+
+    // exceptions
+    auto throwM1 = Matrix<double>(2,1);
+    auto throwM2 = Matrix<double>(5,1);
+    auto throwM3 = Matrix<double>(3,2);
+    EXPECT_ANY_THROW( t2.setTranslation(throwM1));
+    EXPECT_ANY_THROW( t2.setTranslation(throwM2));
+    EXPECT_ANY_THROW( t2.setTranslation(throwM3));
 }

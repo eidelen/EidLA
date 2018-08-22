@@ -25,6 +25,7 @@
 #define MY_AFFINE_H
 
 #include "matrix.hpp"
+#include "exceptions.hpp"
 
 /**
  * This class represents a 4x4 double matrix. This kind
@@ -161,11 +162,8 @@ public:
      */
     void setTranslation( const Matrix<double>& trans)
     {
-        if( trans.cols() != 1 || trans.rows() != 3 )
-        {
-            std::cout << "Translation vector has wrong dimension";
-            std::exit(-1);
-        }
+        if( trans.cols() != 1 || (trans.rows() != 3 && trans.rows() != 4) )
+            throw NoVectorException();
 
         setTranslation( trans(0,0), trans(1,0), trans(2,0) );
     }

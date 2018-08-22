@@ -32,7 +32,15 @@ class SquareMatrixException: public std::exception
     {
         return "Square matrix expected";
     }
-} squareMatException;
+};
+
+class NoVectorException: public std::exception
+{
+    virtual const char* what() const throw() override
+    {
+        return "3x1 or 4x1 vector expected";
+    }
+};
 
 class EmptyContainerException: public std::exception
 {
