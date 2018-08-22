@@ -427,7 +427,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
         {
             case QRAlgorithm:
                 // QR algorithm
-                pairs = qrAlgorithm(cMat, 50,std::numeric_limits<double>::epsilon(), true);
+                pairs = qrAlgorithm(cMat, 50,std::numeric_limits<double>::epsilon(), false);
                 break;
 
             case PowerIterationAndHotellingsDeflation:
