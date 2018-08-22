@@ -207,6 +207,28 @@ TEST(Matrix, Sum)
     ASSERT_EQ(in.sum(), 27);
 }
 
+TEST(Matrix, SumC)
+{
+    auto in = Matrix<double>::identity(5);
+    auto soll = Matrix<double>(5,1);
+    soll.fill(1.0);
+
+    auto res = in.sumC();
+
+    ASSERT_TRUE(soll.compare(res));
+}
+
+TEST(Matrix, SumR)
+{
+    auto in = Matrix<double>::identity(5);
+    auto soll = Matrix<double>(1,5);
+    soll.fill(1.0);
+
+    auto res = in.sumR();
+
+    ASSERT_TRUE(soll.compare(res));
+}
+
 TEST(Matrix, AssignmentOperator)
 {
     auto mat = Matrix<int>(3, 3);
@@ -459,4 +481,19 @@ TEST(Matrix, MoveDataConstructor)
 
     // check that content is correct
     ASSERT_TRUE( copy_in.compare(mv));
+}
+
+TEST(Matrix, Repmat)
+{
+    Matrix<int> a = Matrix<int>(2,3);
+    a.fill(3);
+
+    Matrix<int> soll = Matrix<int>(4,9);
+    soll.fill(3);
+
+    auto res = a.repMat(2,3);
+
+    ASSERT_TRUE(soll.compare(res));
+
+    EXPECT_ANY_THROW(a.repMat(0,1));
 }

@@ -658,5 +658,9 @@ TEST(BST, MinMax)
     ASSERT_EQ(bst->getMax(), 14);
     ASSERT_EQ(bst->getMin(), 1);
 
+    BST<int>* emptyBST = new BST<int>();
+    EXPECT_ANY_THROW(emptyBST->getMax());
+
     delete bst;
+    delete emptyBST;
 }

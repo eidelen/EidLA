@@ -42,12 +42,20 @@ class NoVectorException: public std::exception
     }
 };
 
+class InvalidInputException: public std::exception
+{
+    virtual const char* what() const throw() override
+    {
+        return "Invalid input";
+    }
+};
+
 class EmptyContainerException: public std::exception
 {
     virtual const char* what() const throw() override
     {
         return "Container is empty";
     }
-} emptyContainerException;
+};
 
 #endif //MY_EXCEPTIONS_H

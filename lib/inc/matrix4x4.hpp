@@ -246,6 +246,17 @@ public:
         ret.setTranslation(transVect);
         return ret;
     }
+
+    /**
+     * Finds the rigid transformation between two corresponding 3D
+     * point sets. The algorithm is described in the paper
+     * "Least-Squares Fitting of Two 3-D Point Sets".
+     * @param setA Point set A (3 x n matrix)
+     * @param setB Point set B (3 x n matrix)
+     * @return Rigid transformation
+     */
+    template <typename R, typename Q>
+    static Matrix4x4 findRigidTransformation(const Matrix<R>& setA, const Matrix<Q>& setB);
 };
 
 
@@ -265,5 +276,54 @@ Matrix4x4::Matrix4x4(const Matrix<R>& mat)
         std::exit(-1);
     }
 }
+
+template <typename R, typename Q>
+Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix<Q>& setB)
+{
+    // input to double
+    Matrix<double> dA(setA);
+    Matrix<double> dB(setB);
+
+    // at least 3 point correspondences
+    if( dA.cols() != dB.cols() || dA.cols() < 3 || dA.rows() != 3 || dB.rows() != 3  )
+        throw InvalidInputException();
+
+    size_t n = dA.cols();
+
+    // compute centers
+    Matrix<double> cA = dA.sumC() * (1.0/n);
+    Matrix<double> cB = dB.sumC() * (1.0/n);
+
+    std::cout << "centers: " << std::endl << cA << std::endl << cB;
+
+    // centered point sets
+    Matrix<double> qA = dA - cA.repMat(1,n);
+    Matrix<double> qB = dB - cB.repMat(1,n);
+
+    std::cout << "centerd points: " << std::endl << qA << std::endl << qB;
+
+    // compute rotation
+    Matrix<double> h = Matrix<double>(3,3);
+    h.fill(0.0);
+
+    for( size_t k = 0; k < n; k++ )
+        h = h + (qA.column(k) * qB.column(k).transpose());
+
+    std::cout << "h = " << std::endl << h;
+
+    Decomposition::SVDResult dec = Decomposition::svd(h);
+
+    Matrix<double> rotation = dec.V * dec.U.transpose();
+
+    bool detSuccess;
+    std::cout << "rotation " << std::endl << rotation << "det rot = " << rotation.determinant(&detSuccess) << std::endl;
+
+    return Matrix4x4();
+
+
+
+
+
+};
 
 #endif //MY_AFFINE_H

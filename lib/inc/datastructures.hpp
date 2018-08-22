@@ -829,7 +829,7 @@ public:
     T getMax() const
     {
         if( m_root == nullptr )
-            throw emptyContainerException;
+            throw EmptyContainerException();
 
         const BSTNode<T>* node = m_root;
         while(node->m_right != nullptr)
@@ -841,7 +841,7 @@ public:
     T getMin() const
     {
         if( m_root == nullptr )
-            throw emptyContainerException;
+            throw EmptyContainerException();
 
         const BSTNode<T>* node = m_root;
         while(node->m_left != nullptr)

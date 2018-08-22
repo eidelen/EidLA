@@ -24,6 +24,8 @@
 #ifndef MY_MATRIX_H
 #define MY_MATRIX_H
 
+#include "exceptions.hpp"
+
 #include <memory>
 #include <iostream>
 #include <cmath>
@@ -285,6 +287,18 @@ public:
     T sum() const;
 
     /**
+     * Sum up elements in column direction.
+     * @return rows x 1 matrix
+     */
+    Matrix<T> sumC() const;
+
+    /**
+     * Sum up elements in row direction.
+     * @return 1 x columns matrix
+     */
+    Matrix<T> sumR() const;
+
+    /**
      * Get the position and value of the maximum element. If there
      * are two or more maximums, the first one is returned.
      * @return Position and value of maximum
@@ -495,6 +509,14 @@ public:
      * @return Absolute matrix.
      */
     Matrix<T> absolute() const;
+
+    /**
+     * Creates a repetition of this matrix.
+     * @param rowDirection 1 - m repetitions in row direction.
+     * @param columnDirection 1 - n repetitions in column direction.
+     * @return Repeated matrix
+     */
+    Matrix<T> repMat(size_t rowDirection, size_t columnDirection) const;
 
 #ifdef OPENCVEIDLA
     /**
@@ -869,6 +891,30 @@ T Matrix<T>::sum() const
         ret += ptr[i];
 
     return ret;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::sumC() const
+{
+    Matrix<T> res( rows(), 1 );
+    res.fill(0);
+
+    for( size_t k = 0; k < cols(); k++ )
+        res = res + column(k);
+
+    return res;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::sumR() const
+{
+    Matrix<T> res( 1, cols() );
+    res.fill(0);
+
+    for( size_t k = 0; k < rows(); k++ )
+        res = res + row(k);
+
+    return res;
 }
 
 template <class T>
@@ -1885,6 +1931,20 @@ Matrix<T> Matrix<T>::absolute() const
     {
         dst[k] = std::abs(src[k]);
     }
+
+    return ret;
+}
+
+template <class T>
+Matrix<T> Matrix<T>::repMat(size_t rowDirection, size_t columnDirection) const
+{
+    if( rowDirection < 1 || columnDirection < 1 )
+        throw InvalidInputException();
+
+    Matrix<T> ret = Matrix<T>( rows() * rowDirection, cols() * columnDirection );
+    for( size_t x = 0; x < columnDirection; x++ )
+        for( size_t y = 0; y < rowDirection; y++ )
+            ret.setSubMatrix(y * rows(), x * cols(), *this);
 
     return ret;
 }
