@@ -650,3 +650,13 @@ TEST(BST, BatchBalancing)
         delete bst;
     }
 }
+
+TEST(BST, MinMax)
+{
+    BST<int>* bst = getTestBST();
+
+    ASSERT_EQ(bst->getMax(), 14);
+    ASSERT_EQ(bst->getMin(), 1);
+
+    delete bst;
+}

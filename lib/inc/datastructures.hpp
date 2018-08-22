@@ -24,6 +24,8 @@
 #ifndef MY_DATASTRUCTURES_H
 #define MY_DATASTRUCTURES_H
 
+#include "exceptions.hpp"
+
 #include <vector>
 #include <cmath>
 
@@ -821,6 +823,30 @@ public:
         size_t actualHeight = height();
         size_t balancedHeight = BSTNode<T>::getCompactHeight(size());
         return actualHeight == balancedHeight;
+    }
+
+    T getMax() const
+    {
+        if( m_root == nullptr )
+            throw emptyContainerException;
+
+        const BSTNode<T>* node = m_root;
+        while(node->m_right != nullptr)
+            node = node->m_right;
+
+        return node->m_val;
+    }
+
+    T getMin() const
+    {
+        if( m_root == nullptr )
+            throw emptyContainerException;
+
+        const BSTNode<T>* node = m_root;
+        while(node->m_left != nullptr)
+            node = node->m_left;
+
+        return node->m_val;
     }
 
     BSTNode<T>* m_root;
