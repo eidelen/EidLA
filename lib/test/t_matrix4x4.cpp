@@ -235,20 +235,24 @@ TEST(Matrix4x4, SetAndGetTranslation)
 
 TEST(Matrix4x4, FindAffineTransformation)
 {
-    // Generate Test Point Cloud
-    Matrix<double> p_A = Matrix<double>::random(4,5,-1,1);
-    for(size_t k = 0; k < 5; k++)
+    // Generate test point cloud
+    size_t nInput = 100;
+    Matrix<double> p_A = Matrix<double>::random(4,nInput,-1,1);
+    for(size_t k = 0; k < nInput; k++)
         p_A(3,k) = 1.0;
 
+    // Make example transformation
     Matrix4x4 t = Matrix4x4();
     t.setTranslation( 1, 2, 3 );
+    t.rotX(0.2);
+    t.rotY(0.5);
+    t.rotZ(-0.1);
 
+    // Transform p_A -> corresponding point cloud
     Matrix<double> p_B = t * p_A;
 
+    // this function needs to recover transformation t
     auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,5), p_B.subMatrix(0,0,3,5));
 
-    std::cout << t ;
-    std::cout << t_res ;
-
-    ASSERT_TRUE(t_res.compare(t, true, 0.05));
+    ASSERT_TRUE(t_res.compare(t, true, 0.001));
 }

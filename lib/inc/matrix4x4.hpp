@@ -290,17 +290,16 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
 
     size_t n = dA.cols();
 
+
     // compute centers
     Matrix<double> cA = dA.sumC() * (1.0/n);
     Matrix<double> cB = dB.sumC() * (1.0/n);
 
-    std::cout << "centers: " << std::endl << cA << std::endl << cB;
 
     // centered point sets
     Matrix<double> qA = dA - cA.repMat(1,n);
     Matrix<double> qB = dB - cB.repMat(1,n);
 
-    std::cout << "centerd points: " << std::endl << qA << std::endl << qB;
 
     // compute rotation
     Matrix<double> h = Matrix<double>(3,3);
@@ -309,21 +308,18 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
     for( size_t k = 0; k < n; k++ )
         h = h + (qA.column(k) * qB.column(k).transpose());
 
-    std::cout << "h = " << std::endl << h;
-
     Decomposition::SVDResult dec = Decomposition::svd(h);
 
     Matrix<double> rotation = dec.V * dec.U.transpose();
 
-    bool detSuccess;
-    std::cout << "rotation " << std::endl << rotation << "det rot = " << rotation.determinant(&detSuccess) << std::endl;
 
-    return Matrix4x4();
+    // compose resulting transformation
+    Matrix4x4 res = Matrix4x4();
+    res.setRotation(rotation);
+    Matrix<double> translation = cB - (rotation*cA);
+    res.setTranslation(translation);
 
-
-
-
-
+    return res;
 };
 
 #endif //MY_AFFINE_H
