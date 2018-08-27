@@ -313,18 +313,34 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
 
     Matrix<double> rotation = dec.V * dec.U.transpose();
 
-
-    // check if rotation matrix is valid -> reflection or not
+    // If necessary, fix rotation matrix -> reflection
     double det = rotation.determinant();
+    if( det < 0.0 )
+    {
+        std::cout << "Rotation is a reflection (determinant = " << det << "). Let's fix it!" << std::endl;
+        std::cout << "Initial rotation matrix = " << std::endl << rotation;
+        std::cout << "Singular values of H = " << std::endl << dec.S;
 
+        Matrix<double> vModified = dec.V;
+        vModified.setColumn(2, vModified.column(2) * (-1.0) );
 
+        rotation = vModified * dec.U.transpose();
 
+        // Modified rotation determinant should be positive... actually 1
+        double detFixed = rotation.determinant();
+        if( detFixed < 0.0 )
+            throw NoRotationMatrixException();
+    }
 
     // compose resulting transformation
     Matrix4x4 res = Matrix4x4();
     res.setRotation(rotation);
     Matrix<double> translation = cB - (rotation*cA);
     res.setTranslation(translation);
+
+
+    // compute error
+
 
     return res;
 };

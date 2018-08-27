@@ -250,7 +250,59 @@ TEST(Matrix4x4, FindAffineTransformation)
     Matrix<double> p_B = t * p_A;
 
     // this function needs to recover transformation t
-//    auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,5), p_B.subMatrix(0,0,3,5));
+    double err = 0.0;
+    auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,nInput), p_B.subMatrix(0,0,3,nInput), err);
 
-//    ASSERT_TRUE(t_res.compare(t, true, 0.001));
+    ASSERT_TRUE(t_res.compare(t, true, 0.01));
+    ASSERT_FLOAT_EQ(0.0, err);
+}
+
+TEST(Matrix4x4, FindAffineTransformation_Reflection)
+{
+    // Generate test point cloud
+    double p_A_data[] = {1 , 2, 3, 2,
+                         1 , 0, 1, 1,
+                         0,  0, 0, 0,
+                         1,  1, 1, 1};
+    Matrix<double> p_A = Matrix<double>(4,4, p_A_data);
+
+    // Make example transformation
+    Matrix4x4 t = Matrix4x4();
+    t.setTranslation( 1, 0, 0 );
+    t.rotY(0.5);
+
+    // Transform p_A -> corresponding point cloud
+    Matrix<double> p_B = t * p_A;
+    p_B(0,0) = p_B(0,0) - 0.05;
+
+    // this function needs to recover transformation t
+    double err = 0.0;
+    auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,4), p_B.subMatrix(0,0,3,4), err);
+
+    ASSERT_TRUE(t_res.compare(t, true, 0.05));
+}
+
+TEST(Matrix4x4, FindAffineTransformation_Error)
+{
+    // Generate test point cloud
+    double p_A_data[] = {1 , 2, 3, 2,
+                         1 , 0, 1, 1,
+                         0,  0, 0, 0,
+                         1,  1, 1, 1};
+    Matrix<double> p_A = Matrix<double>(4,4, p_A_data);
+
+    // Make example transformation
+    Matrix4x4 t = Matrix4x4();
+    t.setTranslation( 1, 0, 0 );
+    t.rotY(0.5);
+
+    // Transform p_A -> corresponding point cloud
+    Matrix<double> p_B = t * p_A;
+    p_B(0,0) = p_B(0,0) - 0.05; // modify a bit
+
+    // this function needs to recover transformation t
+    double err = 0.0;
+    auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,4), p_B.subMatrix(0,0,3,4), err);
+
+    ASSERT_GT(err, 0.0);
 }

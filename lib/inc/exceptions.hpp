@@ -67,4 +67,12 @@ class EmptyContainerException: public std::exception
     }
 };
 
+class NoRotationMatrixException: public std::exception
+{
+    virtual const char* what() const throw() override
+    {
+        return "No rotation matrix";
+    }
+};
+
 #endif //MY_EXCEPTIONS_H
