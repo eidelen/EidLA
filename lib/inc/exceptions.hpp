@@ -34,6 +34,15 @@ class SquareMatrixException: public std::exception
     }
 };
 
+class ZeroDeterminantException: public std::exception
+{
+    virtual const char* what() const throw() override
+    {
+        return "Non-Zero determinant expected";
+    }
+};
+
+
 class NoVectorException: public std::exception
 {
     virtual const char* what() const throw() override

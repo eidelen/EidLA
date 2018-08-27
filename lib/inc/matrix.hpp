@@ -349,17 +349,15 @@ public:
 
     /**
      * Returns the inverse of this matrix.
-     * @param invertable On return, this is true if successful
      * @return Inverse of this matrix
      */
-    Matrix<double> inverted(bool* invertable) const;
+    Matrix<double> inverted() const;
 
     /**
      * Returns the determinant of this matrix.
-     * @param successful On return, this is true if successful
      * @return Determinant of this matrix
      */
-    double determinant(bool* successful) const;
+    double determinant() const;
 
     /**
      * Returns a matrix consisting of normalized column vectors.
@@ -1384,29 +1382,18 @@ size_t Matrix<T>::getRank() const
     return rank;
 }
 template <class T>
-Matrix<double> Matrix<T>::inverted(bool* invertable) const
+Matrix<double> Matrix<T>::inverted() const
 {
     // needs to be square matrix
     if (m_rows != m_cols)
+        throw SquareMatrixException();
+
+    double det = determinant();
+
+    if (std::abs(det) < std::numeric_limits<double>::min())
     {
-        std::cout << "Needs to be square matrix" << std::endl;
-        *invertable = false;
-        return *this;
+        throw ZeroDeterminantException();
     }
-
-    bool   detOk;
-    double det = determinant(&detOk);
-
-    if (detOk && std::abs(det) < std::numeric_limits<double>::min())
-    {
-        std::cout << "Inverse failed due to determinant equal zero:"
-
-        << std::endl << *this << std::endl;
-        *invertable = false;
-        return *this;
-    }
-
-    *invertable = true;
 
     std::vector<Matrix<double>> ops;
     Transformation::reduced_echelon(*this, ops);
@@ -1428,7 +1415,7 @@ Matrix<double> Matrix<T>::inverted(bool* invertable) const
 #include "decomposition.hpp"
 
 template <class T>
-double Matrix<T>::determinant(bool* successful) const
+double Matrix<T>::determinant() const
 {
     // compute determinant by using LU decomposition
     // infos: https://s-mat-pcs.oulu.fi/~mpa/matreng/eem3_4-3.htm
@@ -1439,11 +1426,7 @@ double Matrix<T>::determinant(bool* successful) const
 
     // needs to be square matrix
     if (m_rows != m_cols)
-    {
-        std::cout << "Needs to be square matrix" << std::endl;
-        *successful = false;
-        return det;
-    }
+        throw SquareMatrixException();
 
     if( m_rows == 2 ) // m_cols eq. m_rows
     {
@@ -1475,7 +1458,6 @@ double Matrix<T>::determinant(bool* successful) const
         det =  detP*detU;
     }
 
-    *successful = true;
     return det;
 }
 
@@ -1570,18 +1552,9 @@ Matrix<double> Matrix<T>::firstMinors() const
             subMat.removeRow(m);
             subMat.removeColumn(n);
 
-            bool detCalc;
-            double det = subMat.determinant(&detCalc);
+            double det = subMat.determinant();
 
-            if( detCalc )
-            {
-                fm(m,n) = det;
-            }
-            else
-            {
-                std::cout << "Compute first minors failed" << std::endl;
-                std::exit(-1);
-            }
+            fm(m,n) = det;
         }
     }
 
@@ -1952,14 +1925,7 @@ Matrix<T> Matrix<T>::repMat(size_t rowDirection, size_t columnDirection) const
 template <class T>
 double Matrix<T>::conditionNumberL1() const
 {
-    bool invertable;
-    Matrix<T> invMat = this->inverted(&invertable);
-
-    if( !invertable )
-    {
-        std::cerr << "conditionNumberL1: matrix not invertable";
-        return 0.0;
-    }
+    Matrix<T> invMat = this->inverted();
 
     double n = normL1();
     double ni = invMat.normL1();
@@ -1973,14 +1939,7 @@ double Matrix<T>::conditionNumberL1() const
 template <class T>
 double Matrix<T>::conditionNumberInf() const
 {
-    bool invertable;
-    Matrix<T> invMat = this->inverted(&invertable);
-
-    if( !invertable )
-    {
-        std::cerr << "conditionNumberInf: matrix not invertable";
-        return 0.0;
-    }
+    Matrix<T> invMat = this->inverted();
 
     double n = normInf();
     double ni = invMat.normInf();

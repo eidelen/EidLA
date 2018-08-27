@@ -253,10 +253,11 @@ public:
      * "Least-Squares Fitting of Two 3-D Point Sets".
      * @param setA Point set A (3 x n matrix)
      * @param setB Point set B (3 x n matrix)
+     * @param error On return, this holds the registration error.
      * @return Rigid transformation
      */
     template <typename R, typename Q>
-    static Matrix4x4 findRigidTransformation(const Matrix<R>& setA, const Matrix<Q>& setB);
+    static Matrix4x4 findRigidTransformation(const Matrix<R>& setA, const Matrix<Q>& setB, double& error);
 };
 
 
@@ -278,7 +279,7 @@ Matrix4x4::Matrix4x4(const Matrix<R>& mat)
 }
 
 template <typename R, typename Q>
-Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix<Q>& setB)
+Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix<Q>& setB, double& error)
 {
     // input to double
     Matrix<double> dA(setA);
@@ -311,6 +312,12 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
     Decomposition::SVDResult dec = Decomposition::svd(h);
 
     Matrix<double> rotation = dec.V * dec.U.transpose();
+
+
+    // check if rotation matrix is valid -> reflection or not
+    double det = rotation.determinant();
+
+
 
 
     // compose resulting transformation
