@@ -254,40 +254,41 @@ TEST(Matrix4x4, FindAffineTransformation)
     auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,nInput), p_B.subMatrix(0,0,3,nInput), err);
 
     ASSERT_TRUE(t_res.compare(t, true, 0.01));
-    ASSERT_FLOAT_EQ(0.0, err);
+    ASSERT_LT(err, 0.01);
 }
 
-TEST(Matrix4x4, FindAffineTransformation_Reflection)
+TEST(Matrix4x4, FindAffineTransformation_3Points)
 {
     // Generate test point cloud
-    double p_A_data[] = {1 , 2, 3, 2,
-                         1 , 0, 1, 1,
-                         0,  0, 0, 0,
-                         1,  1, 1, 1};
-    Matrix<double> p_A = Matrix<double>(4,4, p_A_data);
+    double p_A_data[] = {1 , 0, 0,
+                         0 , 1, 0,
+                         0,  0, 1,
+                         1,  1, 1};
+    Matrix<double> p_A = Matrix<double>(4,3, p_A_data);
 
     // Make example transformation
     Matrix4x4 t = Matrix4x4();
-    t.setTranslation( 1, 0, 0 );
-    t.rotY(0.5);
+    t.setToIdentity();
+    t.setTranslation(0.0, 0.3, 0.5);
+    t.rotY(0.6);
 
     // Transform p_A -> corresponding point cloud
     Matrix<double> p_B = t * p_A;
-    p_B(0,0) = p_B(0,0) - 0.05;
 
     // this function needs to recover transformation t
     double err = 0.0;
-    auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,4), p_B.subMatrix(0,0,3,4), err);
-
-    ASSERT_TRUE(t_res.compare(t, true, 0.05));
+    auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,3), p_B.subMatrix(0,0,3,3), err);
+    ASSERT_TRUE(t_res.compare(t, true, 0.01));
+    ASSERT_LT(err, 0.001);
 }
+
 
 TEST(Matrix4x4, FindAffineTransformation_Error)
 {
     // Generate test point cloud
     double p_A_data[] = {1 , 2, 3, 2,
                          1 , 0, 1, 1,
-                         0,  0, 0, 0,
+                         0,  1, 0, 3,
                          1,  1, 1, 1};
     Matrix<double> p_A = Matrix<double>(4,4, p_A_data);
 
@@ -298,11 +299,63 @@ TEST(Matrix4x4, FindAffineTransformation_Error)
 
     // Transform p_A -> corresponding point cloud
     Matrix<double> p_B = t * p_A;
-    p_B(0,0) = p_B(0,0) - 0.05; // modify a bit
+    p_B(0,0) = p_B(0,0) + 0.1; // modify a bit
 
     // this function needs to recover transformation t
     double err = 0.0;
     auto t_res = Matrix4x4::findRigidTransformation(p_A.subMatrix(0,0,3,4), p_B.subMatrix(0,0,3,4), err);
-
-    ASSERT_GT(err, 0.0);
+    ASSERT_GT(err, 0.01);
 }
+
+TEST(Matrix4x4, FindAffineTransformation_Batch)
+{
+    int runs = 1000;
+
+    Matrix<size_t> nbrInputPoints = Matrix<size_t>::random(runs,1,3,10);
+
+    for(int run = 0; run < runs; run++)
+    {
+        size_t n = nbrInputPoints(run,0);
+
+        Matrix<double> inputA = Matrix<double>::random( 4, n, -10, +10 );
+        Matrix<double> h = Matrix<double>(1,n); h.fill(1);
+        inputA.setRow(3, h );
+
+        Matrix4x4 t = Matrix4x4();
+        t.setToIdentity();
+        Matrix<double> t_rand = Matrix<double>::random( 6, 1, -3, 3 );
+        t.rotX(t_rand(0,0)); t.rotY(t_rand(1,0)); t.rotZ(t_rand(2,0));
+        t.setTranslation(t_rand(3,0),t_rand(4,0),t_rand(5,0));
+
+        Matrix<double> inputB = t * inputA;
+
+        double error;
+        auto t_res = Matrix4x4::findRigidTransformation(inputA.subMatrix(0,0,3,n), inputB.subMatrix(0,0,3,n), error);
+
+        ASSERT_TRUE( t.compare(t_res, true, 0.1) );
+        ASSERT_LT( error, 0.01 );
+    }
+}
+
+TEST(Matrix4x4, ComputeTransError)
+{
+    double p_A_data[] = {1 , 2,
+                         1 , 2,
+                         0,  0};
+    Matrix<double> p_A = Matrix<double>(3,2, p_A_data);
+
+    double p_B_data[] = {1 , 2,
+                         1 , 2,
+                         0,  0};
+    Matrix<double> p_B = Matrix<double>(3,2, p_B_data);
+
+    Matrix4x4 t;
+    t.setToIdentity();
+
+    ASSERT_LT(Matrix4x4::computeTransformationError(p_A, p_B, t), 0.00001);
+
+
+    p_B(0,0) = 1.5; // error = sqrt(0.5^2)/2 = 0.25
+    ASSERT_NEAR( Matrix4x4::computeTransformationError(p_A, p_B, t), 0.25, 0.001);
+}
+

@@ -75,4 +75,12 @@ class NoRotationMatrixException: public std::exception
     }
 };
 
+class SVDFailedException: public std::exception
+{
+    virtual const char* what() const throw() override
+    {
+        return "SVD failed";
+    }
+};
+
 #endif //MY_EXCEPTIONS_H

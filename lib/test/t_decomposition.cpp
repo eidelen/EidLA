@@ -266,6 +266,15 @@ TEST(Decomposition, QRDecomposition)
     ASSERT_TRUE( mat.compare( res.Q * res.R, true, 0.01));
 }
 
+TEST(Decomposition, QRDecompositionSpecialMatrixWhichFailed)
+{
+    double matData[] = {2.0/3.0, -1.0/3.0, -1.0/3.0,
+                        -1.0/3.0, 2.0/3.0, -1.0/3.0,
+                        -1.0/3.0, -1.0/3.0, 2.0/3.0};
+    Matrix<double> mat(3,3, matData);
+    Decomposition::QRResult res = Decomposition::qr(mat);
+}
+
 TEST(Decomposition, QRDecompositionSpecialMatrix)
 {
     // Rotation Matrix
@@ -499,6 +508,44 @@ TEST(Decomposition, SVD)
     ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
 }
 
+TEST(Decomposition, SVDIdentity)
+{
+    Matrix<double> ident = Matrix<double>::identity(3);
+    Decomposition::SVDResult res = Decomposition::svd(ident);
+    ASSERT_TRUE( res.S.compare(ident, true, 0.001) );
+}
+
+TEST(Decomposition, SVDProblemMatrix)
+{
+    // this is from 3d3d registration. svd does not find the right rotation matrix.
+    double h_data[] = {2, 1, -1, 1, 2, 0, -1, 0, 2.0/3.0};
+    Matrix<double> h = Matrix<double>(3,3,h_data);
+
+    Decomposition::SVDResult res = Decomposition::svd(h);
+
+    std::cout << "U ortho = " << res.U.isOrthogonal(0.01) << std::endl;
+    std::cout << "V ortho = " << res.V.isOrthogonal(0.01) << std::endl;
+    std::cout << "SVD correct = " << h.compare(res.U * res.S * res.V.transpose(), true, 0.0001 ) << std::endl;
+
+    std::cout << "dec.V = " << std::endl << res.V<< std::endl;
+    std::cout << "dec.S = " << std::endl << res.S<< std::endl;
+    std::cout << "dec.U = " << std::endl << res.U<< std::endl;
+
+    // rotation should be identity
+    Matrix<double> r1 = res.V * res.U.transpose();
+
+    double d1 = r1.determinant();
+    std::cout << "d1 = " << d1 << std::endl;
+    std::cout << "r1 = " << std::endl << r1 << std::endl;
+
+    Matrix<double> vModified = res.V;
+    vModified.setColumn(2, vModified.column(2) * (-1.0) );
+    Matrix<double> r2 = vModified * res.U.transpose();
+    double d2 = r2.determinant();
+    std::cout << "d2 = " << d2 << std::endl;
+    std::cout << "r2 = " << std::endl << r2 << std::endl;
+}
+
 TEST(Decomposition, SVDBatch)
 {
     size_t rows = 5;
@@ -511,7 +558,7 @@ TEST(Decomposition, SVDBatch)
 
         ASSERT_TRUE( res.U.isOrthogonal(0.05) );
         ASSERT_TRUE( res.V.isOrthogonal(0.05) );
-        ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.05 ) );
+        ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.1 ) );
     }
 }
 

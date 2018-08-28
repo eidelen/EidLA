@@ -258,6 +258,17 @@ public:
      */
     template <typename R, typename Q>
     static Matrix4x4 findRigidTransformation(const Matrix<R>& setA, const Matrix<Q>& setB, double& error);
+
+    /**
+     * Computes the average Euclidean (L2) error of the transformation t, which
+     * maps the setA to the setB: Norm( setB - t * setA )
+     * @param setA Set A
+     * @param setB Set B
+     * @param transformation Transformation
+     * @return Average Euclidean error
+     */
+    template <typename R, typename Q>
+    static double computeTransformationError(const Matrix<R>& setA, const Matrix<Q>& setB, const Matrix4x4& t);
 };
 
 
@@ -291,7 +302,6 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
 
     size_t n = dA.cols();
 
-
     // compute centers
     Matrix<double> cA = dA.sumC() * (1.0/n);
     Matrix<double> cB = dB.sumC() * (1.0/n);
@@ -300,7 +310,6 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
     // centered point sets
     Matrix<double> qA = dA - cA.repMat(1,n);
     Matrix<double> qB = dB - cB.repMat(1,n);
-
 
     // compute rotation
     Matrix<double> h = Matrix<double>(3,3);
@@ -315,11 +324,16 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
 
     // If necessary, fix rotation matrix -> reflection
     double det = rotation.determinant();
+
+    if( std::abs(1.0 - std::abs(det)) > 0.001 )
+    {
+        h.save("failingsvd.mat");
+        throw NoRotationMatrixException();
+    }
+
     if( det < 0.0 )
     {
         std::cout << "Rotation is a reflection (determinant = " << det << "). Let's fix it!" << std::endl;
-        std::cout << "Initial rotation matrix = " << std::endl << rotation;
-        std::cout << "Singular values of H = " << std::endl << dec.S;
 
         Matrix<double> vModified = dec.V;
         vModified.setColumn(2, vModified.column(2) * (-1.0) );
@@ -338,11 +352,38 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
     Matrix<double> translation = cB - (rotation*cA);
     res.setTranslation(translation);
 
-
-    // compute error
-
+    error = computeTransformationError(dA, dB, res);
 
     return res;
 };
+
+template <typename R, typename Q>
+double Matrix4x4::computeTransformationError(const Matrix<R>& setA, const Matrix<Q>& setB, const Matrix4x4& t)
+{
+    // check input
+    if( ! Matrix::equalDimension(setA,setB) )
+        throw InvalidInputException();
+
+    if( setA.rows() < 3  )
+        throw InvalidInputException();
+
+    size_t n = setA.cols();
+
+    // works for homogene and non-homogene coordinates
+    Matrix<double> setA_h(4,n); setA_h.fill(1.0);
+    setA_h.setSubMatrix(0,0,setA);
+
+    // transform setA and compute difference to setB
+    Matrix<double> tDiff = setB - (t * setA_h).subMatrix(0,0,3,n);
+
+    // compute average L2 error
+    double error = 0.0;
+    for( size_t k = 0; k < n; k++ )
+        error += tDiff.column(k).norm();
+
+    error = error / n;
+
+    return error;
+}
 
 #endif //MY_AFFINE_H

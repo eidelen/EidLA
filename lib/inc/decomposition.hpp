@@ -427,7 +427,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
         {
             case QRAlgorithm:
                 // QR algorithm
-                pairs = qrAlgorithm(cMat, 50,std::numeric_limits<double>::epsilon(), false);
+                pairs = qrAlgorithm(cMat, 200, std::numeric_limits<double>::epsilon(), false);
                 break;
 
             case PowerIterationAndHotellingsDeflation:
@@ -635,7 +635,11 @@ Decomposition::HouseholderResult Decomposition::householder(const Matrix<T>& x)
 template <class T>
 Matrix<double> Decomposition::householderMatrix(const Matrix<T>& v, double b)
 {
-    Matrix<double> p = Matrix<double>::identity(v.rows()) - b * v * v.transpose();
+    Matrix<double> p = Matrix<double>::identity(v.rows());
+
+    if( std::isfinite(b) )
+        p = p - b * v * v.transpose();
+
     return p;
 }
 
@@ -713,10 +717,7 @@ Decomposition::QRResult Decomposition::qr(const Matrix<T>& mat, bool positive)
     {
         // copy current column
         Matrix<double> x = r.subMatrix(i,i,m-i,1);
-
         HouseholderResult house = householder(x);
-
-        // Householder matrix
         Matrix<double> h = householderMatrix(house.V, house.B);
 
         // create the matrix for next loop.
@@ -809,28 +810,64 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
     Matrix<double> u_left = Matrix<double>(s_diag_mat.rows(), s_diag_mat.rows()); u_left.fill(0.0);
     Matrix<double> v_right = Matrix<double>(s_diag_mat.cols(), s_diag_mat.cols()); v_right.fill(0.0);
 
+    bool forceOrthogonalization = false;
+
     for( size_t p = 0; p < ep.size(); p++ )
     {
         double tEigenValue = ep.at(p).L; // left and right eigenvalues should be equal
-        s_diag_mat(p, p) = std::sqrt(std::abs(tEigenValue));
-
         Matrix<double> eVect = ep.at(p).V;
-        v_right.setColumn(p, eVect);
 
-        if( s_diag_mat(p,p) > 0.000001 ) // todo: introduce concept for small numbers
+        // eigenvalues of a symmetric matrix cannot be negative. if so,
+        // this comes from rounding errors in eigen algorithm.
+        if( tEigenValue <= 0.0 )
         {
-            // find u based on v and s
-            u_left.setColumn( p, mat * eVect * (1.0 / s_diag_mat(p,p)));
+            if( (ep.size() - 1) == p )
+            {
+                // this is allowed to happen in the very last run
+                s_diag_mat(p, p) = 0.0;
+                v_right.setColumn(p, eVect);
+                forceOrthogonalization = true;
+                // the last column of u will be built up in the post-processing orthogonalization
+            }
+            else
+            {
+                throw SVDFailedException();
+            }
         }
         else
         {
-            // since singular value is zero, the column in u is created.
-            std::cout << "Warning: Singular value is zero. Column " << p << " of the orthogonal matrix U is made based on already existing columns." << std::endl;
-            for(size_t u_row = 0; u_row < u_left.rows(); u_row++)
-            {
-                u_left(u_row,p) = std::sqrt(1 - u_left.row( u_row ).normSquare());
-            }
+            s_diag_mat(p, p) = std::sqrt(tEigenValue);
+            v_right.setColumn(p, eVect);
+            u_left.setColumn( p, mat * eVect * (1.0 / s_diag_mat(p,p)));
         }
+    }
+
+    // in case of small singular values, the matrix u might be not orthogonal.
+    // if so, the last column can be modified.
+    if( forceOrthogonalization || !u_left.isOrthogonal(0.001) )
+    {
+        if( u_left.rows() == 3 )
+        {
+            // use crossproduct to make third column
+            double ax = u_left(0,0);
+            double ay = u_left(1,0);
+            double az = u_left(2,0);
+
+            double bx = u_left(0,1);
+            double by = u_left(1,1);
+            double bz = u_left(2,1);
+
+            u_left(0,2) = ay*bz - az*by;
+            u_left(1,2) = az*bx - ax*bz;
+            u_left(2,2) = ax*by - ay*bx;
+        }
+        else
+        {
+            size_t lastColumn = (ep.size() - 1);
+            for(size_t u_row = 0; u_row < u_left.rows(); u_row++)
+                u_left(u_row,lastColumn) = std::sqrt(1 - u_left.row( u_row ).normSquare());
+        }
+
     }
 
     return SVDResult(u_left, s_diag_mat, v_right);
