@@ -134,7 +134,7 @@ Example Application
 
 Image compression by applying SVD (singular value decomposition). The computation of this 700 x 500 image took about 14 hours :)
 
-.. image:: http://eidelen.diffuse.ch/svd_example.png
+.. image:: http://eeidelen.diffuse.ch/svd_example.png
    :width: 500pt
 
 
