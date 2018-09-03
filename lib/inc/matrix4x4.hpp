@@ -333,7 +333,7 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
 
     if( det < 0.0 )
     {
-        std::cout << "Rotation is a reflection (determinant = " << det << "). Let's fix it!" << std::endl;
+        //std::cout << "Rotation is a reflection (determinant = " << det << "). Let's fix it!" << std::endl;
 
         Matrix<double> vModified = dec.V;
         vModified.setColumn(2, vModified.column(2) * (-1.0) );
