@@ -353,6 +353,17 @@ public:
         return res;
     }
 
+    /**
+     * Generates a Givens rotation matrix for the passed matrix
+     * mat and the indices i_idx and j_idx.
+     * @param mat Input matrix
+     * @param m Plane index
+     * @param n Plane index
+     * @return
+     */
+    template <class T>
+    static Matrix<double> givensRotation( const Matrix<T>& mat, size_t m, size_t n );
+
 
 private:
     template <class T>
@@ -918,6 +929,12 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
     }
 
     return SVDResult(u_left, s_diag_mat, v_right);
+}
+
+template <class T>
+Matrix<double> Decomposition::givensRotation( const Matrix<T>& mat, size_t m, size_t n )
+{
+    
 }
 
 

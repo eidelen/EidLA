@@ -704,5 +704,4 @@ TEST(Decomposition, GivensRotationBatch)
         ASSERT_NEAR(0.0, n(1, 0), 0.00000001);
         ASSERT_NEAR(n(0,0), res.R, 0.000001);
     }
-
 }
