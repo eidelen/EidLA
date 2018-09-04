@@ -155,6 +155,23 @@ public:
         Matrix<double> V; // Right orthogonal matrix
     };
 
+    struct GivensRotation
+    {
+        GivensRotation()
+            : S(0), C(0), R(0)
+        {
+        }
+
+        GivensRotation(double s, double c, double r)
+        : S(s), C(c), R(r)
+        {
+        }
+
+        double S;
+        double C;
+        double R;
+    };
+
 public:
     /**
      * LU decomposition of the matrix mat.
@@ -303,8 +320,38 @@ public:
      * @return SVD decomposition
      */
     template <class T>
-    static SVDResult svd( const Matrix<T> mat );
+    static SVDResult svd( const Matrix<T>& mat );
 
+    /**
+     * Computes the given rotation based on a and b as input. See
+     * the article https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
+     * @param a First number
+     * @param b Second number -> Givens Rotation will zero b!
+     * @return Givens Rotation parameters
+     */
+    static GivensRotation givensRotation( double a, double b)
+    {
+        // based on https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
+
+        GivensRotation res;
+        if (std::abs(b) > std::numeric_limits<double>::epsilon())
+        {
+            double h = std::hypot(a, b); // no precession problem
+            double d = 1.0 / h;
+
+            res.C = std::abs(a) * d;
+            res.S = -(std::copysign(d, a) * b);
+            res.R = std::copysign(1.0, a) * h;
+        }
+        else
+        {
+            res.S = 0.0;
+            res.C = 1.0;
+            res.R = a;
+        }
+
+        return res;
+    }
 
 
 private:
@@ -794,7 +841,7 @@ Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const 
 #include "solve.hpp"
 
 template <class T>
-Decomposition::SVDResult Decomposition::svd(const Matrix<T> mat)
+Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
 {
     // U*S*V
     Matrix<double> aTa = mat.transpose()*mat;

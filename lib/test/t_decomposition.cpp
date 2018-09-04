@@ -640,3 +640,69 @@ TEST(Decomposition, FilterEigenPair)
 
     ASSERT_EQ(1, vec.size());
 }
+
+TEST(Decomposition, GivensRotation)
+{
+    {
+        Matrix<double> d1(2, 1);
+        d1(0, 0) = 1;
+        d1(1, 0) = 1;
+
+        Decomposition::GivensRotation r1 = Decomposition::givensRotation(d1(0, 0), d1(1, 0));
+
+        Matrix<double> g1(2, 2);
+        g1(0, 0) = r1.C;
+        g1(1, 1) = r1.C;
+        g1(0, 1) = -r1.S;
+        g1(1, 0) = r1.S;
+
+        Matrix<double> n1 = g1 * d1;
+
+        ASSERT_NEAR(0.0, n1(1, 0), 0.00000001);
+        ASSERT_NEAR(std::sqrt(2), n1(0, 0), 0.000001);
+        ASSERT_NEAR(std::sqrt(2), r1.R, 0.000001);
+    }
+
+    {
+        Matrix<double> d1(2, 1);
+        d1(0, 0) = -1;
+        d1(1, 0) = -1;
+
+        Decomposition::GivensRotation r1 = Decomposition::givensRotation(d1(0, 0), d1(1, 0));
+
+        Matrix<double> g1(2, 2);
+        g1(0, 0) = r1.C;
+        g1(1, 1) = r1.C;
+        g1(0, 1) = -r1.S;
+        g1(1, 0) = r1.S;
+
+        Matrix<double> n1 = g1 * d1;
+
+        ASSERT_NEAR(0.0, n1(1, 0), 0.00000001);
+        ASSERT_NEAR(std::sqrt(2), std::abs(n1(0, 0)), 0.000001);
+        ASSERT_NEAR(n1(0,0), r1.R, 0.000001);
+    }
+}
+
+TEST(Decomposition, GivensRotationBatch)
+{
+    int n = 10000;
+
+    for( int k = 0; k < n; k++ )
+    {
+        Matrix<double> input = Matrix<double>::random(2,1,-100.0, 100.0);
+        Decomposition::GivensRotation res = Decomposition::givensRotation(input(0, 0), input(1, 0));
+
+        Matrix<double> g(2, 2);
+        g(0, 0) = res.C;
+        g(1, 1) = res.C;
+        g(0, 1) = -res.S;
+        g(1, 0) = res.S;
+
+        Matrix<double> n = g * input;
+
+        ASSERT_NEAR(0.0, n(1, 0), 0.00000001);
+        ASSERT_NEAR(n(0,0), res.R, 0.000001);
+    }
+
+}
