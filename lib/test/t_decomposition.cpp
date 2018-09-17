@@ -724,7 +724,34 @@ TEST(Decomposition, GivensRotationMatrix)
 
     Matrix<double> g = g1 * g0;
     Matrix<double> r = g * a;
-    
+
     ASSERT_TRUE( r.compare(a2,true,0.001) );
 }
 
+TEST(Decomposition, GivensRotationMatrixBatch)
+{
+    for(int k = 0; k < 1000; k++ )
+    {
+        // Make uper triangle matrix
+
+        Matrix<double> a = Matrix<double>::random(4, 4, -2.0, 2.0);
+
+        a = Decomposition::givensRotation(a, 1, 0) * a;
+        a = Decomposition::givensRotation(a, 2, 0) * a;
+        a = Decomposition::givensRotation(a, 3, 0) * a;
+
+        a = Decomposition::givensRotation(a, 2, 1) * a;
+        a = Decomposition::givensRotation(a, 3, 1) * a;
+
+        a = Decomposition::givensRotation(a, 3, 2) * a;
+
+        ASSERT_NEAR( a(1,0), 0.0, 0.000001 );
+        ASSERT_NEAR( a(2,0), 0.0, 0.000001 );
+        ASSERT_NEAR( a(3,0), 0.0, 0.000001 );
+
+        ASSERT_NEAR( a(2,1), 0.0, 0.000001 );
+        ASSERT_NEAR( a(3,1), 0.0, 0.000001 );
+
+        ASSERT_NEAR( a(3,2), 0.0, 0.000001 );
+    }
+}
