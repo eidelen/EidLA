@@ -234,7 +234,7 @@ TEST(Decomposition, EigenvalueAllNonSymmetric)
 */
 
 // example from document /documents/qr_decomposition.pdf
-TEST(Decomposition, QRDecomposition)
+TEST(Decomposition, QRDecompositionHouseholder)
 {
     double matData[] = {0.8147, 0.0975, 0.1576,
                         0.9058, 0.2785, 0.9706,
@@ -259,10 +259,43 @@ TEST(Decomposition, QRDecomposition)
                       0, 0, 0};
     auto rSoll = Matrix<double>(5,3,rData);
 
-    Decomposition::QRResult res = Decomposition::qr(mat);
+    Decomposition::QRResult res = Decomposition::qr_householder(mat);
 
     ASSERT_TRUE( res.Q.isOrthogonal(0.01)); // directly comparing Q does not make sense, since signs can change
     ASSERT_TRUE( rSoll.compare(res.R, true, 0.01));
+    ASSERT_TRUE( mat.compare( res.Q * res.R, true, 0.01));
+}
+
+// example from document /documents/qr_decomposition.pdf
+TEST(Decomposition, QRDecompositionGivens)
+{
+    double matData[] = {0.8147, 0.0975, 0.1576,
+                        0.9058, 0.2785, 0.9706,
+                        0.1270, 0.5469, 0.9572,
+                        0.9134, 0.9575, 0.4854,
+                        0.6324, 0.9649, 0.8003 };
+
+    auto mat = Matrix<double>(5, 3, matData);
+
+    /*
+    double qData[] = {0.4927,-0.4806, -0.1780,-0.6015,-0.3644,
+                      0.5478,-0.3583,0.5777,0.3760, 0.3104,
+                      0.0768,0.4754,0.6343,-0.1497,-0.5859,
+                      0.5523,0.3391,-0.4808,0.5071,-0.3026,
+                      0.3824,0.5473,-0.0311,-0.4661, 0.5796};
+    auto qSoll = Matrix<double>(5,5,qData); */
+
+    /*double rData[] = {1.6536,1.1405,1.2569,
+                      0, 0.9661, 0.6341,
+                      0, 0, 0.8816,
+                      0, 0, 0,
+                      0, 0, 0};
+    auto rSoll = Matrix<double>(5,3,rData);*/
+
+    Decomposition::QRResult res = Decomposition::qr_givens(mat);
+
+    ASSERT_TRUE( res.Q.isOrthogonal(0.01)); // directly comparing Q does not make sense, since signs can change
+    //ASSERT_TRUE( rSoll.compare(res.R, true, 0.01));
     ASSERT_TRUE( mat.compare( res.Q * res.R, true, 0.01));
 }
 

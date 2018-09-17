@@ -277,16 +277,29 @@ public:
     static DiagonalizationResult bidiagonalization(const Matrix<T>& a);
 
 
+    enum QRMethod
+    {
+        Householder, /* Householder reflection */
+        Givens       /* Givens rotation */
+    };
+
     /**
      * QR decomposition, where the passed matrix A is decomposed into an
      * orthogonal matrix Q and an upper triangle matrix R, such that
      * A = Q * R.
      * @param mat Matrix A
      * @param positive If true, the diagonal elements of R are positive. This needs additional computation.
+     * @param method Applied method to compute the QR decomposition.
      * @return QR decomposition
      */
     template <class T>
-    static QRResult qr(const Matrix<T>& mat, bool positive = true);
+    static QRResult qr(const Matrix<T>& mat, bool positive = true, QRMethod method = QRMethod::Householder );
+
+    template <class T>
+    static QRResult qr_householder( const Matrix<T>& mat, bool positive = true);
+
+    template <class T>
+    static QRResult qr_givens( const Matrix<T>& mat, bool positive = true);
 
     /**
      * RQ decomposition, where the passed matrix A is decomposed into an
@@ -762,7 +775,21 @@ Decomposition::DiagonalizationResult Decomposition::bidiagonalization(const Matr
 
 // QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf
 template <class T>
-Decomposition::QRResult Decomposition::qr(const Matrix<T>& mat, bool positive)
+Decomposition::QRResult Decomposition::qr(const Matrix<T>& mat, bool positive, QRMethod method )
+{
+    switch( method )
+    {
+        case Householder:
+            return qr_householder(mat,positive);
+
+        case Givens:
+            return qr_givens(mat,positive);
+    }
+}
+
+// QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf
+template <class T>
+Decomposition::QRResult Decomposition::qr_householder( const Matrix<T>& mat, bool positive)
 {
     Matrix<double> r = mat;
     size_t m = r.rows();
@@ -806,7 +833,22 @@ Decomposition::QRResult Decomposition::qr(const Matrix<T>& mat, bool positive)
         }
     }
 
-    return std::move(retResult);
+    return retResult;
+}
+
+// QR decomposition by using Givens rotations -> see documents/qr_decomposition.pdf
+template <class T>
+Decomposition::QRResult Decomposition::qr_givens( const Matrix<T>& mat, bool positive)
+{
+    Matrix<double> r = mat;
+    size_t m = r.rows();
+    size_t n = r.cols();
+
+    // initialize q as identity
+    Matrix<double> q = Matrix<double>::identity(m);
+
+    //todo: continou
+    //for( size_t j = 0; j)
 }
 
 template <class T>
