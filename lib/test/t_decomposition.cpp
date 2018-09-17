@@ -705,3 +705,26 @@ TEST(Decomposition, GivensRotationBatch)
         ASSERT_NEAR(n(0,0), res.R, 0.000001);
     }
 }
+
+// https://en.wikipedia.org/wiki/Givens_rotation#Triangularization
+TEST(Decomposition, GivensRotationMatrix)
+{
+    double data[] = {6,5,0 ,5,1,4, 0,4,3};
+    Matrix<double> a = Matrix<double>(3,3,data);
+
+    Matrix<double> g0 = Decomposition::givensRotation(a,1,0);
+    Matrix<double> a1 = g0 * a;
+
+    ASSERT_NEAR( 0.0, a1(1,0), 0.0001 );
+
+    Matrix<double> g1 = Decomposition::givensRotation(a1,2,1);
+    Matrix<double> a2 = g1 * a1;
+
+    ASSERT_NEAR( 0.0, a2(2,1), 0.0001 );
+
+    Matrix<double> g = g1 * g0;
+    Matrix<double> r = g * a;
+    
+    ASSERT_TRUE( r.compare(a2,true,0.001) );
+}
+

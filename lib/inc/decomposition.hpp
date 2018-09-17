@@ -934,8 +934,22 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
 template <class T>
 Matrix<double> Decomposition::givensRotation( const Matrix<T>& mat, size_t m, size_t n )
 {
-    
-}
+    if( m <= n )
+        throw InvalidInputException();
 
+    Matrix<double> gMat = Matrix<double>::identity(mat.rows());
+
+    double b = mat(m,n);
+    double a = mat(n,n);
+
+    Decomposition::GivensRotation gr = givensRotation(a,b);
+
+    gMat(n,n) = gr.C;
+    gMat(m,m) = gr.C;
+    gMat(n,m) = -gr.S;
+    gMat(m,n) = gr.S;
+
+    return gMat;
+}
 
 #endif //MY_DECOMPOSITION_H
