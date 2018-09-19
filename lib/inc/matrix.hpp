@@ -46,7 +46,6 @@ template <class T>
 class Matrix
 {
 public:
-
     Matrix();
 
     /**
@@ -90,13 +89,12 @@ public:
      */
     Matrix(const std::string& filepath);
 
-
 #ifdef OPENCVEIDLA
     /**
      * Constructs a matrix from an OpenCV matrix.
      * @param mat OpenCV matrix
      */
-    Matrix( const cv::Mat& mat);
+    Matrix(const cv::Mat& mat);
 #endif // OPENCVEIDLA
 
     /**
@@ -199,7 +197,7 @@ public:
      * @return
      */
     const T operator()(size_t m, size_t n) const;
-    T& operator()(size_t m, size_t n);
+    T&      operator()(size_t m, size_t n);
 
     /**
      * Multiplication of a matrix with a scalar.
@@ -382,7 +380,6 @@ public:
      */
     Matrix<double> denormalize(double mean, double scale) const;
 
-
     /**
      * Returns the first minors of this matrix.
      * @return First minors matrix.
@@ -468,7 +465,7 @@ public:
      * |value| < threshold   ->  value = 0;
      * @param threshold
      */
-    void setToZero( T threshold );
+    void setToZero(T threshold);
 
     /**
      * Computes the L1 norm of the matrix or vector.
@@ -522,11 +519,10 @@ public:
      * matrix.
      * @return OpendCV matrix.
      */
-    cv::Mat toOpenCVMatrix( ) const;
+    cv::Mat toOpenCVMatrix() const;
 #endif // OPENCVEIDLA
 
 protected:
-
     /**
      * Check if the dimensions of the two passed matrix are equal.
      * @param m1 Mat 1
@@ -537,11 +533,11 @@ protected:
 
     T elementwiseMultiplyAndSum(const T* arr1, const T* arr2, size_t length) const;
 
-    T* getRowPtr(size_t row);
+    T*       getRowPtr(size_t row);
     const T* getRowPtr(size_t row) const;
 
 #ifdef OPENCVEIDLA
-    cv::Mat createOpenCVMat( ) const;
+    cv::Mat createOpenCVMat() const;
 #endif // OPENCVEIDLA
 
 protected:
@@ -552,14 +548,13 @@ protected:
     size_t             m_nbrOfElements;
 };
 
-
 #ifdef OPENCVEIDLA
 template <>
-inline cv::Mat Matrix<double>::createOpenCVMat( ) const;
+inline cv::Mat Matrix<double>::createOpenCVMat() const;
 template <>
-inline cv::Mat Matrix<float>::createOpenCVMat( ) const;
+inline cv::Mat Matrix<float>::createOpenCVMat() const;
 template <>
-inline cv::Mat Matrix<int>::createOpenCVMat( ) const;
+inline cv::Mat Matrix<int>::createOpenCVMat() const;
 #endif // OPENCVEIDLA
 
 template <>
@@ -583,7 +578,6 @@ Matrix<T>::Matrix(size_t rows, size_t cols)
 {
     m_data.reset(new T[m_nbrOfElements]);
 }
-
 
 template <class T, class R>
 void copyMatData(const Matrix<T>& src, Matrix<R>& dst)
@@ -623,7 +617,7 @@ Matrix<T>::Matrix(const Matrix<T>& mat)
 template <class T>
 Matrix<T>::Matrix(Matrix&& other)
 {
-    this->m_data          = std::move( other.m_data );
+    this->m_data          = std::move(other.m_data);
     this->m_rows          = other.rows();
     this->m_cols          = other.cols();
     this->m_nbrOfElements = m_rows * m_cols;
@@ -649,7 +643,7 @@ template <class T>
 Matrix<T>::Matrix(const cv::Mat& mat)
 : Matrix<T>(mat.rows, mat.cols)
 {
-    for(size_t m = 0; m < mat.rows; m++)
+    for (size_t m = 0; m < mat.rows; m++)
     {
         const T* src = mat.ptr<T>(m); // pointer to row m
         std::copy(src, src + mat.cols, this->getRowPtr(m));
@@ -684,7 +678,7 @@ Matrix<T>& Matrix<T>::operator=(Matrix<T>&& other)
 {
     if (this != &other) // self-assignment check expected
     {
-        this->m_data = std::move( other.m_data );
+        this->m_data = std::move(other.m_data);
 
         m_rows          = other.rows();
         m_cols          = other.cols();
@@ -733,7 +727,7 @@ template <class T>
 void Matrix<T>::fill(T val)
 {
     T* dataPtr = data();
-    for (size_t i  = 0; i < m_nbrOfElements; i++)
+    for (size_t i = 0; i < m_nbrOfElements; i++)
         dataPtr[i] = val;
 }
 
@@ -894,10 +888,10 @@ T Matrix<T>::sum() const
 template <class T>
 Matrix<T> Matrix<T>::sumC() const
 {
-    Matrix<T> res( rows(), 1 );
+    Matrix<T> res(rows(), 1);
     res.fill(0);
 
-    for( size_t k = 0; k < cols(); k++ )
+    for (size_t k = 0; k < cols(); k++)
         res = res + column(k);
 
     return res;
@@ -906,10 +900,10 @@ Matrix<T> Matrix<T>::sumC() const
 template <class T>
 Matrix<T> Matrix<T>::sumR() const
 {
-    Matrix<T> res( 1, cols() );
+    Matrix<T> res(1, cols());
     res.fill(0);
 
-    for( size_t k = 0; k < rows(); k++ )
+    for (size_t k = 0; k < rows(); k++)
         res = res + row(k);
 
     return res;
@@ -928,7 +922,7 @@ Matrix<T> Matrix<T>::operator*(T scale) const
     T*        resD  = res.data();
     const T*  dataD = this->data();
     for (size_t i = 0; i < this->getNbrOfElements(); i++)
-        resD[i]   = dataD[i] * scale;
+        resD[i] = dataD[i] * scale;
 
     return res;
 }
@@ -957,54 +951,54 @@ Matrix<T> Matrix<T>::matMulR(const Matrix<T>& mat) const
     Matrix<T> res(this->rows(), mat.cols());
 
     // Direct implementation for common square matrices
-    if( this->isSquare() && Matrix<T>::equalDimension(*this,mat) && this->rows() < 5)
+    if (this->isSquare() && Matrix<T>::equalDimension(*this, mat) && this->rows() < 5)
     {
         if (this->rows() == 1)
         {
-            res(0,0) = mat(0,0) * getValue(0,0);
+            res(0, 0) = mat(0, 0) * getValue(0, 0);
         }
-        else if( this->rows() == 2)
+        else if (this->rows() == 2)
         {
-            res(0,0) = getValue(0,0) * mat(0,0) + getValue(0,1) * mat(1,0);
-            res(0,1) = getValue(0,0) * mat(0,1) + getValue(0,1) * mat(1,1);
-            res(1,0) = getValue(1,0) * mat(0,0) + getValue(1,1) * mat(1,0);
-            res(1,1) = getValue(1,0) * mat(0,1) + getValue(1,1) * mat(1,1);
+            res(0, 0) = getValue(0, 0) * mat(0, 0) + getValue(0, 1) * mat(1, 0);
+            res(0, 1) = getValue(0, 0) * mat(0, 1) + getValue(0, 1) * mat(1, 1);
+            res(1, 0) = getValue(1, 0) * mat(0, 0) + getValue(1, 1) * mat(1, 0);
+            res(1, 1) = getValue(1, 0) * mat(0, 1) + getValue(1, 1) * mat(1, 1);
         }
-        else if( this->rows() == 3)
+        else if (this->rows() == 3)
         {
-            res(0,0) = getValue(0,0) * mat(0,0) + getValue(0,1) * mat(1,0) + getValue(0,2) * mat(2,0);
-            res(0,1) = getValue(0,0) * mat(0,1) + getValue(0,1) * mat(1,1) + getValue(0,2) * mat(2,1);
-            res(0,2) = getValue(0,0) * mat(0,2) + getValue(0,1) * mat(1,2) + getValue(0,2) * mat(2,2);
+            res(0, 0) = getValue(0, 0) * mat(0, 0) + getValue(0, 1) * mat(1, 0) + getValue(0, 2) * mat(2, 0);
+            res(0, 1) = getValue(0, 0) * mat(0, 1) + getValue(0, 1) * mat(1, 1) + getValue(0, 2) * mat(2, 1);
+            res(0, 2) = getValue(0, 0) * mat(0, 2) + getValue(0, 1) * mat(1, 2) + getValue(0, 2) * mat(2, 2);
 
-            res(1,0) = getValue(1,0) * mat(0,0) + getValue(1,1) * mat(1,0) + getValue(1,2) * mat(2,0);
-            res(1,1) = getValue(1,0) * mat(0,1) + getValue(1,1) * mat(1,1) + getValue(1,2) * mat(2,1);
-            res(1,2) = getValue(1,0) * mat(0,2) + getValue(1,1) * mat(1,2) + getValue(1,2) * mat(2,2);
+            res(1, 0) = getValue(1, 0) * mat(0, 0) + getValue(1, 1) * mat(1, 0) + getValue(1, 2) * mat(2, 0);
+            res(1, 1) = getValue(1, 0) * mat(0, 1) + getValue(1, 1) * mat(1, 1) + getValue(1, 2) * mat(2, 1);
+            res(1, 2) = getValue(1, 0) * mat(0, 2) + getValue(1, 1) * mat(1, 2) + getValue(1, 2) * mat(2, 2);
 
-            res(2,0) = getValue(2,0) * mat(0,0) + getValue(2,1) * mat(1,0) + getValue(2,2) * mat(2,0);
-            res(2,1) = getValue(2,0) * mat(0,1) + getValue(2,1) * mat(1,1) + getValue(2,2) * mat(2,1);
-            res(2,2) = getValue(2,0) * mat(0,2) + getValue(2,1) * mat(1,2) + getValue(2,2) * mat(2,2);
+            res(2, 0) = getValue(2, 0) * mat(0, 0) + getValue(2, 1) * mat(1, 0) + getValue(2, 2) * mat(2, 0);
+            res(2, 1) = getValue(2, 0) * mat(0, 1) + getValue(2, 1) * mat(1, 1) + getValue(2, 2) * mat(2, 1);
+            res(2, 2) = getValue(2, 0) * mat(0, 2) + getValue(2, 1) * mat(1, 2) + getValue(2, 2) * mat(2, 2);
         }
-        else if( this->rows() == 4)
+        else if (this->rows() == 4)
         {
-            res(0,0) = getValue(0,0)*mat(0,0) + getValue(0,1)*mat(1,0) +  getValue(0,2)*mat(2,0) + getValue(0,3)*mat(3,0);
-            res(0,1) = getValue(0,0)*mat(0,1) + getValue(0,1)*mat(1,1) +  getValue(0,2)*mat(2,1) + getValue(0,3)*mat(3,1);
-            res(0,2) = getValue(0,0)*mat(0,2) + getValue(0,1)*mat(1,2) +  getValue(0,2)*mat(2,2) + getValue(0,3)*mat(3,2);
-            res(0,3) = getValue(0,0)*mat(0,3) + getValue(0,1)*mat(1,3) +  getValue(0,2)*mat(2,3) + getValue(0,3)*mat(3,3);
+            res(0, 0) = getValue(0, 0) * mat(0, 0) + getValue(0, 1) * mat(1, 0) + getValue(0, 2) * mat(2, 0) + getValue(0, 3) * mat(3, 0);
+            res(0, 1) = getValue(0, 0) * mat(0, 1) + getValue(0, 1) * mat(1, 1) + getValue(0, 2) * mat(2, 1) + getValue(0, 3) * mat(3, 1);
+            res(0, 2) = getValue(0, 0) * mat(0, 2) + getValue(0, 1) * mat(1, 2) + getValue(0, 2) * mat(2, 2) + getValue(0, 3) * mat(3, 2);
+            res(0, 3) = getValue(0, 0) * mat(0, 3) + getValue(0, 1) * mat(1, 3) + getValue(0, 2) * mat(2, 3) + getValue(0, 3) * mat(3, 3);
 
-            res(1,0) = getValue(1,0)*mat(0,0) + getValue(1,1)*mat(1,0) +  getValue(1,2)*mat(2,0) + getValue(1,3)*mat(3,0);
-            res(1,1) = getValue(1,0)*mat(0,1) + getValue(1,1)*mat(1,1) +  getValue(1,2)*mat(2,1) + getValue(1,3)*mat(3,1);
-            res(1,2) = getValue(1,0)*mat(0,2) + getValue(1,1)*mat(1,2) +  getValue(1,2)*mat(2,2) + getValue(1,3)*mat(3,2);
-            res(1,3) = getValue(1,0)*mat(0,3) + getValue(1,1)*mat(1,3) +  getValue(1,2)*mat(2,3) + getValue(1,3)*mat(3,3);
+            res(1, 0) = getValue(1, 0) * mat(0, 0) + getValue(1, 1) * mat(1, 0) + getValue(1, 2) * mat(2, 0) + getValue(1, 3) * mat(3, 0);
+            res(1, 1) = getValue(1, 0) * mat(0, 1) + getValue(1, 1) * mat(1, 1) + getValue(1, 2) * mat(2, 1) + getValue(1, 3) * mat(3, 1);
+            res(1, 2) = getValue(1, 0) * mat(0, 2) + getValue(1, 1) * mat(1, 2) + getValue(1, 2) * mat(2, 2) + getValue(1, 3) * mat(3, 2);
+            res(1, 3) = getValue(1, 0) * mat(0, 3) + getValue(1, 1) * mat(1, 3) + getValue(1, 2) * mat(2, 3) + getValue(1, 3) * mat(3, 3);
 
-            res(2,0) = getValue(2,0)*mat(0,0) + getValue(2,1)*mat(1,0) +  getValue(2,2)*mat(2,0) + getValue(2,3)*mat(3,0);
-            res(2,1) = getValue(2,0)*mat(0,1) + getValue(2,1)*mat(1,1) +  getValue(2,2)*mat(2,1) + getValue(2,3)*mat(3,1);
-            res(2,2) = getValue(2,0)*mat(0,2) + getValue(2,1)*mat(1,2) +  getValue(2,2)*mat(2,2) + getValue(2,3)*mat(3,2);
-            res(2,3) = getValue(2,0)*mat(0,3) + getValue(2,1)*mat(1,3) +  getValue(2,2)*mat(2,3) + getValue(2,3)*mat(3,3);
+            res(2, 0) = getValue(2, 0) * mat(0, 0) + getValue(2, 1) * mat(1, 0) + getValue(2, 2) * mat(2, 0) + getValue(2, 3) * mat(3, 0);
+            res(2, 1) = getValue(2, 0) * mat(0, 1) + getValue(2, 1) * mat(1, 1) + getValue(2, 2) * mat(2, 1) + getValue(2, 3) * mat(3, 1);
+            res(2, 2) = getValue(2, 0) * mat(0, 2) + getValue(2, 1) * mat(1, 2) + getValue(2, 2) * mat(2, 2) + getValue(2, 3) * mat(3, 2);
+            res(2, 3) = getValue(2, 0) * mat(0, 3) + getValue(2, 1) * mat(1, 3) + getValue(2, 2) * mat(2, 3) + getValue(2, 3) * mat(3, 3);
 
-            res(3,0) = getValue(3,0)*mat(0,0) + getValue(3,1)*mat(1,0) +  getValue(3,2)*mat(2,0) + getValue(3,3)*mat(3,0);
-            res(3,1) = getValue(3,0)*mat(0,1) + getValue(3,1)*mat(1,1) +  getValue(3,2)*mat(2,1) + getValue(3,3)*mat(3,1);
-            res(3,2) = getValue(3,0)*mat(0,2) + getValue(3,1)*mat(1,2) +  getValue(3,2)*mat(2,2) + getValue(3,3)*mat(3,2);
-            res(3,3) = getValue(3,0)*mat(0,3) + getValue(3,1)*mat(1,3) +  getValue(3,2)*mat(2,3) + getValue(3,3)*mat(3,3);
+            res(3, 0) = getValue(3, 0) * mat(0, 0) + getValue(3, 1) * mat(1, 0) + getValue(3, 2) * mat(2, 0) + getValue(3, 3) * mat(3, 0);
+            res(3, 1) = getValue(3, 0) * mat(0, 1) + getValue(3, 1) * mat(1, 1) + getValue(3, 2) * mat(2, 1) + getValue(3, 3) * mat(3, 1);
+            res(3, 2) = getValue(3, 0) * mat(0, 2) + getValue(3, 1) * mat(1, 2) + getValue(3, 2) * mat(2, 2) + getValue(3, 3) * mat(3, 2);
+            res(3, 3) = getValue(3, 0) * mat(0, 3) + getValue(3, 1) * mat(1, 3) + getValue(3, 2) * mat(2, 3) + getValue(3, 3) * mat(3, 3);
         }
     }
     else
@@ -1023,8 +1017,8 @@ Matrix<T> Matrix<T>::matMulR(const Matrix<T>& mat) const
             for (size_t m = 0; m < this->rows(); m++)
             {
                 // get column mat -> continous memory block
-                const T *matColNPtr = lookup.at(n).data();
-                const T *thisRowPtr = data() + m * cols(); // this is fast
+                const T* matColNPtr = lookup.at(n).data();
+                const T* thisRowPtr = data() + m * cols(); // this is fast
 
                 res(m, n) = elementwiseMultiplyAndSum(thisRowPtr, matColNPtr, this->cols());
             }
@@ -1049,7 +1043,7 @@ Matrix<T> Matrix<T>::operator/(const Matrix<T>& mat) const
     const T*  thisData = data();
     const T*  matD     = mat.data();
     for (size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i]   = thisData[i] / matD[i];
+        resD[i] = thisData[i] / matD[i];
 
     return res;
 }
@@ -1069,7 +1063,7 @@ Matrix<T> Matrix<T>::operator+(const Matrix<T>& mat) const
     const T*  thisData = data();
     const T*  matD     = mat.data();
     for (size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i]   = thisData[i] + matD[i];
+        resD[i] = thisData[i] + matD[i];
 
     return res;
 }
@@ -1089,7 +1083,7 @@ Matrix<T> Matrix<T>::operator-(const Matrix<T>& mat) const
     const T*  thisData = data();
     const T*  matD     = mat.data();
     for (size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i]   = thisData[i] - matD[i];
+        resD[i] = thisData[i] - matD[i];
 
     return res;
 }
@@ -1121,7 +1115,7 @@ inline bool almost_equal(double x, double y)
 }
 
 template <class T>
-bool Matrix<T>::compare(const Matrix<T>& mat, bool useCustomTolerance, T customTolerance ) const
+bool Matrix<T>::compare(const Matrix<T>& mat, bool useCustomTolerance, T customTolerance) const
 {
     if (!equalDimension(*this, mat))
     {
@@ -1138,9 +1132,9 @@ bool Matrix<T>::compare(const Matrix<T>& mat, bool useCustomTolerance, T customT
 
         T absDiff = std::abs(x - y);
 
-        if( useCustomTolerance )
+        if (useCustomTolerance)
         {
-            if( absDiff > customTolerance )
+            if (absDiff > customTolerance)
                 return false;
         }
         else
@@ -1149,7 +1143,6 @@ bool Matrix<T>::compare(const Matrix<T>& mat, bool useCustomTolerance, T customT
             if (absDiff > std::numeric_limits<double>::epsilon() * std::abs(x + y) * 2)
                 return false;
         }
-
     }
 
     return true;
@@ -1428,17 +1421,17 @@ double Matrix<T>::determinant() const
     if (m_rows != m_cols)
         throw SquareMatrixException();
 
-    if( m_rows == 2 ) // m_cols eq. m_rows
+    if (m_rows == 2) // m_cols eq. m_rows
     {
         // special case 2x2 matrix
-        det = getValue(0,0) * getValue(1,1) - getValue(0,1) * getValue(1,0);
+        det = getValue(0, 0) * getValue(1, 1) - getValue(0, 1) * getValue(1, 0);
     }
     else
     {
         // sum of product of l and u diag elements.
         // by definition, product of l diag is 1!
-        Decomposition::LUResult lu = Decomposition::luDecomposition(*this);
-        Matrix<double> uDiag = lu.U.diagonal();
+        Decomposition::LUResult lu    = Decomposition::luDecomposition(*this);
+        Matrix<double>          uDiag = lu.U.diagonal();
 
         // build diagonal products to get determinant of u
         double detU = 1.0;
@@ -1450,12 +1443,12 @@ double Matrix<T>::determinant() const
 
         // determinant of permutation matrix: 1.0 or -1.0
         double detP;
-        if( lu.NbrRowSwaps % 2 == 0 ) // check if even
+        if (lu.NbrRowSwaps % 2 == 0) // check if even
             detP = 1.0;
         else
             detP = -1.0;
 
-        det =  detP*detU;
+        det = detP * detU;
     }
 
     return det;
@@ -1485,12 +1478,11 @@ Matrix<double> Matrix<T>::normalize(double& mean, double& scale) const
 {
     double minP = std::get<2>(this->min());
     double maxP = std::get<2>(this->max());
-    mean = this->mean();
+    mean        = this->mean();
 
     double diff = maxP - minP;
 
-
-    if( diff < std::numeric_limits<double>::min())
+    if (diff < std::numeric_limits<double>::min())
     {
         // all value are identical -> do not apply scale
         scale = 1.0;
@@ -1500,13 +1492,12 @@ Matrix<double> Matrix<T>::normalize(double& mean, double& scale) const
         scale = 2.0 / diff;
     }
 
-
     Matrix<double> ret(this->rows(), this->cols());
 
     const T* src = this->data();
-    double* dst = ret.data();
+    double*  dst = ret.data();
 
-    for( size_t i = 0; i < getNbrOfElements(); i++ )
+    for (size_t i = 0; i < getNbrOfElements(); i++)
     {
         dst[i] = (src[i] - mean) * scale;
     }
@@ -1519,8 +1510,8 @@ Matrix<double> Matrix<T>::denormalize(double mean, double scale) const
 {
     Matrix<double> ret(this->rows(), this->cols());
 
-    const T *src = this->data();
-    double *dst = ret.data();
+    const T* src = this->data();
+    double*  dst = ret.data();
 
     for (size_t i = 0; i < getNbrOfElements(); i++)
     {
@@ -1541,12 +1532,12 @@ Matrix<double> Matrix<T>::firstMinors() const
 
     // https://en.wikipedia.org/wiki/Minor_(linear_algebra)
 
-    Matrix<double> fm = Matrix<double>(rows(),cols());
+    Matrix<double> fm = Matrix<double>(rows(), cols());
     Matrix<double> tDouble(*this);
 
-    for( size_t m = 0; m < rows(); m++ )
+    for (size_t m = 0; m < rows(); m++)
     {
-        for( size_t n = 0; n < cols(); n++ )
+        for (size_t n = 0; n < cols(); n++)
         {
             Matrix<double> subMat(tDouble);
             subMat.removeRow(m);
@@ -1554,7 +1545,7 @@ Matrix<double> Matrix<T>::firstMinors() const
 
             double det = subMat.determinant();
 
-            fm(m,n) = det;
+            fm(m, n) = det;
         }
     }
 
@@ -1573,13 +1564,13 @@ Matrix<double> Matrix<T>::cofactors() const
     Matrix<double> fm = firstMinors();
 
     // modify signs
-    for(size_t m = 0; m < m_rows; m++)
+    for (size_t m = 0; m < m_rows; m++)
     {
-        for(size_t n = 0; n < m_cols; n++)
+        for (size_t n = 0; n < m_cols; n++)
         {
-            if( (m+n) % 2 != 0 ) // check if uneven
+            if ((m + n) % 2 != 0) // check if uneven
             {
-                fm(m,n) = -fm(m,n);
+                fm(m, n) = -fm(m, n);
             }
         }
     }
@@ -1610,14 +1601,14 @@ void Matrix<T>::removeRow(size_t m)
 
     // swap the row to remove step by step to the very end
     // (swapping a row is relatively fast)
-    for(size_t i = m; (i+1) < rows(); i++)
+    for (size_t i = m; (i + 1) < rows(); i++)
     {
-        swapRows(i,i+1);
+        swapRows(i, i + 1);
     }
 
     // adapt matrix shape - but not allocated memory
-    m_rows = rows()-1;
-    m_nbrOfElements = m_cols*m_rows;
+    m_rows          = rows() - 1;
+    m_nbrOfElements = m_cols * m_rows;
 }
 
 template <class T>
@@ -1634,43 +1625,43 @@ void Matrix<T>::removeColumn(size_t n)
     // Different to rows, columns are not mapped
     // to the memory. Therefore modifying a column
     // is relatively time consuming.
-    Matrix<T> cpy = Matrix<T>( *this );
-    for( size_t m = 0; m < rows(); m++ )
+    Matrix<T> cpy = Matrix<T>(*this);
+    for (size_t m = 0; m < rows(); m++)
     {
-        for( size_t c = 0; c < cols(); c++ )
+        for (size_t c = 0; c < cols(); c++)
         {
-            if( c != n )
+            if (c != n)
             {
-                data()[new_memLoc++] = cpy(m,c);
+                data()[new_memLoc++] = cpy(m, c);
             }
         }
     }
 
     // adapt matrix shape - but not allocated memory
-    m_cols = cols()-1;
-    m_nbrOfElements = m_cols*m_rows;
+    m_cols          = cols() - 1;
+    m_nbrOfElements = m_cols * m_rows;
 }
 
 template <class T>
 Matrix<T> Matrix<T>::subMatrix(size_t rowStart, size_t columnStart, size_t nbrOfRows, size_t nbrOfColumns) const
 {
-    if( rowStart + nbrOfRows > rows() || columnStart + nbrOfColumns > cols() )
+    if (rowStart + nbrOfRows > rows() || columnStart + nbrOfColumns > cols())
     {
         std::cout << "subMatrix exceeds actual matrix size";
         std::exit(-1);
     }
 
-    Matrix<T> res( nbrOfRows, nbrOfColumns );
-    T* dst = res.data();
-    const T* src = data() + rowStart*cols() + columnStart;
+    Matrix<T> res(nbrOfRows, nbrOfColumns);
+    T*        dst = res.data();
+    const T*  src = data() + rowStart * cols() + columnStart;
 
-    for(size_t m = 0; m < nbrOfRows; m++ )
+    for (size_t m = 0; m < nbrOfRows; m++)
     {
         // copy partial lines at once
-        const T* c_Src = src + m*cols();
-        T* c_Dst = dst + m*nbrOfColumns;
+        const T* c_Src = src + m * cols();
+        T*       c_Dst = dst + m * nbrOfColumns;
 
-        std::copy( c_Src, c_Src + nbrOfColumns, c_Dst);
+        std::copy(c_Src, c_Src + nbrOfColumns, c_Dst);
     }
 
     return res;
@@ -1680,17 +1671,17 @@ template <class T>
 template <class R>
 void Matrix<T>::setSubMatrix(size_t rowStart, size_t columnStart, const Matrix<R>& subMat)
 {
-    if( rowStart + subMat.rows() > rows() || columnStart + subMat.cols() > cols() )
+    if (rowStart + subMat.rows() > rows() || columnStart + subMat.cols() > cols())
     {
         std::cout << "writing subMatrix exceeds actual matrix size";
         std::exit(-1);
     }
 
-    for( size_t m = 0; m < subMat.rows(); m++ )
+    for (size_t m = 0; m < subMat.rows(); m++)
     {
-        for( size_t n = 0; n < subMat.cols(); n++ )
+        for (size_t n = 0; n < subMat.cols(); n++)
         {
-            setValue(m+rowStart, n+columnStart, subMat(m,n));
+            setValue(m + rowStart, n + columnStart, subMat(m, n));
         }
     }
 }
@@ -1698,7 +1689,7 @@ void Matrix<T>::setSubMatrix(size_t rowStart, size_t columnStart, const Matrix<R
 template <class T>
 double Matrix<T>::norm() const
 {
-    return std::sqrt( normSquare() );
+    return std::sqrt(normSquare());
 }
 
 template <class T>
@@ -1708,7 +1699,7 @@ T Matrix<T>::normSquare() const
 
     if (cols() == 1 || rows() == 1)
     {
-        const T *matData = data();
+        const T* matData = data();
         for (size_t i = 0; i < getNbrOfElements(); i++)
         {
             T val = matData[i];
@@ -1726,7 +1717,7 @@ T Matrix<T>::normSquare() const
 template <class T>
 bool Matrix<T>::isSymmetric() const
 {
-    return compare( transpose() );
+    return compare(transpose());
 }
 
 template <class T>
@@ -1738,19 +1729,19 @@ bool Matrix<T>::isSquare() const
 template <class T>
 bool Matrix<T>::isOrthogonal(T customTolerance) const
 {
-    if( !isSquare() )
+    if (!isSquare())
     {
         return false;
     }
 
-    for( size_t i = 0; i < rows(); i++)
+    for (size_t i = 0; i < rows(); i++)
     {
-        if(  std::abs(1.0 - row(i).norm() )  > customTolerance )
+        if (std::abs(1.0 - row(i).norm()) > customTolerance)
         {
             return false;
         }
 
-        if(  std::abs(1.0 - column(i).norm())  > customTolerance )
+        if (std::abs(1.0 - column(i).norm()) > customTolerance)
         {
             return false;
         }
@@ -1764,7 +1755,7 @@ bool Matrix<T>::save(const std::string& path) const
 {
     std::ofstream f;
     f.open(path, std::ofstream::trunc);
-    if( ! f.is_open() )
+    if (!f.is_open())
     {
         std::cout << "Cannot save file " << path << std::endl;
         return false;
@@ -1779,8 +1770,8 @@ bool Matrix<T>::save(const std::string& path) const
 template <class T>
 bool Matrix<T>::load(const std::string& path)
 {
-    std::ifstream f( path );
-    if( ! f.is_open() )
+    std::ifstream f(path);
+    if (!f.is_open())
     {
         std::cout << "Cannot open file " << path << std::endl;
         return false;
@@ -1800,11 +1791,11 @@ std::string Matrix<T>::serialize() const
     std::string data;
 
     size_t* dim = new size_t[2];
-    dim[0] = m_rows;
-    dim[1] = m_cols;
+    dim[0]      = m_rows;
+    dim[1]      = m_cols;
 
-    data.append( std::string( (char*)dim, 2*sizeof(size_t) ) );
-    data.append( std::string( (char*)this->data(), m_nbrOfElements* sizeof(T) ));
+    data.append(std::string((char*)dim, 2 * sizeof(size_t)));
+    data.append(std::string((char*)this->data(), m_nbrOfElements * sizeof(T)));
 
     delete[] dim;
     return data;
@@ -1823,17 +1814,16 @@ void Matrix<T>::deserialize(const std::string& data)
     m_data.reset(new T[m_nbrOfElements]);
 
     // copy data
-    const T* src = (const T*)(buffer + 2* sizeof(size_t));
+    const T* src = (const T*)(buffer + 2 * sizeof(size_t));
     std::copy(src, src + m_nbrOfElements, this->data());
 }
 
 template <class T>
-void Matrix<T>::setToZero( T threshold )
+void Matrix<T>::setToZero(T threshold)
 {
-    std::transform(data(), data()+m_nbrOfElements, data(),
-                   [&threshold](T val) -> T
-                   {
-                       if( std::abs(val) < threshold)
+    std::transform(data(), data() + m_nbrOfElements, data(),
+                   [&threshold](T val) -> T {
+                       if (std::abs(val) < threshold)
                            return 0;
                        else
                            return val;
@@ -1843,13 +1833,13 @@ void Matrix<T>::setToZero( T threshold )
 template <class T>
 T Matrix<T>::normL1() const
 {
-    T norm = 0;
+    T         norm    = 0;
     Matrix<T> thisAbs = this->absolute();
 
-    for( size_t c = 0; c < thisAbs.cols(); c++ )
+    for (size_t c = 0; c < thisAbs.cols(); c++)
     {
         T cSum = thisAbs.column(c).sum();
-        if( cSum > norm )
+        if (cSum > norm)
             norm = cSum;
     }
 
@@ -1859,13 +1849,13 @@ T Matrix<T>::normL1() const
 template <class T>
 T Matrix<T>::normInf() const
 {
-    T norm = 0;
+    T         norm    = 0;
     Matrix<T> thisAbs = this->absolute();
 
-    for( size_t c = 0; c < thisAbs.rows(); c++ )
+    for (size_t c = 0; c < thisAbs.rows(); c++)
     {
         T cSum = thisAbs.row(c).sum();
-        if( cSum > norm )
+        if (cSum > norm)
             norm = cSum;
     }
 
@@ -1885,10 +1875,10 @@ double Matrix<T>::normL2() const
     else
     {
         // if matrix -> max singular value
-        Decomposition::SVDResult svdR = Decomposition::svd( *this );
+        Decomposition::SVDResult svdR = Decomposition::svd(*this);
 
         auto max = svdR.S.max();
-        normRet = std::get<2>(max);
+        normRet  = std::get<2>(max);
     }
 
     return normRet;
@@ -1897,10 +1887,10 @@ double Matrix<T>::normL2() const
 template <class T>
 Matrix<T> Matrix<T>::absolute() const
 {
-    Matrix<T> ret( this->rows(), this->cols() );
-    const T* src = this->data();
-    T* dst = ret.data();
-    for( size_t k = 0; k < ret.getNbrOfElements(); k++ )
+    Matrix<T> ret(this->rows(), this->cols());
+    const T*  src = this->data();
+    T*        dst = ret.data();
+    for (size_t k = 0; k < ret.getNbrOfElements(); k++)
     {
         dst[k] = std::abs(src[k]);
     }
@@ -1911,12 +1901,12 @@ Matrix<T> Matrix<T>::absolute() const
 template <class T>
 Matrix<T> Matrix<T>::repMat(size_t rowDirection, size_t columnDirection) const
 {
-    if( rowDirection < 1 || columnDirection < 1 )
+    if (rowDirection < 1 || columnDirection < 1)
         throw InvalidInputException();
 
-    Matrix<T> ret = Matrix<T>( rows() * rowDirection, cols() * columnDirection );
-    for( size_t x = 0; x < columnDirection; x++ )
-        for( size_t y = 0; y < rowDirection; y++ )
+    Matrix<T> ret = Matrix<T>(rows() * rowDirection, cols() * columnDirection);
+    for (size_t x = 0; x < columnDirection; x++)
+        for (size_t y = 0; y < rowDirection; y++)
             ret.setSubMatrix(y * rows(), x * cols(), *this);
 
     return ret;
@@ -1927,7 +1917,7 @@ double Matrix<T>::conditionNumberL1() const
 {
     Matrix<T> invMat = this->inverted();
 
-    double n = normL1();
+    double n  = normL1();
     double ni = invMat.normL1();
     return n * ni;
 }
@@ -1941,33 +1931,32 @@ double Matrix<T>::conditionNumberInf() const
 {
     Matrix<T> invMat = this->inverted();
 
-    double n = normInf();
+    double n  = normInf();
     double ni = invMat.normInf();
     return n * ni;
 }
 
 #ifdef OPENCVEIDLA
 
-
 // general case -> see template specializations below
 
 template <class T>
-cv::Mat Matrix<T>::toOpenCVMatrix( ) const
+cv::Mat Matrix<T>::toOpenCVMatrix() const
 {
     return createOpenCVMat();
 }
 
 // general case, return double matrix -> see template specializations below
 template <class T>
-inline cv::Mat Matrix<T>::createOpenCVMat( ) const
+inline cv::Mat Matrix<T>::createOpenCVMat() const
 {
-    cv::Mat oMat(rows(),cols(),CV_64F);
+    cv::Mat oMat(rows(), cols(), CV_64F);
 
-    for(size_t m = 0; m < rows(); m++)
+    for (size_t m = 0; m < rows(); m++)
     {
-        for(size_t n = 0; n < cols(); n++)
+        for (size_t n = 0; n < cols(); n++)
         {
-            oMat.at<double>(m,n) = (*this)(m,n);
+            oMat.at<double>(m, n) = (*this)(m, n);
         }
     }
 
@@ -1975,11 +1964,11 @@ inline cv::Mat Matrix<T>::createOpenCVMat( ) const
 }
 
 template <>
-inline cv::Mat Matrix<double>::createOpenCVMat( ) const
+inline cv::Mat Matrix<double>::createOpenCVMat() const
 {
-    cv::Mat oMat(rows(),cols(),CV_64F);
+    cv::Mat oMat(rows(), cols(), CV_64F);
 
-    for(size_t m = 0; m < rows(); m++)
+    for (size_t m = 0; m < rows(); m++)
     {
         double* dst = oMat.ptr<double>(m);
         std::copy(getRowPtr(m), getRowPtr(m) + cols(), dst);
@@ -1989,11 +1978,11 @@ inline cv::Mat Matrix<double>::createOpenCVMat( ) const
 }
 
 template <>
-inline cv::Mat Matrix<float>::createOpenCVMat( ) const
+inline cv::Mat Matrix<float>::createOpenCVMat() const
 {
-    cv::Mat oMat(rows(),cols(),CV_32F);
+    cv::Mat oMat(rows(), cols(), CV_32F);
 
-    for(size_t m = 0; m < rows(); m++)
+    for (size_t m = 0; m < rows(); m++)
     {
         float* dst = oMat.ptr<float>(m);
         std::copy(getRowPtr(m), getRowPtr(m) + cols(), dst);
@@ -2002,13 +1991,12 @@ inline cv::Mat Matrix<float>::createOpenCVMat( ) const
     return oMat;
 }
 
-
 template <>
-inline cv::Mat Matrix<int>::createOpenCVMat( ) const
+inline cv::Mat Matrix<int>::createOpenCVMat() const
 {
-    cv::Mat oMat(rows(),cols(),CV_32S);
+    cv::Mat oMat(rows(), cols(), CV_32S);
 
-    for(size_t m = 0; m < rows(); m++)
+    for (size_t m = 0; m < rows(); m++)
     {
         int* dst = oMat.ptr<int>(m);
         std::copy(getRowPtr(m), getRowPtr(m) + cols(), dst);
@@ -2018,11 +2006,11 @@ inline cv::Mat Matrix<int>::createOpenCVMat( ) const
 }
 
 template <>
-inline cv::Mat Matrix<uchar>::createOpenCVMat( ) const
+inline cv::Mat Matrix<uchar>::createOpenCVMat() const
 {
-    cv::Mat oMat(rows(),cols(),CV_8UC1);
+    cv::Mat oMat(rows(), cols(), CV_8UC1);
 
-    for(size_t m = 0; m < rows(); m++)
+    for (size_t m = 0; m < rows(); m++)
     {
         uchar* dst = oMat.ptr<uchar>(m);
         std::copy(getRowPtr(m), getRowPtr(m) + cols(), dst);
@@ -2030,7 +2018,6 @@ inline cv::Mat Matrix<uchar>::createOpenCVMat( ) const
 
     return oMat;
 }
-
 
 #endif // OPENCVEIDLA
 

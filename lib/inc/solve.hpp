@@ -30,7 +30,6 @@
 class Solve
 {
 public:
-
     /**
     * Solves linear system of equations.
     * @param mat Matrix of coefficients.
@@ -41,35 +40,34 @@ public:
     static Matrix<double> solve_lseq(const Matrix<T>& mat, const Matrix<T>& b);
 };
 
-
 template <class T>
 Matrix<double> Solve::solve_lseq(const Matrix<T>& mat, const Matrix<T>& b)
 {
     // check input
-    if( b.cols() != 1 )
+    if (b.cols() != 1)
     {
         std::cout << "Error: Condition vector wrong dimension";
         std::exit(-1);
     }
-    else if( b.rows() != mat.cols() )
+    else if (b.rows() != mat.cols())
     {
         std::cout << "Error: Mismatching condition vector and coefficient matrix";
         std::exit(-1);
     }
-    else if( ! mat.isSquare() )
+    else if (!mat.isSquare())
     {
         std::cout << "Error: Coefficient matrix needs to be square matrix";
         std::exit(-1);
     }
 
     // make augmented matrix
-    Matrix<double> a( mat.rows(), mat.cols() + 1);
-    a.setSubMatrix(0,0,          mat);
-    a.setSubMatrix(0,mat.cols(), b);
+    Matrix<double> a(mat.rows(), mat.cols() + 1);
+    a.setSubMatrix(0, 0, mat);
+    a.setSubMatrix(0, mat.cols(), b);
 
     // solve by using full-pivoting reduced echelon transformation
     std::vector<Matrix<double>> rowOps; // not used
-    Matrix<double> redEch = Transformation::reduced_echelon(a, rowOps, true);
+    Matrix<double>              redEch = Transformation::reduced_echelon(a, rowOps, true);
 
     // solution vector is in last column
     return redEch.column(mat.cols());

@@ -35,10 +35,10 @@ public:
         : L(l), U(u), P(p), NbrRowSwaps(n)
         {
         }
-        Matrix<double> L; // Lower triangle matrix
-        Matrix<double> U; // Upper triangle matrix
-        Matrix<double> P; // Row Swaps
-        size_t NbrRowSwaps;     // Number of row swaps
+        Matrix<double> L;           // Lower triangle matrix
+        Matrix<double> U;           // Upper triangle matrix
+        Matrix<double> P;           // Row Swaps
+        size_t         NbrRowSwaps; // Number of row swaps
     };
 
     struct EigenPair
@@ -54,16 +54,14 @@ public:
 
     static void sortDescending(std::vector<EigenPair>& pairs)
     {
-        std::sort(pairs.begin(), pairs.end(), [](const EigenPair& a, const EigenPair& b)
-        {
+        std::sort(pairs.begin(), pairs.end(), [](const EigenPair& a, const EigenPair& b) {
             return a.L > b.L;
         });
     }
 
     static void sortAscending(std::vector<EigenPair>& pairs)
     {
-        std::sort(pairs.begin(), pairs.end(), [](const EigenPair& a, const EigenPair& b)
-        {
+        std::sort(pairs.begin(), pairs.end(), [](const EigenPair& a, const EigenPair& b) {
             return a.L < b.L;
         });
     }
@@ -72,7 +70,7 @@ public:
     {
         std::vector<EigenPair> copyEP = pairs;
         pairs.clear();
-        std::copy_if (copyEP.begin(), copyEP.end(), std::back_inserter(pairs), [eigenValueThreshold](EigenPair i){return i.L >= eigenValueThreshold; } );
+        std::copy_if(copyEP.begin(), copyEP.end(), std::back_inserter(pairs), [eigenValueThreshold](EigenPair i) { return i.L >= eigenValueThreshold; });
     }
 
     struct QRResult
@@ -89,18 +87,18 @@ public:
         }
 
         QRResult(const QRResult& qr)
-                : Q(qr.Q), R(qr.R)
+        : Q(qr.Q), R(qr.R)
         {
         }
         QRResult()
-                : Q(Matrix<double>::identity(1)), R(Matrix<double>::identity(1))
+        : Q(Matrix<double>::identity(1)), R(Matrix<double>::identity(1))
         {
         }
 
         QRResult& operator=(const QRResult& other)
         {
             // check for self-assignment
-            if(&other == this)
+            if (&other == this)
                 return *this;
 
             this->Q = other.Q;
@@ -111,7 +109,7 @@ public:
         QRResult& operator=(QRResult&& other)
         {
             // check for self-assignment
-            if(&other == this)
+            if (&other == this)
                 return *this;
 
             this->Q = std::move(other.Q);
@@ -136,11 +134,11 @@ public:
 
     struct HouseholderResult
     {
-        HouseholderResult(double b, Matrix<double> v) :
-        B(b), V(v)
+        HouseholderResult(double b, Matrix<double> v)
+        : B(b), V(v)
         {
         }
-        double B;         // scalar
+        double         B; // scalar
         Matrix<double> V; // householder vector
     };
 
@@ -158,7 +156,7 @@ public:
     struct GivensRotation
     {
         GivensRotation()
-            : S(0), C(0), R(0)
+        : S(0), C(0), R(0)
         {
         }
 
@@ -182,11 +180,10 @@ public:
     template <class T>
     static LUResult luDecomposition(const Matrix<T>& mat, bool pivoting = true);
 
-
     enum EigenMethod
     {
         PowerIterationAndHotellingsDeflation, //Power iteration and hotelling's deflation
-        QRAlgorithm, // QR algorithm
+        QRAlgorithm,                          // QR algorithm
     };
 
     /**
@@ -234,7 +231,6 @@ public:
     template <class T>
     static std::vector<EigenPair> qrAlgorithm(const Matrix<T>& mat, size_t maxIteration, double precision, bool showProgress = false);
 
-
     /**
      * Compute Rayleigh quotient of a matrix and a vector. This can be
      * used to find the Eigenvalue to a corresponding Eigenvector and
@@ -276,7 +272,6 @@ public:
     template <class T>
     static DiagonalizationResult bidiagonalization(const Matrix<T>& a);
 
-
     enum QRMethod
     {
         Householder, /* Householder reflection */
@@ -293,13 +288,13 @@ public:
      * @return QR decomposition
      */
     template <class T>
-    static QRResult qr(const Matrix<T>& mat, bool positive = true, QRMethod method = QRMethod::Householder );
+    static QRResult qr(const Matrix<T>& mat, bool positive = true, QRMethod method = QRMethod::Householder);
 
     template <class T>
-    static QRResult qr_householder( const Matrix<T>& mat, bool positive = true);
+    static QRResult qr_householder(const Matrix<T>& mat, bool positive = true);
 
     template <class T>
-    static QRResult qr_givens( const Matrix<T>& mat, bool positive = true);
+    static QRResult qr_givens(const Matrix<T>& mat, bool positive = true);
 
     /**
      * RQ decomposition, where the passed matrix A is decomposed into an
@@ -311,8 +306,7 @@ public:
      * @return QR decomposition
      */
     template <class T>
-    static QRResult rq( const Matrix<T>& mat, QRMethod method = QRMethod::Householder );
-
+    static QRResult rq(const Matrix<T>& mat, QRMethod method = QRMethod::Householder);
 
     /**
      * The QR decomposition is not unique. Changing the sign of a row and
@@ -334,7 +328,7 @@ public:
      * @return SVD decomposition
      */
     template <class T>
-    static SVDResult svd( const Matrix<T>& mat );
+    static SVDResult svd(const Matrix<T>& mat);
 
     /**
      * Computes the given rotation based on a and b as input. See
@@ -343,7 +337,7 @@ public:
      * @param b Second number -> Givens Rotation will zero b!
      * @return Givens Rotation parameters
      */
-    static GivensRotation givensRotation( double a, double b)
+    static GivensRotation givensRotation(double a, double b)
     {
         // based on https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
 
@@ -378,8 +372,7 @@ public:
      * @return
      */
     template <class T>
-    static Matrix<double> givensRotation( const Matrix<T>& mat, size_t col, size_t a_row, size_t b_row );
-
+    static Matrix<double> givensRotation(const Matrix<T>& mat, size_t col, size_t a_row, size_t b_row);
 
 private:
     template <class T>
@@ -410,22 +403,22 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
 
     l.setToIdentity();
 
-    Matrix<double> p = Matrix<double>::identity(n);
-    size_t nbrRowSwaps = 0;
+    Matrix<double> p           = Matrix<double>::identity(n);
+    size_t         nbrRowSwaps = 0;
 
     for (size_t k = 0; k < n; k++)
     {
-        if( pivoting )
+        if (pivoting)
         {
             // find pivot row and swap
-            size_t pivotRow = k;
+            size_t pivotRow   = k;
             double pivotValue = 0.0;
             for (size_t searchPivotIdx = k; searchPivotIdx < n; searchPivotIdx++)
             {
                 double cPivotElement = std::abs(u(searchPivotIdx, k));
                 if (cPivotElement > pivotValue)
                 {
-                    pivotRow = searchPivotIdx;
+                    pivotRow   = searchPivotIdx;
                     pivotValue = cPivotElement;
                 }
             }
@@ -440,20 +433,19 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
                 p = Multiplier::swapRow(u, pivotRow, k) * p;
 
                 //swap the subdiagonal entries of in l
-                for( size_t lswapIdx = 0; lswapIdx < k; lswapIdx++)
+                for (size_t lswapIdx = 0; lswapIdx < k; lswapIdx++)
                 {
-                    double tmpVal = l(pivotRow, lswapIdx);
-                    l(pivotRow, lswapIdx) = l(k,lswapIdx);
-                    l(k,lswapIdx) = tmpVal;
+                    double tmpVal         = l(pivotRow, lswapIdx);
+                    l(pivotRow, lswapIdx) = l(k, lswapIdx);
+                    l(k, lswapIdx)        = tmpVal;
                 }
             }
         }
 
-
         // process beneath rows, so that first pivot column element of u is zero
-        double pivot = u(k,k);
+        double pivot = u(k, k);
 
-        if( std::abs(pivot) > std::numeric_limits<double>::min()) // check if pivot is not zero
+        if (std::abs(pivot) > std::numeric_limits<double>::min()) // check if pivot is not zero
         {
             Matrix<double> pivotRow = u.row(k);
             for (size_t i = k + 1; i < n; i++)
@@ -472,7 +464,7 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
             // This is a singular matrix, therefore l(i,k) can be freely chosen -> lu decomposition is not unique
             // U does not be to be modified in this step
             // info: https://math.stackexchange.com/questions/2010470/doolittle-transformation-is-non-unique-for-singular-matrices
-            for(size_t i = k + 1; i < n; i++)
+            for (size_t i = k + 1; i < n; i++)
             {
                 l(i, k) = 0;
             }
@@ -484,20 +476,20 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
 }
 
 template <class T>
-std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat, Decomposition::EigenMethod method )
+std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat, Decomposition::EigenMethod method)
 {
-    if(!mat.isSquare())
+    if (!mat.isSquare())
     {
         std::cout << "Eigen: Square matrix required";
         std::exit(-1);
     }
 
-    Matrix<double> cMat(mat);
+    Matrix<double>         cMat(mat);
     std::vector<EigenPair> pairs;
 
-    if( cMat.isSymmetric() )
+    if (cMat.isSymmetric())
     {
-        switch( method )
+        switch (method)
         {
             case QRAlgorithm:
                 // QR algorithm
@@ -509,7 +501,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
                 // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
                 for (size_t i = 0; i < cMat.rows(); i++)
                 {
-                    EigenPair ePair = powerIteration(cMat, 50,std::numeric_limits<double>::epsilon());
+                    EigenPair ePair = powerIteration(cMat, 50, std::numeric_limits<double>::epsilon());
                     if (ePair.Valid)
                     {
                         pairs.push_back(ePair);
@@ -526,7 +518,7 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
         std::cout << "Warning: The Eigen decomposition of non-symmetric matrices does not work yet properly in this library!!" << std::endl;
 
         // compute the largest eigenvalue
-        pairs.push_back(powerIteration(cMat, 30,std::numeric_limits<double>::epsilon()));
+        pairs.push_back(powerIteration(cMat, 30, std::numeric_limits<double>::epsilon()));
     }
 
     sortDescending(pairs);
@@ -537,38 +529,38 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
 template <class T>
 Decomposition::EigenPair Decomposition::rayleighIteration(const Matrix<T>& mat, const Matrix<double>& initialEigenVector, double initialEigenValue, size_t maxIteration, double precision)
 {
-    Matrix<double> matD      = mat;
+    Matrix<double> matD = mat;
 
     // Rayleigh quotient iteration: https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
 
-    Matrix<double> e_vec = initialEigenVector;
-    double e_val = initialEigenValue;
-    double e_val_before = e_val;
+    Matrix<double> e_vec        = initialEigenVector;
+    double         e_val        = initialEigenValue;
+    double         e_val_before = e_val;
 
     // init used variables
-    Matrix<double> ident = Matrix<double>::identity(matD.cols());
-    Matrix<double> e_vec_unscaled = Matrix<double>(matD.cols(),1);
-    bool go = true;
-    size_t nbrOfIterations = 0;
-    bool validEigenPair = false;
+    Matrix<double> ident           = Matrix<double>::identity(matD.cols());
+    Matrix<double> e_vec_unscaled  = Matrix<double>(matD.cols(), 1);
+    bool           go              = true;
+    size_t         nbrOfIterations = 0;
+    bool           validEigenPair  = false;
 
     while (go)
     {
-        e_vec_unscaled = (matD - (ident*e_val) ).adjugate() * e_vec;
-        e_vec = e_vec_unscaled.normalizeColumns();
-        e_val = rayleighQuotient(matD,e_vec);
+        e_vec_unscaled = (matD - (ident * e_val)).adjugate() * e_vec;
+        e_vec          = e_vec_unscaled.normalizeColumns();
+        e_val          = rayleighQuotient(matD, e_vec);
 
         //std::cout << "Iteration: " << nbrOfIterations << std::endl << e_vec << std::endl << e_val << "--------------" << std::endl;
 
         // check stopping criteria of Rayleigh iteration
-        if( std::abs(e_val - e_val_before) < precision*std::abs(e_val + e_val_before) )
+        if (std::abs(e_val - e_val_before) < precision * std::abs(e_val + e_val_before))
         {
-            go = false;
+            go             = false;
             validEigenPair = true;
         }
-        else if( nbrOfIterations >= maxIteration )
+        else if (nbrOfIterations >= maxIteration)
         {
-            go = false;
+            go             = false;
             validEigenPair = false;
         }
 
@@ -587,10 +579,10 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
 
     Matrix<double> a = mat;
 
-    size_t nbrOfIterations = 0;
-    bool go = true;
-    bool foundEig = false;
-    Matrix<double> q_before = Matrix<double>(a.rows(), a.rows());
+    size_t         nbrOfIterations = 0;
+    bool           go              = true;
+    bool           foundEig        = false;
+    Matrix<double> q_before        = Matrix<double>(a.rows(), a.rows());
     q_before.fill(0);
     Matrix<double> qProd = Matrix<double>::identity(a.rows());
 
@@ -599,28 +591,28 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
         Decomposition::QRResult qr = Decomposition::qr(a, false); // note: not important to have positive elements on diagonal of R
 
         // check stopping criteria
-        if( q_before.compare(qr.Q,true,precision))
+        if (q_before.compare(qr.Q, true, precision))
         {
             // q changed less than required precission.
             // q is good choice since its normalized
-            go = false;
+            go       = false;
             foundEig = true;
         }
-        else if( nbrOfIterations >= maxIteration )
+        else if (nbrOfIterations >= maxIteration)
         {
-            go = false;
+            go       = false;
             foundEig = false;
         }
         else
         {
             // continue -> prepare next loop
 
-            a = qr.R * qr.Q; // iteratively converge to a - diag(a) are eigenvalues
+            a     = qr.R * qr.Q;  // iteratively converge to a - diag(a) are eigenvalues
             qProd = qProd * qr.Q; // accumlate q transformations to get eigenvectors
 
-            if( showProgress )
+            if (showProgress)
             {
-                std::cout << "qrAlgorithm progress = " << static_cast<double>(nbrOfIterations) / static_cast<double> (maxIteration) << std::endl;
+                std::cout << "qrAlgorithm progress = " << static_cast<double>(nbrOfIterations) / static_cast<double>(maxIteration) << std::endl;
             }
 
             q_before = qr.Q;
@@ -629,9 +621,9 @@ std::vector<Decomposition::EigenPair> Decomposition::qrAlgorithm(const Matrix<T>
     }
 
     // The eigenvalues are in a and eigenvectors in qProd
-    for( size_t i = 0; i < qProd.cols(); i++ )
+    for (size_t i = 0; i < qProd.cols(); i++)
     {
-        EigenPair eP( qProd.column(i), a(i,i), foundEig );
+        EigenPair eP(qProd.column(i), a(i, i), foundEig);
         ret.push_back(eP);
     }
 
@@ -645,28 +637,29 @@ Decomposition::EigenPair Decomposition::powerIteration(const Matrix<T>& mat, siz
     // Finds most significant eigenvalue
 
     Matrix<double> matD = mat;
-    Matrix<double> eVec(matD.rows(),1); eVec.fill(1.0);
-    double eVal = 1;
+    Matrix<double> eVec(matD.rows(), 1);
+    eVec.fill(1.0);
+    double eVal       = 1;
     double eValBefore = eVal;
 
-    bool validEigenPair = false;
+    bool   validEigenPair  = false;
     size_t nbrOfIterations = 0;
-    bool go = true;
+    bool   go              = true;
 
     while (go)
     {
         eVec = (matD * eVec).normalizeColumns();
-        eVal = rayleighQuotient(matD,eVec);
+        eVal = rayleighQuotient(matD, eVec);
 
         // check stopping criteria of power iteration
-        if( std::abs(eVal - eValBefore) < precision*std::abs(eVal + eValBefore) )
+        if (std::abs(eVal - eValBefore) < precision * std::abs(eVal + eValBefore))
         {
-            go = false;
+            go             = false;
             validEigenPair = true;
         }
-        else if( nbrOfIterations >= maxIteration )
+        else if (nbrOfIterations >= maxIteration)
         {
-            go = false;
+            go             = false;
             validEigenPair = false;
         }
 
@@ -689,21 +682,21 @@ template <class T>
 Decomposition::HouseholderResult Decomposition::householder(const Matrix<T>& x)
 {
     // generate basis vector [1.0, 0, 0, ..]
-    Matrix<double> e(x.rows(),1);
+    Matrix<double> e(x.rows(), 1);
     e.fill(0.0);
-    e(0,0) = 1.0;
+    e(0, 0) = 1.0;
 
     double sign = 1.0;
-    if( x(0,0) > 0.0 )
+    if (x(0, 0) > 0.0)
         sign = -1.0;
 
     // vh -> Householder vector
-    Matrix<double> v = x - (e*x.norm()*sign);
+    Matrix<double> v = x - (e * x.norm() * sign);
 
     // scalar
-    double b = 2.0 / (v.transpose() * v)(0,0);
+    double b = 2.0 / (v.transpose() * v)(0, 0);
 
-    return HouseholderResult(b,v);
+    return HouseholderResult(b, v);
 }
 
 template <class T>
@@ -711,12 +704,11 @@ Matrix<double> Decomposition::householderMatrix(const Matrix<T>& v, double b)
 {
     Matrix<double> p = Matrix<double>::identity(v.rows());
 
-    if( std::isfinite(b) )
+    if (std::isfinite(b))
         p = p - b * v * v.transpose();
 
     return p;
 }
-
 
 // Sources:
 // Householder bidiagonalization, Matrix computation, 4th ed, Golub & Loan, p.284
@@ -727,7 +719,7 @@ Decomposition::DiagonalizationResult Decomposition::bidiagonalization(const Matr
     size_t m = a_m.rows();
     size_t n = a_m.cols();
 
-    if( m < n )
+    if (m < n)
     {
         std::cout << "bidiagonalization: Invalid matrix dimension";
         std::exit(-1);
@@ -737,93 +729,93 @@ Decomposition::DiagonalizationResult Decomposition::bidiagonalization(const Matr
     Matrix<double> u = Matrix<double>::identity(m);
     Matrix<double> v = Matrix<double>::identity(n);
 
-    for( size_t j = 0; j < n; j++)
+    for (size_t j = 0; j < n; j++)
     {
         // row direction
-        Matrix<double> x_r = a.subMatrix(j,j, m-j, 1);
-        HouseholderResult h_r = householder(x_r);
-        Matrix<double> h_mat_r = householderMatrix(h_r.V, h_r.B);
+        Matrix<double>    x_r     = a.subMatrix(j, j, m - j, 1);
+        HouseholderResult h_r     = householder(x_r);
+        Matrix<double>    h_mat_r = householderMatrix(h_r.V, h_r.B);
 
-        Matrix<double> a_sub_r = a.subMatrix(j,j, m-j, n-j);
+        Matrix<double> a_sub_r = a.subMatrix(j, j, m - j, n - j);
 
         // transform a with householder matrix
         a_sub_r = h_mat_r * a_sub_r;
-        a.setSubMatrix(j,j, a_sub_r); // place submatrix into a
+        a.setSubMatrix(j, j, a_sub_r); // place submatrix into a
 
         // concatenate householder matrix to u
         Matrix<double> H_MAT_R = Matrix<double>::identity(m);
-        H_MAT_R.setSubMatrix(j,j,h_mat_r);
+        H_MAT_R.setSubMatrix(j, j, h_mat_r);
         u = u * H_MAT_R;
 
         // column direction
-        if( j < n-2 )
+        if (j < n - 2)
         {
-            Matrix<double> x_c = a.subMatrix(j,j+1, 1, n-(j+1));
-            HouseholderResult h_c = householder(x_c.transpose());
-            Matrix<double> h_mat_c = householderMatrix(h_c.V, h_c.B);
+            Matrix<double>    x_c     = a.subMatrix(j, j + 1, 1, n - (j + 1));
+            HouseholderResult h_c     = householder(x_c.transpose());
+            Matrix<double>    h_mat_c = householderMatrix(h_c.V, h_c.B);
 
-            Matrix<double> a_sub_c = a.subMatrix(j,j+1, m-j, n-j-1);
-            a_sub_c = a_sub_c * h_mat_c;
-            a.setSubMatrix(j, j+1, a_sub_c); // place submatrix into a
+            Matrix<double> a_sub_c = a.subMatrix(j, j + 1, m - j, n - j - 1);
+            a_sub_c                = a_sub_c * h_mat_c;
+            a.setSubMatrix(j, j + 1, a_sub_c); // place submatrix into a
 
             // concatenate householder matrix to v
             Matrix<double> H_MAT_C = Matrix<double>::identity(n);
-            H_MAT_C.setSubMatrix(j+1,j+1,h_mat_c);
-            v =  v * H_MAT_C;
+            H_MAT_C.setSubMatrix(j + 1, j + 1, h_mat_c);
+            v = v * H_MAT_C;
         }
     }
 
-    return DiagonalizationResult(u,a,v);
+    return DiagonalizationResult(u, a, v);
 }
 
 // QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf
 template <class T>
-Decomposition::QRResult Decomposition::qr(const Matrix<T>& mat, bool positive, QRMethod method )
+Decomposition::QRResult Decomposition::qr(const Matrix<T>& mat, bool positive, QRMethod method)
 {
-    switch( method )
+    switch (method)
     {
         case Householder:
-            return qr_householder(mat,positive);
+            return qr_householder(mat, positive);
 
         case Givens:
-            return qr_givens(mat,positive);
+            return qr_givens(mat, positive);
     }
 }
 
 // QR decomposition by using Householder reflection -> see documents/qr_decomposition.pdf
 template <class T>
-Decomposition::QRResult Decomposition::qr_householder( const Matrix<T>& mat, bool positive)
+Decomposition::QRResult Decomposition::qr_householder(const Matrix<T>& mat, bool positive)
 {
     Matrix<double> r = mat;
-    size_t m = r.rows();
-    size_t n = r.cols();
+    size_t         m = r.rows();
+    size_t         n = r.cols();
 
     // initialize q as identity
     Matrix<double> q = Matrix<double>::identity(m);
 
-    for( size_t i = 0; i < n; i++ )
+    for (size_t i = 0; i < n; i++)
     {
         // copy current column
-        Matrix<double> x = r.subMatrix(i,i,m-i,1);
+        Matrix<double>    x     = r.subMatrix(i, i, m - i, 1);
         HouseholderResult house = householder(x);
-        Matrix<double> h = householderMatrix(house.V, house.B);
+        Matrix<double>    h     = householderMatrix(house.V, house.B);
 
         // create the matrix for next loop.
-        Matrix<double> rSub = h * r.subMatrix(i,i, m-i, n-i);
-        r.setSubMatrix(i,i,rSub);
+        Matrix<double> rSub = h * r.subMatrix(i, i, m - i, n - i);
+        r.setSubMatrix(i, i, rSub);
 
         // use the smaller Householder matrix h to
         // create one of the right size, H.
         // each H is used to get step by step to to
         // the matrix Q.
         Matrix<double> H = Matrix<double>::identity(m);
-        H.setSubMatrix(i,i,h);
+        H.setSubMatrix(i, i, h);
         q = q * H;
     }
 
-    QRResult retResult(q,r);
+    QRResult retResult(q, r);
 
-    if( positive )
+    if (positive)
     {
         // There exist multiple qr solutions. To get a unique result,
         // the diagonal elements on r are chosen to be positive.
@@ -841,28 +833,28 @@ Decomposition::QRResult Decomposition::qr_householder( const Matrix<T>& mat, boo
 
 // QR decomposition by using Givens rotations -> see documents/qr_decomposition.pdf
 template <class T>
-Decomposition::QRResult Decomposition::qr_givens( const Matrix<T>& mat, bool positive)
+Decomposition::QRResult Decomposition::qr_givens(const Matrix<T>& mat, bool positive)
 {
     Matrix<double> r = mat;
-    size_t m = r.rows();
-    size_t n = r.cols();
+    size_t         m = r.rows();
+    size_t         n = r.cols();
 
     // initialize q as identity
     Matrix<double> q = Matrix<double>::identity(m);
 
-    for( size_t j = 0; j < n; j++ )
+    for (size_t j = 0; j < n; j++)
     {
-        for( size_t i = m-1; i > j; i-- )
+        for (size_t i = m - 1; i > j; i--)
         {
-            Matrix<double> gs = givensRotation(r, j, i-1, i );
-            r = gs * r;
-            q = q*gs.transpose();
+            Matrix<double> gs = givensRotation(r, j, i - 1, i);
+            r                 = gs * r;
+            q                 = q * gs.transpose();
         }
     }
 
-    QRResult res(q,r);
+    QRResult res(q, r);
 
-    if( positive )
+    if (positive)
     {
         // There exist multiple qr solutions. To get a unique result,
         // the diagonal elements on r are chosen to be positive.
@@ -886,9 +878,9 @@ Decomposition::QRResult Decomposition::rq(const Matrix<T>& mat, QRMethod method)
 
     Matrix<double> p = Matrix<double>(m, m);
     p.fill(0.0);
-    for( size_t i = 0; i < m; i++ )
+    for (size_t i = 0; i < m; i++)
     {
-        p(i,m-1-i) = 1.0;
+        p(i, m - 1 - i) = 1.0;
     }
 
     Matrix<double> ad = p * mat; // reverses the rows in mat
@@ -898,7 +890,7 @@ Decomposition::QRResult Decomposition::rq(const Matrix<T>& mat, QRMethod method)
     Matrix<double> q = p * qrD.Q.transpose();
     Matrix<double> r = p * qrD.R.transpose() * p;
 
-    return QRResult(q,r);
+    return QRResult(q, r);
 }
 
 template <class T>
@@ -909,13 +901,13 @@ Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const 
     Matrix<double> Q = q;
     Matrix<double> R = r;
 
-    for( size_t i = 0; i < Q.rows(); i++)
+    for (size_t i = 0; i < Q.rows(); i++)
         Q(i, row) = -Q(i, row);
 
-    for( size_t i = 0; i < R.cols(); i++)
-        R(row,i) = -R(row,i);
+    for (size_t i = 0; i < R.cols(); i++)
+        R(row, i) = -R(row, i);
 
-    return QRResult(std::move(Q),std::move(R));
+    return QRResult(std::move(Q), std::move(R));
 }
 
 #include "solve.hpp"
@@ -924,7 +916,7 @@ template <class T>
 Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
 {
     // U*S*V
-    Matrix<double> aTa = mat.transpose()*mat;
+    Matrix<double> aTa = mat.transpose() * mat;
 
     // aTa are symmetric
     std::vector<EigenPair> ep = eigen(aTa, QRAlgorithm);
@@ -934,21 +926,23 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
     Matrix<double> s_diag_mat = Matrix<double>(mat.rows(), mat.cols());
     s_diag_mat.fill(0.0);
 
-    Matrix<double> u_left = Matrix<double>(s_diag_mat.rows(), s_diag_mat.rows()); u_left.fill(0.0);
-    Matrix<double> v_right = Matrix<double>(s_diag_mat.cols(), s_diag_mat.cols()); v_right.fill(0.0);
+    Matrix<double> u_left = Matrix<double>(s_diag_mat.rows(), s_diag_mat.rows());
+    u_left.fill(0.0);
+    Matrix<double> v_right = Matrix<double>(s_diag_mat.cols(), s_diag_mat.cols());
+    v_right.fill(0.0);
 
     bool forceOrthogonalization = false;
 
-    for( size_t p = 0; p < ep.size(); p++ )
+    for (size_t p = 0; p < ep.size(); p++)
     {
-        double tEigenValue = ep.at(p).L; // left and right eigenvalues should be equal
-        Matrix<double> eVect = ep.at(p).V;
+        double         tEigenValue = ep.at(p).L; // left and right eigenvalues should be equal
+        Matrix<double> eVect       = ep.at(p).V;
 
         // eigenvalues of a symmetric matrix cannot be negative. if so,
         // this comes from rounding errors in eigen algorithm.
-        if( tEigenValue <= 0.0 )
+        if (tEigenValue <= 0.0)
         {
-            if( (ep.size() - 1) == p )
+            if ((ep.size() - 1) == p)
             {
                 // this is allowed to happen in the very last run
                 s_diag_mat(p, p) = 0.0;
@@ -965,58 +959,57 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
         {
             s_diag_mat(p, p) = std::sqrt(tEigenValue);
             v_right.setColumn(p, eVect);
-            u_left.setColumn( p, mat * eVect * (1.0 / s_diag_mat(p,p)));
+            u_left.setColumn(p, mat * eVect * (1.0 / s_diag_mat(p, p)));
         }
     }
 
     // in case of small singular values, the matrix u might be not orthogonal.
     // if so, the last column can be modified.
-    if( forceOrthogonalization || !u_left.isOrthogonal(0.001) )
+    if (forceOrthogonalization || !u_left.isOrthogonal(0.001))
     {
-        if( u_left.rows() == 3 )
+        if (u_left.rows() == 3)
         {
             // use crossproduct to make third column
-            double ax = u_left(0,0);
-            double ay = u_left(1,0);
-            double az = u_left(2,0);
+            double ax = u_left(0, 0);
+            double ay = u_left(1, 0);
+            double az = u_left(2, 0);
 
-            double bx = u_left(0,1);
-            double by = u_left(1,1);
-            double bz = u_left(2,1);
+            double bx = u_left(0, 1);
+            double by = u_left(1, 1);
+            double bz = u_left(2, 1);
 
-            u_left(0,2) = ay*bz - az*by;
-            u_left(1,2) = az*bx - ax*bz;
-            u_left(2,2) = ax*by - ay*bx;
+            u_left(0, 2) = ay * bz - az * by;
+            u_left(1, 2) = az * bx - ax * bz;
+            u_left(2, 2) = ax * by - ay * bx;
         }
         else
         {
             size_t lastColumn = (ep.size() - 1);
-            for(size_t u_row = 0; u_row < u_left.rows(); u_row++)
-                u_left(u_row,lastColumn) = std::sqrt(1 - u_left.row( u_row ).normSquare());
+            for (size_t u_row = 0; u_row < u_left.rows(); u_row++)
+                u_left(u_row, lastColumn) = std::sqrt(1 - u_left.row(u_row).normSquare());
         }
-
     }
 
     return SVDResult(u_left, s_diag_mat, v_right);
 }
 
 template <class T>
-Matrix<double> Decomposition::givensRotation( const Matrix<T>& mat, size_t col, size_t a_row, size_t b_row )
+Matrix<double> Decomposition::givensRotation(const Matrix<T>& mat, size_t col, size_t a_row, size_t b_row)
 {
-    if( a_row >= b_row || a_row < col  )
+    if (a_row >= b_row || a_row < col)
         throw InvalidInputException();
 
     Matrix<double> gMat = Matrix<double>::identity(mat.rows());
 
-    double b = mat(b_row,col);
-    double a = mat(a_row,col);
+    double b = mat(b_row, col);
+    double a = mat(a_row, col);
 
-    Decomposition::GivensRotation gr = givensRotation(a,b);
+    Decomposition::GivensRotation gr = givensRotation(a, b);
 
-    gMat(a_row,a_row) = gr.C;
-    gMat(b_row,b_row) = gr.C;
-    gMat(a_row,b_row) = -gr.S;
-    gMat(b_row,a_row) = gr.S;
+    gMat(a_row, a_row) = gr.C;
+    gMat(b_row, b_row) = gr.C;
+    gMat(a_row, b_row) = -gr.S;
+    gMat(b_row, a_row) = gr.S;
 
     return gMat;
 }

@@ -94,15 +94,15 @@ Matrix<double> Transformation::echelon(const Matrix<T>& mat, std::vector<Matrix<
         {
             double currentValue = std::abs(ret(m, n));
 
-            if (currentValue > maxValue )
+            if (currentValue > maxValue)
             {
                 pivotRow          = m;
                 foundNonZeroPivot = true;
-                maxValue = currentValue;
+                maxValue          = currentValue;
 
                 // Possible non-zero pivot found. If fullPivoting is
                 // disabled, pivot search can be stopped.
-                if( !fullPivoting )
+                if (!fullPivoting)
                     break;
             }
         }

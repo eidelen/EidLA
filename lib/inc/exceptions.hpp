@@ -26,7 +26,7 @@
 
 #include <exception>
 
-class SquareMatrixException: public std::exception
+class SquareMatrixException : public std::exception
 {
     virtual const char* what() const throw() override
     {
@@ -34,7 +34,7 @@ class SquareMatrixException: public std::exception
     }
 };
 
-class ZeroDeterminantException: public std::exception
+class ZeroDeterminantException : public std::exception
 {
     virtual const char* what() const throw() override
     {
@@ -42,8 +42,7 @@ class ZeroDeterminantException: public std::exception
     }
 };
 
-
-class NoVectorException: public std::exception
+class NoVectorException : public std::exception
 {
     virtual const char* what() const throw() override
     {
@@ -51,7 +50,7 @@ class NoVectorException: public std::exception
     }
 };
 
-class InvalidInputException: public std::exception
+class InvalidInputException : public std::exception
 {
     virtual const char* what() const throw() override
     {
@@ -59,7 +58,7 @@ class InvalidInputException: public std::exception
     }
 };
 
-class EmptyContainerException: public std::exception
+class EmptyContainerException : public std::exception
 {
     virtual const char* what() const throw() override
     {
@@ -67,7 +66,7 @@ class EmptyContainerException: public std::exception
     }
 };
 
-class NoRotationMatrixException: public std::exception
+class NoRotationMatrixException : public std::exception
 {
     virtual const char* what() const throw() override
     {
@@ -75,7 +74,7 @@ class NoRotationMatrixException: public std::exception
     }
 };
 
-class SVDFailedException: public std::exception
+class SVDFailedException : public std::exception
 {
     virtual const char* what() const throw() override
     {
