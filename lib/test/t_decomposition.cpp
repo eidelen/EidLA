@@ -244,14 +244,6 @@ TEST(Decomposition, QRDecompositionHouseholder)
 
     auto mat = Matrix<double>(5, 3, matData);
 
-    /*
-    double qData[] = {0.4927,-0.4806, -0.1780,-0.6015,-0.3644,
-                      0.5478,-0.3583,0.5777,0.3760, 0.3104,
-                      0.0768,0.4754,0.6343,-0.1497,-0.5859,
-                      0.5523,0.3391,-0.4808,0.5071,-0.3026,
-                      0.3824,0.5473,-0.0311,-0.4661, 0.5796};
-    auto qSoll = Matrix<double>(5,5,qData); */
-
     double rData[] = {1.6536,1.1405,1.2569,
                       0, 0.9661, 0.6341,
                       0, 0, 0.8816,
@@ -277,26 +269,10 @@ TEST(Decomposition, QRDecompositionGivens)
 
     auto mat = Matrix<double>(5, 3, matData);
 
-    /*
-    double qData[] = {0.4927,-0.4806, -0.1780,-0.6015,-0.3644,
-                      0.5478,-0.3583,0.5777,0.3760, 0.3104,
-                      0.0768,0.4754,0.6343,-0.1497,-0.5859,
-                      0.5523,0.3391,-0.4808,0.5071,-0.3026,
-                      0.3824,0.5473,-0.0311,-0.4661, 0.5796};
-    auto qSoll = Matrix<double>(5,5,qData); */
-
-    /*double rData[] = {1.6536,1.1405,1.2569,
-                      0, 0.9661, 0.6341,
-                      0, 0, 0.8816,
-                      0, 0, 0,
-                      0, 0, 0};
-    auto rSoll = Matrix<double>(5,3,rData);*/
-
     Decomposition::QRResult res = Decomposition::qr_givens(mat);
 
-    ASSERT_TRUE( res.Q.isOrthogonal(0.01)); // directly comparing Q does not make sense, since signs can change
-    //ASSERT_TRUE( rSoll.compare(res.R, true, 0.01));
-    ASSERT_TRUE( mat.compare( res.Q * res.R, true, 0.01));
+    ASSERT_TRUE( res.Q.isOrthogonal(0.001)); // directly comparing Q does not make sense, since signs can change
+    ASSERT_TRUE( mat.compare( res.Q * res.R, true, 0.001));
 }
 
 TEST(Decomposition, QRDecompositionSpecialMatrixWhichFailed)
@@ -328,16 +304,19 @@ TEST(Decomposition, QRDecompositionSpecialMatrix)
 
 TEST(Decomposition, QRBatchTesting)
 {
-    for( int k = 0; k < 500; k++ )
+    for( int k = 0; k < 5000; k++ )
     {
         auto m = Matrix<double>::random(5, 5, -100.0, 100.0);
 
-        Decomposition::QRResult res = Decomposition::qr(m,true);
-        auto Q = res.Q;
-        auto R = res.R;
+        // check householder qr algorithm
+        Decomposition::QRResult res_h = Decomposition::qr(m,true,Decomposition::Householder);
+        ASSERT_TRUE( res_h.Q.isOrthogonal(0.00001) );
+        ASSERT_TRUE( m.compare(res_h.Q*res_h.R, true, 0.00001) );
 
-        ASSERT_TRUE( Q.isOrthogonal(0.0001) );
-        ASSERT_TRUE( m.compare(Q*R, true, 0.0001) );
+        // check givens qr algorithm
+        Decomposition::QRResult res_g = Decomposition::qr(m,true,Decomposition::Givens);
+        ASSERT_TRUE( res_g.Q.isOrthogonal(0.0001) );
+        ASSERT_TRUE( m.compare(res_g.Q*res_g.R, true, 0.00001) );
     }
 }
 
@@ -745,12 +724,12 @@ TEST(Decomposition, GivensRotationMatrix)
     double data[] = {6,5,0 ,5,1,4, 0,4,3};
     Matrix<double> a = Matrix<double>(3,3,data);
 
-    Matrix<double> g0 = Decomposition::givensRotation(a,1,0);
+    Matrix<double> g0 = Decomposition::givensRotation(a,0,0,1);
     Matrix<double> a1 = g0 * a;
 
     ASSERT_NEAR( 0.0, a1(1,0), 0.0001 );
 
-    Matrix<double> g1 = Decomposition::givensRotation(a1,2,1);
+    Matrix<double> g1 = Decomposition::givensRotation(a1,1,1,2);
     Matrix<double> a2 = g1 * a1;
 
     ASSERT_NEAR( 0.0, a2(2,1), 0.0001 );
@@ -769,14 +748,14 @@ TEST(Decomposition, GivensRotationMatrixBatch)
 
         Matrix<double> a = Matrix<double>::random(4, 4, -2.0, 2.0);
 
-        a = Decomposition::givensRotation(a, 1, 0) * a;
-        a = Decomposition::givensRotation(a, 2, 0) * a;
-        a = Decomposition::givensRotation(a, 3, 0) * a;
+        a = Decomposition::givensRotation(a, 0, 2, 3) * a;
+        a = Decomposition::givensRotation(a, 0, 1, 2) * a;
+        a = Decomposition::givensRotation(a, 0, 0, 1) * a;
 
-        a = Decomposition::givensRotation(a, 2, 1) * a;
-        a = Decomposition::givensRotation(a, 3, 1) * a;
+        a = Decomposition::givensRotation(a, 1, 1, 2) * a;
+        a = Decomposition::givensRotation(a, 1, 1, 3) * a;
 
-        a = Decomposition::givensRotation(a, 3, 2) * a;
+        a = Decomposition::givensRotation(a, 2, 2, 3) * a;
 
         ASSERT_NEAR( a(1,0), 0.0, 0.000001 );
         ASSERT_NEAR( a(2,0), 0.0, 0.000001 );

@@ -307,10 +307,11 @@ public:
      * A = R * Q.
      * @param mat Matrix A
      * @param positive If true, the diagonal elements of R are positive. This needs additional computation.
+     * @param method Applied method to compute the QR decomposition.
      * @return QR decomposition
      */
     template <class T>
-    static QRResult rq(const Matrix<T>& mat);
+    static QRResult rq( const Matrix<T>& mat, QRMethod method = QRMethod::Householder );
 
 
     /**
@@ -368,14 +369,16 @@ public:
 
     /**
      * Generates a Givens rotation matrix for the passed matrix
-     * mat and the indices i_idx and j_idx.
+     * mat and the indices. The Givens rotation rotates the
+     * element mat(b_row,col) to zero. Note: a_row < b_row || a_row >= col
      * @param mat Input matrix
-     * @param m Plane index
-     * @param n Plane index
+     * @param col Plane index
+     * @param a_row Plane a index
+     * @param b_row Plane b index, which will be set to zero.
      * @return
      */
     template <class T>
-    static Matrix<double> givensRotation( const Matrix<T>& mat, size_t m, size_t n );
+    static Matrix<double> givensRotation( const Matrix<T>& mat, size_t col, size_t a_row, size_t b_row );
 
 
 private:
@@ -818,7 +821,7 @@ Decomposition::QRResult Decomposition::qr_householder( const Matrix<T>& mat, boo
         q = q * H;
     }
 
-    QRResult retResult(std::move(q),std::move(r));
+    QRResult retResult(q,r);
 
     if( positive )
     {
@@ -847,12 +850,36 @@ Decomposition::QRResult Decomposition::qr_givens( const Matrix<T>& mat, bool pos
     // initialize q as identity
     Matrix<double> q = Matrix<double>::identity(m);
 
-    //todo: continou
-    //for( size_t j = 0; j)
+    for( size_t j = 0; j < n; j++ )
+    {
+        for( size_t i = m-1; i > j; i-- )
+        {
+            Matrix<double> gs = givensRotation(r, j, i-1, i );
+            r = gs * r;
+            q = q*gs.transpose();
+        }
+    }
+
+    QRResult res(q,r);
+
+    if( positive )
+    {
+        // There exist multiple qr solutions. To get a unique result,
+        // the diagonal elements on r are chosen to be positive.
+        for (size_t i = 0; i < m; i++)
+        {
+            if (res.R(i, i) < 0)
+            {
+                res = qrSignModifier(res.Q, res.R, i);
+            }
+        }
+    }
+
+    return res;
 }
 
 template <class T>
-Decomposition::QRResult Decomposition::rq(const Matrix<T>& mat)
+Decomposition::QRResult Decomposition::rq(const Matrix<T>& mat, QRMethod method)
 {
     // info: https://math.stackexchange.com/questions/1640695/rq-decomposition
     size_t m = mat.rows();
@@ -866,7 +893,7 @@ Decomposition::QRResult Decomposition::rq(const Matrix<T>& mat)
 
     Matrix<double> ad = p * mat; // reverses the rows in mat
 
-    Decomposition::QRResult qrD = Decomposition::qr(ad.transpose());
+    Decomposition::QRResult qrD = Decomposition::qr(ad.transpose(), method);
 
     Matrix<double> q = p * qrD.Q.transpose();
     Matrix<double> r = p * qrD.R.transpose() * p;
@@ -974,22 +1001,22 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
 }
 
 template <class T>
-Matrix<double> Decomposition::givensRotation( const Matrix<T>& mat, size_t m, size_t n )
+Matrix<double> Decomposition::givensRotation( const Matrix<T>& mat, size_t col, size_t a_row, size_t b_row )
 {
-    if( m <= n )
+    if( a_row >= b_row || a_row < col  )
         throw InvalidInputException();
 
     Matrix<double> gMat = Matrix<double>::identity(mat.rows());
 
-    double b = mat(m,n);
-    double a = mat(n,n);
+    double b = mat(b_row,col);
+    double a = mat(a_row,col);
 
     Decomposition::GivensRotation gr = givensRotation(a,b);
 
-    gMat(n,n) = gr.C;
-    gMat(m,m) = gr.C;
-    gMat(n,m) = -gr.S;
-    gMat(m,n) = gr.S;
+    gMat(a_row,a_row) = gr.C;
+    gMat(b_row,b_row) = gr.C;
+    gMat(a_row,b_row) = -gr.S;
+    gMat(b_row,a_row) = gr.S;
 
     return gMat;
 }
