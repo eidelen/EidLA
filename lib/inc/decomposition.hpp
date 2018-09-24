@@ -331,6 +331,16 @@ public:
     static SVDResult svd(const Matrix<T>& mat);
 
     /**
+     * Performs a singular value decomposition of the
+     * passed matrix mat. The method applied is the
+     * Golub and Kahan algorithm.
+     * @param mat Passed matrix.
+     * @return SVD decomposition
+     */
+    template <class T>
+    static SVDResult svdGolubKahan(const Matrix<T>& mat);
+
+    /**
      * Computes the given rotation based on a and b as input. See
      * the article https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
      * @param a First number
@@ -363,8 +373,8 @@ public:
 
     /**
      * Generates a Givens rotation matrix for the passed matrix
-     * mat and the indices. The Givens rotation rotates the
-     * element mat(b_row,col) to zero. Note: a_row < b_row || a_row >= col
+     * mat and the two row indices. The Givens rotation rotates the
+     * element mat(b_row,col) to zero, by G*mat. Note: a_row < b_row || a_row >= col
      * @param mat Input matrix
      * @param col Plane index
      * @param a_row Plane a index
@@ -372,7 +382,20 @@ public:
      * @return
      */
     template <class T>
-    static Matrix<double> givensRotation(const Matrix<T>& mat, size_t col, size_t a_row, size_t b_row);
+    static Matrix<double> givensRotatioColumnDirection(const Matrix<T> &mat, size_t col, size_t a_row, size_t b_row);
+
+    /**
+     * Generates a Givens rotation matrix for the passed matrix
+     * mat, the row  and the two column indices. The Givens rotation rotates the
+     * element mat(row,b_col) to zero, by mat*G. Note: a_col < b_col || a_col >= row
+     * @param mat Input matrix
+     * @param row Plane index
+     * @param a_col Plane a index
+     * @param b_col Plane b index, which will be set to zero.
+     * @return
+     */
+    template <class T>
+    static Matrix<double> givensRotationRowDirection(const Matrix<T> &mat, size_t row, size_t a_col, size_t b_col);
 
 private:
     template <class T>
@@ -846,7 +869,7 @@ Decomposition::QRResult Decomposition::qr_givens(const Matrix<T>& mat, bool posi
     {
         for (size_t i = m - 1; i > j; i--)
         {
-            Matrix<double> gs = givensRotation(r, j, i - 1, i);
+            Matrix<double> gs = givensRotatioColumnDirection(r, j, i - 1, i);
             r                 = gs * r;
             q                 = q * gs.transpose();
         }
@@ -994,7 +1017,7 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
 }
 
 template <class T>
-Matrix<double> Decomposition::givensRotation(const Matrix<T>& mat, size_t col, size_t a_row, size_t b_row)
+Matrix<double> Decomposition::givensRotatioColumnDirection(const Matrix<T> &mat, size_t col, size_t a_row, size_t b_row)
 {
     if (a_row >= b_row || a_row < col)
         throw InvalidInputException();
@@ -1012,6 +1035,44 @@ Matrix<double> Decomposition::givensRotation(const Matrix<T>& mat, size_t col, s
     gMat(b_row, a_row) = gr.S;
 
     return gMat;
+}
+
+template <class T>
+Matrix<double> Decomposition::givensRotationRowDirection(const Matrix<T> &mat, size_t row, size_t a_col, size_t b_col)
+{
+    if (a_col >= b_col || a_col < row)
+        throw InvalidInputException();
+
+    Matrix<double> gMat = Matrix<double>::identity(mat.rows());
+
+    double b = mat(row, b_col);
+    double a = mat(row, a_col);
+
+    Decomposition::GivensRotation gr = givensRotation(a, b);
+
+    gMat(a_col, a_col) = gr.C;
+    gMat(b_col, b_col) = gr.C;
+    gMat(a_col, b_col) = gr.S;
+    gMat(b_col, a_col) = -gr.S;
+
+    return gMat;
+}
+
+// Described in Matrix Computations, 4th edition, Golub & van Loan, p.
+template <class T>
+Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
+{
+    Decomposition::DiagonalizationResult b = Decomposition::bidiagonalization(mat);
+
+    std::cout << b.D << std::endl;
+
+    Matrix<double> g1 = Decomposition::givensRotatioColumnDirection(b.D, 0, 0, 1);
+
+    std::cout << b.D * g1 << std::endl;
+
+
+
+    return SVDResult(mat, mat, mat);
 }
 
 #endif //MY_DECOMPOSITION_H

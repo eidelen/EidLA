@@ -724,12 +724,12 @@ TEST(Decomposition, GivensRotationMatrix)
     double data[] = {6,5,0 ,5,1,4, 0,4,3};
     Matrix<double> a = Matrix<double>(3,3,data);
 
-    Matrix<double> g0 = Decomposition::givensRotation(a,0,0,1);
+    Matrix<double> g0 = Decomposition::givensRotatioColumnDirection(a, 0, 0, 1);
     Matrix<double> a1 = g0 * a;
 
     ASSERT_NEAR( 0.0, a1(1,0), 0.0001 );
 
-    Matrix<double> g1 = Decomposition::givensRotation(a1,1,1,2);
+    Matrix<double> g1 = Decomposition::givensRotatioColumnDirection(a1, 1, 1, 2);
     Matrix<double> a2 = g1 * a1;
 
     ASSERT_NEAR( 0.0, a2(2,1), 0.0001 );
@@ -740,7 +740,7 @@ TEST(Decomposition, GivensRotationMatrix)
     ASSERT_TRUE( r.compare(a2,true,0.001) );
 }
 
-TEST(Decomposition, GivensRotationMatrixBatch)
+TEST(Decomposition, GivensRotationMatrixBatchCol)
 {
     for(int k = 0; k < 1000; k++ )
     {
@@ -748,14 +748,14 @@ TEST(Decomposition, GivensRotationMatrixBatch)
 
         Matrix<double> a = Matrix<double>::random(4, 4, -2.0, 2.0);
 
-        a = Decomposition::givensRotation(a, 0, 2, 3) * a;
-        a = Decomposition::givensRotation(a, 0, 1, 2) * a;
-        a = Decomposition::givensRotation(a, 0, 0, 1) * a;
+        a = Decomposition::givensRotatioColumnDirection(a, 0, 2, 3) * a;
+        a = Decomposition::givensRotatioColumnDirection(a, 0, 1, 2) * a;
+        a = Decomposition::givensRotatioColumnDirection(a, 0, 0, 1) * a;
 
-        a = Decomposition::givensRotation(a, 1, 1, 2) * a;
-        a = Decomposition::givensRotation(a, 1, 1, 3) * a;
+        a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 2) * a;
+        a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 3) * a;
 
-        a = Decomposition::givensRotation(a, 2, 2, 3) * a;
+        a = Decomposition::givensRotatioColumnDirection(a, 2, 2, 3) * a;
 
         ASSERT_NEAR( a(1,0), 0.0, 0.000001 );
         ASSERT_NEAR( a(2,0), 0.0, 0.000001 );
@@ -766,4 +766,83 @@ TEST(Decomposition, GivensRotationMatrixBatch)
 
         ASSERT_NEAR( a(3,2), 0.0, 0.000001 );
     }
+}
+
+TEST(Decomposition, GivensRotationMatrixCol)
+{
+    double data[] = {1,2,3, 4,5,6, 7,8,3};
+    Matrix<double> mat(3,3,data);
+
+    Matrix<double> g1 = Decomposition::givensRotationRowDirection(mat, 0, 1, 2);
+    Matrix<double> a = mat * g1;
+    Matrix<double> g2 = Decomposition::givensRotationRowDirection(a, 0, 0, 1);
+    a = a * g2;
+    Matrix<double> g3 = Decomposition::givensRotationRowDirection(a, 1, 1, 2);
+    a = a * g3;
+
+    ASSERT_NEAR( a(0,1), 0.0, 0.000001 );
+    ASSERT_NEAR( a(0,2), 0.0, 0.000001 );
+    ASSERT_NEAR( a(1,2), 0.0, 0.000001 );
+
+    ASSERT_TRUE( mat.compare( a * g3.inverted() * g2.inverted() * g1.inverted(), true, 0.00001) );
+}
+
+TEST(Decomposition, GivensRotationMatrixRowBatch)
+{
+    for(int k = 0; k < 1000; k++ )
+    {
+        Matrix<double> a = Matrix<double>::random(3, 3, -2.0, 2.0);
+
+        // Make lower triangle matrix
+        a = a * Decomposition::givensRotationRowDirection(a, 0, 1, 2);
+        a = a * Decomposition::givensRotationRowDirection(a, 0, 0, 1);
+        a = a * Decomposition::givensRotationRowDirection(a, 1, 1, 2);
+
+        ASSERT_NEAR(a(0, 1), 0.0, 0.000001);
+        ASSERT_NEAR(a(0, 2), 0.0, 0.000001);
+        ASSERT_NEAR(a(1, 2), 0.0, 0.000001);
+    }
+}
+
+TEST(Decomposition, SVDGolubKahan)
+{ /*
+    >> a = [1,2,1; -1,1,2; 4, 2, 2]
+    >> [u,s,v] = svd(a)
+    u =
+
+        -0.41178  -0.28554  -0.86539
+        -0.13290  -0.92067   0.36702
+        -0.90154   0.26614   0.34116
+
+    s =
+
+        Diagonal Matrix
+
+    5.37236         0         0
+    0   2.52038         0
+    0         0   0.88624
+
+    v =
+
+        -0.72315   0.67438   0.14920
+        -0.51365  -0.38069  -0.76892
+        -0.46174  -0.63268   0.62169
+    */
+
+    double matData[] = {1,2,1, -1,1,2, 4, 2, 2};
+    auto mat = Matrix<double>(3, 3, matData);
+
+    Matrix<double> s_soll = Matrix<double>(3,3);
+    s_soll.fill(0.0);
+    s_soll(0,0) = 5.37236;
+    s_soll(1,1) = 2.52038;
+    s_soll(2,2) = 0.88624;
+
+    Decomposition::SVDResult res = Decomposition::svdGolubKahan(mat);
+
+    // U and V cannot be compared directly, because it can change in signs.
+    ASSERT_TRUE( res.U.isOrthogonal(0.001) );
+    ASSERT_TRUE( res.V.isOrthogonal(0.001) );
+    ASSERT_TRUE( s_soll.compare(res.S, true, 0.001) );
+    ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
 }
