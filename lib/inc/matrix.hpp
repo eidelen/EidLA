@@ -513,6 +513,21 @@ public:
      */
     Matrix<T> repMat(size_t rowDirection, size_t columnDirection) const;
 
+
+    enum SortDirection
+    {
+        Ascending,
+        Descending
+    };
+
+    /**
+     * Sorts the rows of a matrix according to the values in
+     * the column sortColumn.
+     * @param sortColumn Sorting column
+     * @param direction Sorting criteria
+     */
+    void sortRows(size_t sortColumn, SortDirection direction);
+
 #ifdef OPENCVEIDLA
     /**
      * Returns an OpenCV matrix of this
@@ -1934,6 +1949,33 @@ double Matrix<T>::conditionNumberInf() const
     double n  = normInf();
     double ni = invMat.normInf();
     return n * ni;
+}
+
+
+template <class T>
+void Matrix<T>::sortRows(size_t sortColumn, SortDirection direction)
+{
+    // Bubble sort
+    bool anySwap = true;
+    while( anySwap )
+    {
+        anySwap = false;
+        for( size_t m = 0; m < m_rows - 1; m++ )
+        {
+            bool doSwap = false;
+
+            if( direction == SortDirection::Ascending )
+                doSwap = getValue(m,sortColumn) > getValue(m+1,sortColumn);
+            else if( direction == SortDirection::Descending )
+                doSwap = getValue(m,sortColumn) < getValue(m+1,sortColumn);
+
+            if(doSwap)
+            {
+                swapRows(m, m+1);
+                anySwap = true;
+            }
+        }
+    }
 }
 
 #ifdef OPENCVEIDLA

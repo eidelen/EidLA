@@ -497,3 +497,32 @@ TEST(Matrix, Repmat)
 
     EXPECT_ANY_THROW(a.repMat(0,1));
 }
+
+TEST(Matrix, SortRowDirection)
+{
+    for(int k = 0; k < 500; k++)
+    {
+        size_t m = 5;
+        size_t n = 3;
+        Matrix<double> mat = Matrix<double>::random(m, n, 0.0, 10.0);
+
+        size_t n_s = Matrix<size_t>::random(1, 1, 0, n - 1)(0, 0);
+
+        mat.sortRows(n_s, Matrix<double>::Ascending);
+
+        double before = -1.0;
+        for (size_t i = 0; i < m; i++)
+        {
+            ASSERT_GE(mat(i, n_s), before);
+            before = mat(i, n_s);
+        }
+
+        mat.sortRows(n_s, Matrix<double>::Descending);
+        before = 11.0;
+        for (size_t i = 0; i < m; i++)
+        {
+            ASSERT_LE(mat(i, n_s), before);
+            before = mat(i, n_s);
+        }
+    }
+}
