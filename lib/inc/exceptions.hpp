@@ -82,4 +82,12 @@ class SVDFailedException : public std::exception
     }
 };
 
+class OutOfRangeException : public std::exception
+{
+    virtual const char* what() const throw() override
+    {
+        return "Out of range";
+    }
+};
+
 #endif //MY_EXCEPTIONS_H

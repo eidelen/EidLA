@@ -1955,6 +1955,9 @@ double Matrix<T>::conditionNumberInf() const
 template <class T>
 void Matrix<T>::sortRows(size_t sortColumn, SortDirection direction)
 {
+    if( sortColumn >= m_cols )
+        throw InvalidInputException();
+
     // Bubble sort
     bool anySwap = true;
     while( anySwap )
