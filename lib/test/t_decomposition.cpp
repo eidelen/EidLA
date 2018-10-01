@@ -174,6 +174,74 @@ TEST(Decomposition, EigenvalueSymmetricBatchTesting)
     }
 }
 
+TEST(Decomposition, Eigenvalue2x2)
+{
+    // test different cases
+
+    // m01 = 0;
+    for( int k = 0; k < 1000; k++ )
+    {
+        auto m = Matrix<double>::random(2, 2, -10.0, 10.0);
+        m(0,1) = 0.0;
+
+        std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
+        for (size_t i = 0; i < eig.size(); i++)
+        {
+            auto cEP = eig.at(i);
+            ASSERT_TRUE((m * cEP.V).compare(cEP.L * cEP.V, true, 0.00001));
+        }
+    }
+
+    // m10 = 0;
+    for( int k = 0; k < 1000; k++ )
+    {
+        auto m = Matrix<double>::random(2, 2, -10.0, 10.0);
+        m(1,0) = 0.0;
+
+        std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
+        for (size_t i = 0; i < eig.size(); i++)
+        {
+            auto cEP = eig.at(i);
+            ASSERT_TRUE((m * cEP.V).compare(cEP.L * cEP.V, true, 0.00001));
+        }
+    }
+
+    // m10 = 0 & m01 = 0;
+    for( int k = 0; k < 1000; k++ )
+    {
+        auto m = Matrix<double>::random(2, 2, -10.0, 10.0);
+        m(1,0) = 0.0;
+        m(0,1) = 0.0;
+
+        std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
+        for (size_t i = 0; i < eig.size(); i++)
+        {
+            auto cEP = eig.at(i);
+            ASSERT_TRUE((m * cEP.V).compare(cEP.L * cEP.V, true, 0.00001));
+        }
+    }
+}
+
+TEST(Decomposition, Eigenvalue2x2BatchTesting)
+{
+    for( int k = 0; k < 500; k++ )
+    {
+        auto m = Matrix<double>::random(2, 2, -10.0, 10.0);
+        m = m * m.transpose();
+
+        std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(m);
+        for( size_t i = 0; i < eig.size(); i++ )
+        {
+            auto cEP = eig.at(i);
+
+            if( cEP.Valid )
+            {
+                ASSERT_TRUE((m * cEP.V).compare(cEP.L * cEP.V, true, 0.00001));
+            }
+        }
+    }
+}
+
 // Example from https://en.wikipedia.org/wiki/Rayleigh_quotient_iteration
 TEST(Decomposition, EigenvalueNonSymmetricLargest)
 {
@@ -564,7 +632,7 @@ TEST(Decomposition, SVDBatch)
 
     for( int k = 0; k < 500; k++ )
     {
-        auto a = Matrix<double>::random(rows, rows, -5.0, 5.0);
+        auto a = Matrix<double>::random(rows, rows, -1.0, 1.0);
 
         Decomposition::SVDResult res = Decomposition::svd(a);
 

@@ -198,6 +198,14 @@ public:
     static std::vector<EigenPair> eigen(const Matrix<T>& mat, EigenMethod method = QRAlgorithm);
 
     /**
+     * Eigen decomposition of 2x2 matrix.
+     * @param mat 2x2 matrix
+     * @return  Vector of Eigen pairs.
+     */
+    template <class T>
+    static std::vector<EigenPair> eigen2x2(const Matrix<T>& mat);
+
+    /**
      * Converges to Eigen pair depending on initial Eigen vector and Eigen value.
      * @param mat Matrix of which to perform Eigen decomposition.
      * @param initialEigenVector Initial Eigen vector
@@ -498,6 +506,8 @@ Decomposition::LUResult Decomposition::doolittle(const Matrix<T>& aIn, bool pivo
     return ret;
 }
 
+
+
 template <class T>
 std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat, Decomposition::EigenMethod method)
 {
@@ -507,44 +517,110 @@ std::vector<Decomposition::EigenPair> Decomposition::eigen(const Matrix<T>& mat,
         std::exit(-1);
     }
 
-    Matrix<double>         cMat(mat);
     std::vector<EigenPair> pairs;
 
-    if (cMat.isSymmetric())
+    // special solution for 2x2 matrix
+    if( mat.rows() == 2 )
     {
-        switch (method)
-        {
-            case QRAlgorithm:
-                // QR algorithm
-                pairs = qrAlgorithm(cMat, 200, std::numeric_limits<double>::epsilon(), false);
-                break;
-
-            case PowerIterationAndHotellingsDeflation:
-                // Power iteration and hotelling's deflation
-                // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
-                for (size_t i = 0; i < cMat.rows(); i++)
-                {
-                    EigenPair ePair = powerIteration(cMat, 50, std::numeric_limits<double>::epsilon());
-                    if (ePair.Valid)
-                    {
-                        pairs.push_back(ePair);
-
-                        // Hotelling's deflation -> remove found Eigen pair from cMat
-                        cMat = cMat - (ePair.L * ePair.V * ePair.V.transpose());
-                    }
-                }
-                break;
-        }
+        pairs = eigen2x2(mat);
     }
     else
     {
-        std::cout << "Warning: The Eigen decomposition of non-symmetric matrices does not work yet properly in this library!!" << std::endl;
+        Matrix<double> cMat(mat);
 
-        // compute the largest eigenvalue
-        pairs.push_back(powerIteration(cMat, 30, std::numeric_limits<double>::epsilon()));
+        if (cMat.isSymmetric())
+        {
+            switch (method)
+            {
+                case QRAlgorithm:
+                    // QR algorithm
+                    pairs = qrAlgorithm(cMat, 200, std::numeric_limits<double>::epsilon(), false);
+                    break;
+
+                case PowerIterationAndHotellingsDeflation:
+                    // Power iteration and hotelling's deflation
+                    // http://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/ecl4.pdf
+                    for (size_t i = 0; i < cMat.rows(); i++)
+                    {
+                        EigenPair ePair = powerIteration(cMat, 50, std::numeric_limits<double>::epsilon());
+                        if (ePair.Valid)
+                        {
+                            pairs.push_back(ePair);
+
+                            // Hotelling's deflation -> remove found Eigen pair from cMat
+                            cMat = cMat - (ePair.L * ePair.V * ePair.V.transpose());
+                        }
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            std::cout
+                << "Warning: The Eigen decomposition of non-symmetric matrices does not work yet properly in this library!!"
+                << std::endl;
+
+            // compute the largest eigenvalue
+            pairs.push_back(powerIteration(cMat, 30, std::numeric_limits<double>::epsilon()));
+        }
     }
 
     sortDescending(pairs);
+
+    return pairs;
+}
+
+// http://www.math.harvard.edu/archive/21b_fall_04/exhibits/2dmatrices/
+template <class T>
+std::vector<Decomposition::EigenPair> Decomposition::eigen2x2(const Matrix<T>& mat)
+{
+    if( mat.rows() != 2 || mat.cols() != 2 )
+        throw InvalidInputException();
+
+    double a = mat(0,0);
+    double b = mat(0,1);
+    double c = mat(1,0);
+    double d = mat(1,1);
+
+    double t = a + d;
+    double k = a*d - b*c;
+
+    double ll = std::sqrt(std::pow(t,2.0)/4.0-k);
+    double l1 = t/2.0 + ll;
+    double l2 = t/2.0 - ll;
+    Matrix<double> v1(2,1);
+    Matrix<double> v2(2,1);
+
+    if( c != 0.0 )
+    {
+        v1(0,0) = l1 - d;
+        v1(1,0) = c;
+
+        v2(0,0) = l2 - d;
+        v2(1,0) = c;
+    }
+    else if( b != 0.0 )
+    {
+        v1(0,0) = b;
+        v1(1,0) = l1-a;
+
+        v2(0,0) = b;
+        v2(1,0) = l2-a;
+    }
+    else
+    {
+        l1 = a;
+        v1(0,0) = 1.0;
+        v1(1,0) = 0.0;
+
+        l2 = d;
+        v2(0,0) = 0.0;
+        v2(1,0) = 1.0;
+    }
+
+    std::vector<Decomposition::EigenPair> pairs;
+    pairs.push_back( Decomposition::EigenPair(v1,l1,true));
+    pairs.push_back( Decomposition::EigenPair(v2,l2,true));
 
     return pairs;
 }
@@ -1062,14 +1138,32 @@ Matrix<double> Decomposition::givensRotationRowDirection(const Matrix<T> &mat, s
 template <class T>
 Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 {
-    Decomposition::DiagonalizationResult b = Decomposition::bidiagonalization(mat);
+    Decomposition::DiagonalizationResult diag = Decomposition::bidiagonalization(mat);
+    Matrix<double> b = diag.D;
 
-    std::cout << b.D << std::endl;
+    std::cout << b << std::endl;
 
-    Matrix<double> g1 = Decomposition::givensRotatioColumnDirection(b.D, 0, 0, 1);
+    size_t k = 0;
 
-    std::cout << b.D * g1 << std::endl;
+    Matrix<double> v1 = Decomposition::givensRotationRowDirection(b, k, k, k+1);
 
+    b = b * v1;
+
+    std::cout << b << std::endl;
+
+    Matrix<double> u1 = Decomposition::givensRotatioColumnDirection(b, k, k, k+1);
+
+    b = u1 * b;
+
+    std::cout << b << std::endl;
+
+    k = 1;
+
+    Matrix<double> v2 = Decomposition::givensRotationRowDirection(b, k, k, k+1);
+
+    b = b * v1;
+
+    std::cout << b << std::endl;
 
 
     return SVDResult(mat, mat, mat);
