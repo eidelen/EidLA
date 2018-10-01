@@ -380,6 +380,30 @@ public:
     }
 
     /**
+     * Generates a Givens rotation matrix for the passed values a and b
+     * and the two row indices.
+     * @param a First number
+     * @param b Second number -> Givens Rotation will zero b!
+     * @param m Matrix size
+     * @param col Plane index
+     * @param a_row Plane a index
+     * @param b_row Plane b index, which will be set to zero.
+     * @return Givens rotation.
+     */
+    static Matrix<double> givensRotatioColumnDirection(double a, double b, size_t m, size_t col, size_t a_row, size_t b_row)
+    {
+        Decomposition::GivensRotation gr = givensRotation(a, b);
+
+        Matrix<double> gMat = Matrix<double>::identity(m);
+        gMat(a_row, a_row) = gr.C;
+        gMat(b_row, b_row) = gr.C;
+        gMat(a_row, b_row) = -gr.S;
+        gMat(b_row, a_row) = gr.S;
+
+        return gMat;
+    }
+
+    /**
      * Generates a Givens rotation matrix for the passed matrix
      * mat and the two row indices. The Givens rotation rotates the
      * element mat(b_row,col) to zero, by G*mat. Note: a_row < b_row || a_row >= col
@@ -391,6 +415,30 @@ public:
      */
     template <class T>
     static Matrix<double> givensRotatioColumnDirection(const Matrix<T> &mat, size_t col, size_t a_row, size_t b_row);
+
+    /**
+     * Generates a Givens rotation matrix for the passed values a and b
+     * and the two column indices.
+     * @param a First number
+     * @param b Second number -> Givens Rotation will zero b!
+     * @param m Matrix size
+     * @param row Plane index
+     * @param a_col Plane a index
+     * @param b_col Plane b index, which will be set to zero.
+     * @return Givens rotation.
+     */
+    static Matrix<double> givensRotationRowDirection(double a, double b, size_t m, size_t row, size_t a_col, size_t b_col)
+    {
+        Decomposition::GivensRotation gr = givensRotation(a, b);
+
+        Matrix<double> gMat = Matrix<double>::identity(m);
+        gMat(a_col, a_col) = gr.C;
+        gMat(b_col, b_col) = gr.C;
+        gMat(a_col, b_col) = gr.S;
+        gMat(b_col, a_col) = -gr.S;
+
+        return gMat;
+    }
 
     /**
      * Generates a Givens rotation matrix for the passed matrix
@@ -1098,19 +1146,10 @@ Matrix<double> Decomposition::givensRotatioColumnDirection(const Matrix<T> &mat,
     if (a_row >= b_row || a_row < col)
         throw InvalidInputException();
 
-    Matrix<double> gMat = Matrix<double>::identity(mat.rows());
-
     double b = mat(b_row, col);
     double a = mat(a_row, col);
 
-    Decomposition::GivensRotation gr = givensRotation(a, b);
-
-    gMat(a_row, a_row) = gr.C;
-    gMat(b_row, b_row) = gr.C;
-    gMat(a_row, b_row) = -gr.S;
-    gMat(b_row, a_row) = gr.S;
-
-    return gMat;
+    return givensRotatioColumnDirection(a, b, mat.rows(), col, a_row, b_row);
 }
 
 template <class T>
@@ -1119,19 +1158,10 @@ Matrix<double> Decomposition::givensRotationRowDirection(const Matrix<T> &mat, s
     if (a_col >= b_col || a_col < row)
         throw InvalidInputException();
 
-    Matrix<double> gMat = Matrix<double>::identity(mat.rows());
-
     double b = mat(row, b_col);
     double a = mat(row, a_col);
 
-    Decomposition::GivensRotation gr = givensRotation(a, b);
-
-    gMat(a_col, a_col) = gr.C;
-    gMat(b_col, b_col) = gr.C;
-    gMat(a_col, b_col) = gr.S;
-    gMat(b_col, a_col) = -gr.S;
-
-    return gMat;
+    return givensRotationRowDirection(a, b, mat.cols(), mat.rows(), a_col, b_col);;
 }
 
 // Described in Matrix Computations, 4th edition, Golub & van Loan, p.
