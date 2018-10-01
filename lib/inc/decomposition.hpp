@@ -1211,7 +1211,22 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 
     for(size_t k = 0; k < b.cols()-1; k++ )
     {
-        // todo: make different interface to givens rotations!
+        std::cout << "k: " << k << ", b-in " << std::endl << b << std::endl;
+
+        b = b * givensRotationRowDirection(y, z, b.cols(), k, k, k+1);
+        std::cout << "k: " << k << ", b-col " << std::endl << b << std::endl;
+
+        y = b(k,k);
+        z = b(k+1,k);
+        b = givensRotatioColumnDirection(y, z, b.rows(), k, k, k+1)* b;
+        std::cout << "k: " << k << ", b-row " << std::endl << b << std::endl;
+
+        if( k < b.cols()-1 )
+        {
+            y = b(k,k+1);
+            z = b(k,k+2);
+        }
+
     }
 
     return SVDResult(mat, mat, mat);
