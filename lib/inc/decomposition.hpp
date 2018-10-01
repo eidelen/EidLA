@@ -1141,30 +1141,48 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
     Decomposition::DiagonalizationResult diag = Decomposition::bidiagonalization(mat);
     Matrix<double> b = diag.D;
 
-    std::cout << b << std::endl;
-
-    size_t k = 0;
-
-    Matrix<double> v1 = Decomposition::givensRotationRowDirection(b, k, k, k+1);
-
-    b = b * v1;
+    size_t m = b.rows();
+    size_t n = b.cols();
 
     std::cout << b << std::endl;
 
-    Matrix<double> u1 = Decomposition::givensRotatioColumnDirection(b, k, k, k+1);
+    // lower right 2x2 submatrix
+    Matrix<double> t = b.transpose()*b;
+    Matrix<double> t_minor = t.subMatrix( t.rows() - 2, t.cols() - 2, 2, 2);
+    /*double dm = b( m-2, m-2);
+    double dn = b( m-1, m-1);
+    double fmm1 = b( m-3, m-2 );
+    double fm = b( m-2, m-1 );
 
-    b = u1 * b;
+    t(0,0) = std::pow(dm,2.0) + std::pow(fmm1,2.0);
+    t(1,1) = std::pow(dn,2.0) + std::pow(fm,2.0);
+    t(1,0) = dm * fm;
+    t(0,1) = dm * fm;*/
 
-    std::cout << b << std::endl;
+    std::cout << "BTB:" << std::endl << t << std::endl;
 
-    k = 1;
 
-    Matrix<double> v2 = Decomposition::givensRotationRowDirection(b, k, k, k+1);
+    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(t_minor);
 
-    b = b * v1;
+    // choose eigen value closer to btb11
+    double l;
+    double l1 = eig.at(0).L;
+    double l2 = eig.at(1).L;
+    double tnn = t_minor(1,1);
+    if( std::abs(tnn - l1 ) <  std::abs(tnn - l2 ) )
+        l = l1;
+    else
+        l = l2;
 
-    std::cout << b << std::endl;
+    std::cout << "Eigenvalues (u1, u2, tnn => u) : " << l1 << ", " << l2 << ", " << tnn << " => " << l << ")" << std::endl;
 
+    double y = t(0,0) - l;
+    double z = t(0,1);
+
+    for(size_t k = 0; k < b.cols()-1; k++ )
+    {
+        // todo: make different interface to givens rotations!
+    }
 
     return SVDResult(mat, mat, mat);
 }
