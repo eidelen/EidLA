@@ -348,6 +348,49 @@ public:
     template <class T>
     static SVDResult svdGolubKahan(const Matrix<T>& mat);
 
+    static void svdStepGolubKahan(Matrix<double>& b)
+    {
+        // b is an upper bidiagonal matrix
+
+        size_t m = b.rows();
+        size_t n = b.cols();
+
+        // lower right 2x2 submatrix - eigen decomposition
+        Matrix<double> t = b.transpose() * b; // todo: speed up by forming t_minor directly
+        Matrix<double> t_minor = t.subMatrix(t.rows() - 2, t.cols() - 2, 2, 2);
+        std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(t_minor);
+
+        // choose eigen value closer to tnn
+        double l;
+        double l1 = eig.at(0).L;
+        double l2 = eig.at(1).L;
+        double tnn = t_minor(1, 1);
+        if (std::abs(tnn - l1) < std::abs(tnn - l2))
+            l = l1;
+        else
+            l = l2;
+
+        // use eigenvalue to perform the first Givens rotation
+        double y = t(0, 0) - l;
+        double z = t(0, 1);
+
+        for (size_t k = 0; k < n - 1; k++)
+        {
+            b = b * givensRotationRowDirection(y, z, n, k, k, k + 1);
+
+            y = b(k, k);
+            z = b(k + 1, k);
+            b = givensRotatioColumnDirection(y, z, m, k, k, k + 1) * b;
+
+            if (k < n - 1)
+            {
+                // set the values for the next column
+                y = b(k, k + 1);
+                z = b(k, k + 2);
+            }
+        }
+    }
+
     /**
      * Computes the given rotation based on a and b as input. See
      * the article https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
@@ -1168,66 +1211,45 @@ Matrix<double> Decomposition::givensRotationRowDirection(const Matrix<T> &mat, s
 template <class T>
 Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 {
+    double eps = std::numeric_limits<double>::epsilon() * 100;
+
     Decomposition::DiagonalizationResult diag = Decomposition::bidiagonalization(mat);
     Matrix<double> b = diag.D;
 
     size_t m = b.rows();
     size_t n = b.cols();
 
-    std::cout << b << std::endl;
+    std::cout << "B:" << std::endl << b << std::endl;
 
-    // lower right 2x2 submatrix
-    Matrix<double> t = b.transpose()*b;
-    Matrix<double> t_minor = t.subMatrix( t.rows() - 2, t.cols() - 2, 2, 2);
-    /*double dm = b( m-2, m-2);
-    double dn = b( m-1, m-1);
-    double fmm1 = b( m-3, m-2 );
-    double fm = b( m-2, m-1 );
-
-    t(0,0) = std::pow(dm,2.0) + std::pow(fmm1,2.0);
-    t(1,1) = std::pow(dn,2.0) + std::pow(fm,2.0);
-    t(1,0) = dm * fm;
-    t(0,1) = dm * fm;*/
-
-    std::cout << "BTB:" << std::endl << t << std::endl;
-
-
-    std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(t_minor);
-
-    // choose eigen value closer to btb11
-    double l;
-    double l1 = eig.at(0).L;
-    double l2 = eig.at(1).L;
-    double tnn = t_minor(1,1);
-    if( std::abs(tnn - l1 ) <  std::abs(tnn - l2 ) )
-        l = l1;
-    else
-        l = l2;
-
-    std::cout << "Eigenvalues (u1, u2, tnn => u) : " << l1 << ", " << l2 << ", " << tnn << " => " << l << ")" << std::endl;
-
-    double y = t(0,0) - l;
-    double z = t(0,1);
-
-    for(size_t k = 0; k < b.cols()-1; k++ )
+    // svd step
+    size_t q = 0;
+    size_t p = 0;
+    bool goOn = true;
+    while( goOn )
     {
-        std::cout << "k: " << k << ", b-in " << std::endl << b << std::endl;
-
-        b = b * givensRotationRowDirection(y, z, b.cols(), k, k, k+1);
-        std::cout << "k: " << k << ", b-col " << std::endl << b << std::endl;
-
-        y = b(k,k);
-        z = b(k+1,k);
-        b = givensRotatioColumnDirection(y, z, b.rows(), k, k, k+1)* b;
-        std::cout << "k: " << k << ", b-row " << std::endl << b << std::endl;
-
-        if( k < b.cols()-1 )
+        // go through the upper band and zero value below a certain value
+        size_t zeroCnt = 0;
+        for(size_t r = 0; r < n-1; r++)
         {
-            y = b(k,k+1);
-            z = b(k,k+2);
+            if(std::abs(b(r,r+1)) <= eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) ) )
+            {
+                zeroCnt++;
+
+                //zero row r and column r, except brr
+                for(size_t y = r+1; y < n; y++)
+                    b(r,y) = 0.0;
+                for(size_t y = r+1; y < m; y++)
+                    b(y,r) = 0.0;
+            }
         }
 
+        if( zeroCnt == n-1 )
+            break;
+
+        Decomposition::svdStepGolubKahan(b);
     }
+
+    std::cout << b << std::endl;
 
     return SVDResult(mat, mat, mat);
 }
