@@ -348,7 +348,7 @@ public:
     template <class T>
     static SVDResult svdGolubKahan(const Matrix<T>& mat);
 
-    static void svdStepGolubKahan(Matrix<double>& b)
+    static void svdStepGolubKahan(Matrix<double>& b, std::vector<Matrix<double>>& uLeft, std::vector<Matrix<double>>& vRight )
     {
         // b is an upper bidiagonal matrix
 
@@ -358,6 +358,7 @@ public:
         // lower right 2x2 submatrix - eigen decomposition
         Matrix<double> t = b.transpose() * b; // todo: speed up by forming t_minor directly
         Matrix<double> t_minor = t.subMatrix(t.rows() - 2, t.cols() - 2, 2, 2);
+
         std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(t_minor);
 
         // choose eigen value closer to tnn
@@ -376,11 +377,17 @@ public:
 
         for (size_t k = 0; k < n - 1; k++)
         {
-            b = b * givensRotationRowDirection(y, z, n, k, k, k + 1);
+            Matrix<double> b_in = b;
+
+            Matrix<double> gr = givensRotationRowDirection(y, z, n, k, k, k + 1);
+            b = b * gr;
+            vRight.push_back(gr);
 
             y = b(k, k);
             z = b(k + 1, k);
-            b = givensRotatioColumnDirection(y, z, m, k, k, k + 1) * b;
+            Matrix<double> gl = givensRotatioColumnDirection(y, z, m, k, k, k + 1);
+            b = gl * b;
+            uLeft.push_back(gl);
 
             if (k < n - 1)
             {
@@ -1211,7 +1218,8 @@ Matrix<double> Decomposition::givensRotationRowDirection(const Matrix<T> &mat, s
 template <class T>
 Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 {
-    double eps = std::numeric_limits<double>::epsilon() * 100;
+    // U*S*V
+    double eps = std::numeric_limits<double>::epsilon() * 10;
 
     Decomposition::DiagonalizationResult diag = Decomposition::bidiagonalization(mat);
     Matrix<double> b = diag.D;
@@ -1219,39 +1227,64 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
     size_t m = b.rows();
     size_t n = b.cols();
 
-    std::cout << "B:" << std::endl << b << std::endl;
+    std::vector<Matrix<double>> uLeftV;
+    std::vector<Matrix<double>> vRightV;
 
     // svd step
-    size_t q = 0;
-    size_t p = 0;
     bool goOn = true;
     while( goOn )
     {
-        // go through the upper band and zero value below a certain value
+        Matrix<double> b_before = b;
+        Decomposition::svdStepGolubKahan(b,uLeftV,vRightV);
+
+        // go through the upper band and zero values close to zero
         size_t zeroCnt = 0;
         for(size_t r = 0; r < n-1; r++)
         {
             if(std::abs(b(r,r+1)) <= eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) ) )
             {
+                b(r,r+1) = 0.0;
                 zeroCnt++;
-
-                //zero row r and column r, except brr
-                for(size_t y = r+1; y < n; y++)
-                    b(r,y) = 0.0;
-                for(size_t y = r+1; y < m; y++)
-                    b(y,r) = 0.0;
             }
         }
 
-        if( zeroCnt == n-1 )
-            break;
-
-        Decomposition::svdStepGolubKahan(b);
+        // stop when the whole upper diagonal is zero
+        if( zeroCnt >= n - 1 )
+            goOn = false;
     }
 
-    std::cout << b << std::endl;
+    Matrix<double> u_left_accum = Matrix<double>::identity(b.rows());
+    Matrix<double> v_right_accum = Matrix<double>::identity(b.cols());
+    for( size_t k = 0; k < uLeftV.size(); k++ )
+    {
+        v_right_accum = v_right_accum * vRightV.at(k);
+        u_left_accum = uLeftV.at(k) * u_left_accum;
+    }
 
-    return SVDResult(mat, mat, mat);
+    Matrix<double> u = diag.U * u_left_accum.transpose();
+    Matrix<double> v = diag.V * v_right_accum;
+
+
+    // Make singular values positive
+    Matrix<double> sing(b.rows(), b.cols());
+    sing.fill(0.0);
+
+    for( size_t k = 0; k < b.cols(); k++ )
+    {
+        double s = b(k,k);
+
+        if( s < 0.0 )
+        {
+            // invert s and row k in u
+            s = -s;
+            for( size_t r = 0; r < u.rows(); r++ )
+                u(r,k) = -u(r,k);
+        }
+
+        sing(k,k) = s;
+    }
+
+    return SVDResult(u,sing,v);
 }
 
 #endif //MY_DECOMPOSITION_H
