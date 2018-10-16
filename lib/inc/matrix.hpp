@@ -1751,7 +1751,7 @@ bool Matrix<T>::isOrthogonal(T customTolerance) const
 
     // an orthogonal matrix multiplied with its transpose results in the identity matrix
     Matrix<T> p = transpose() * (*this);
-    return p.compare(Matrix<T>::identity(p.cols()), customTolerance );
+    return p.compare(Matrix<T>::identity(p.cols()), true, customTolerance );
 }
 
 template <class T>
