@@ -1749,20 +1749,9 @@ bool Matrix<T>::isOrthogonal(T customTolerance) const
         return false;
     }
 
-    for (size_t i = 0; i < rows(); i++)
-    {
-        if (std::abs(1.0 - row(i).norm()) > customTolerance)
-        {
-            return false;
-        }
-
-        if (std::abs(1.0 - column(i).norm()) > customTolerance)
-        {
-            return false;
-        }
-    }
-
-    return true;
+    // an orthogonal matrix multiplied with its transpose results in the identity matrix
+    Matrix<T> p = transpose() * (*this);
+    return p.compare(Matrix<T>::identity(p.cols()), customTolerance );
 }
 
 template <class T>
