@@ -914,3 +914,48 @@ TEST(Decomposition, SVDGolubKahan)
     ASSERT_TRUE( s_soll.compare(res.S, true, 0.001) );
     ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
 }
+
+TEST(Decomposition, SVDGolubKahanWithNullSingularValue)
+{
+    double matData[] = {0.0, 1.0, 1.0,
+                        std::sqrt(2.0), 2.0, 0,
+                        0.0, 1.0, 1.0};
+
+    auto a = Matrix<double>(3, 3, matData);
+
+    //double matdata[] = {1,2,1,3,4,  4,3,7,1,2, 8,9,1,3,3, 6,6,6,3,2, 4,4,6,3,1};
+    //size_t rows = 5;
+    //Matrix<double> a(rows,rows, matdata);
+
+    Decomposition::SVDResult res = Decomposition::svdGolubKahan(a);
+
+    ASSERT_TRUE( res.U.isOrthogonal(0.05) );
+    ASSERT_TRUE( res.V.isOrthogonal(0.05) );
+    ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.1 ) );
+}
+
+TEST(Decomposition, SVDGolubKahanMatrixCheckIdentity)
+{
+    size_t cols = 5;
+    Matrix<double> m = Matrix<double>::identity(cols);
+
+    size_t p, q;
+    Decomposition::svdCheckMatrixGolubKahan(m,p,q);
+
+    ASSERT_EQ(q,cols);
+    ASSERT_EQ(p,0);
+}
+
+TEST(Decomposition, SVDGolubKahanMatrixCheckLowerIdentUpperBiag)
+{
+    size_t cols = 6;
+    Matrix<double> m = Matrix<double>::identity(cols);
+    m(0,1) = 2;
+    m(1,2) = 3;
+
+    size_t p, q;
+    Decomposition::svdCheckMatrixGolubKahan(m,p,q);
+
+    ASSERT_EQ(q,cols-3);
+    ASSERT_EQ(p,3);
+}

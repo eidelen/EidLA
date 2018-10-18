@@ -375,6 +375,8 @@ public:
         double y = t(0, 0) - l;
         double z = t(0, 1);
 
+        std::cout << b << std::endl;
+
         for (size_t k = 0; k < n - 1; k++)
         {
             Matrix<double> b_in = b;
@@ -383,11 +385,15 @@ public:
             b = b * gr;
             vRight.push_back(gr);
 
+            std::cout << b << std::endl;
+
             y = b(k, k);
             z = b(k + 1, k);
             Matrix<double> gl = givensRotatioColumnDirection(y, z, m, k, k, k + 1);
             b = gl * b;
             uLeft.push_back(gl);
+
+            std::cout << b << std::endl;
 
             if (k < n - 1)
             {
@@ -396,6 +402,56 @@ public:
                 z = b(k, k + 2);
             }
         }
+
+        // print out diagonal elements and their upper diagonal element
+        for(size_t k = 0; k < n; k++ )
+        {
+            if( k < n-1 )
+                std::cout << b(k,k) << "  ( " << b(k,k+1) << " )" << std::endl;
+            else
+                std::cout << b(k,k) << "  ( - )" << std::endl;
+        }
+
+        std::cout << std::endl;
+    }
+
+    static void svdCheckMatrixGolubKahan(const Matrix<double>& mat, size_t& p, size_t& q)
+    {
+        double eps = std::numeric_limits<double>::epsilon() * 10;
+        size_t n = mat.cols();
+
+        std::cout << mat << std::endl;
+
+        // find q - diagonality from back
+        q = 1;
+        for( size_t i = 0; i < n-1; i++ )
+        {
+            size_t x = (n - 1) - i;
+            size_t y = (n - 1) - i - 1;
+
+            double val = mat(y,x);
+
+            if( mat(y,x) < eps )
+                q++;
+            else
+                break;
+        }
+
+        // find q - diagonality from back
+        p = n - q;
+        for( size_t i = q; i < n-1; i++ )
+        {
+            size_t x = (n - 1) - i;
+            size_t y = (n - 1) - i - 1;
+
+            double val = mat(y,x);
+
+            if( mat(y,x) >= eps )
+                p--;
+            else
+                break;
+        }
+
     }
 
     /**
@@ -506,6 +562,7 @@ public:
 private:
     template <class T>
     static LUResult doolittle(const Matrix<T>& a, bool pivoting);
+
 };
 
 // Infos from:
@@ -1248,6 +1305,48 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
             }
         }
 
+
+
+        // check for reducing - last upper diagonal element
+        if( std::abs(b(n-2,n-1)) <= eps * (std::abs(b(n-2,n-2)) + std::abs(b(n-1,n-1)) ) )
+        {
+            std::cout << "Before Reducing: " << b << std::endl;
+            std::cout << "Singular value found: " << b(n-1, n-1) << std::endl;
+
+            // reduce matrix by one order
+            b = b.subMatrix(0,0,n-1,n-1);
+            n = n - 1;
+            m = n;
+
+            std::cout << "After Reducing: " << b << std::endl;
+        }
+        else
+        {
+            // check for splitting
+            for(size_t r = 0; r < n-2; r++)
+            {
+                if(std::abs(b(r,r+1)) <= eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) ) )
+                {
+                    std::cout << "Do splitting" << std::endl;
+                    std::cout << "B1:" << std::endl << b.subMatrix(0,0,r+1,r+1) << std::endl;
+                    std::cout << "B2:" << std::endl << b.subMatrix(r+1,r+1,n-r-1,n-r-1) << std::endl;
+                }
+            }
+
+        }
+
+        //
+
+        // check for splitting - last upper element
+        size_t q;
+        for( q = 1; q < n; q++ )
+        {
+            size_t idx = n-q;
+            if( b(idx,idx+1) != 0.0 )
+                break;
+        }
+
+
         // stop when the whole upper diagonal is zero
         if( zeroCnt >= n - 1 )
             goOn = false;
@@ -1263,7 +1362,6 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 
     Matrix<double> u = diag.U * u_left_accum.transpose();
     Matrix<double> v = diag.V * v_right_accum;
-
 
     // Make singular values positive
     Matrix<double> sing(b.rows(), b.cols());
