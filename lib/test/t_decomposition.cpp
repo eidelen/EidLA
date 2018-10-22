@@ -909,10 +909,10 @@ TEST(Decomposition, SVDGolubKahan)
     Decomposition::SVDResult res = Decomposition::svdGolubKahan(mat);
 
     // U and V cannot be compared directly, because it can change in signs.
-    ASSERT_TRUE( res.U.isOrthogonal(0.001) );
-    ASSERT_TRUE( res.V.isOrthogonal(0.001) );
+    ASSERT_TRUE( res.U.isOrthogonal(0.00001) );
+    ASSERT_TRUE( res.V.isOrthogonal(0.00001) );
     ASSERT_TRUE( s_soll.compare(res.S, true, 0.001) );
-    ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
+    ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.00001 ) );
 }
 
 TEST(Decomposition, SVDGolubKahanWithNullSingularValue)
@@ -940,6 +940,16 @@ TEST(Decomposition, SVDGolubKahanMatrixCheckIdentity)
     Matrix<double> m = Matrix<double>::identity(cols);
 
     size_t p, q;
+    Decomposition::svdCheckMatrixGolubKahan(m,p,q);
+
+    ASSERT_EQ(q,cols);
+    ASSERT_EQ(p,0);
+
+
+    // one entry
+    cols = 1;
+    m = Matrix<double>::identity(cols);
+
     Decomposition::svdCheckMatrixGolubKahan(m,p,q);
 
     ASSERT_EQ(q,cols);

@@ -348,7 +348,13 @@ public:
     template <class T>
     static SVDResult svdGolubKahan(const Matrix<T>& mat);
 
-    static void svdStepGolubKahan(Matrix<double>& b, std::vector<Matrix<double>>& uLeft, std::vector<Matrix<double>>& vRight )
+    struct SvdStepResult
+    {
+        Matrix<double> u;
+        Matrix<double> v;
+    };
+
+    static SvdStepResult svdStepGolubKahan(Matrix<double>& b)
     {
         // b is an upper bidiagonal matrix
 
@@ -375,7 +381,8 @@ public:
         double y = t(0, 0) - l;
         double z = t(0, 1);
 
-        std::cout << b << std::endl;
+        Matrix<double> vR = Matrix<double>::identity(n);
+        Matrix<double> uL = Matrix<double>::identity(m);
 
         for (size_t k = 0; k < n - 1; k++)
         {
@@ -383,17 +390,13 @@ public:
 
             Matrix<double> gr = givensRotationRowDirection(y, z, n, k, k, k + 1);
             b = b * gr;
-            vRight.push_back(gr);
-
-            std::cout << b << std::endl;
+            vR = vR * gr;
 
             y = b(k, k);
             z = b(k + 1, k);
             Matrix<double> gl = givensRotatioColumnDirection(y, z, m, k, k, k + 1);
             b = gl * b;
-            uLeft.push_back(gl);
-
-            std::cout << b << std::endl;
+            uL = gl * uL;
 
             if (k < n - 1)
             {
@@ -403,7 +406,12 @@ public:
             }
         }
 
+        SvdStepResult res;
+        res.v = vR;
+        res.u = uL;
+
         // print out diagonal elements and their upper diagonal element
+        /*
         for(size_t k = 0; k < n; k++ )
         {
             if( k < n-1 )
@@ -412,7 +420,9 @@ public:
                 std::cout << b(k,k) << "  ( - )" << std::endl;
         }
 
-        std::cout << std::endl;
+        std::cout << std::endl;*/
+
+        return res;
     }
 
     /*
@@ -425,8 +435,6 @@ public:
      *      0   0   0   0   d
      *
      *    |  p |       |  q   |
-     *
-     *
      */
     static void svdCheckMatrixGolubKahan(const Matrix<double>& mat, size_t& p, size_t& q)
     {
@@ -446,7 +454,7 @@ public:
                 q++;
                 break;
             }
-            else if( mat(y, x) < eps )
+            else if( std::abs(mat(y, x)) < eps )
             {
                 // still diagonal
                 q++;
@@ -471,7 +479,7 @@ public:
                 p--;
                 break;
             }
-            else if( mat(y, x) >= eps )
+            else if( std::abs(mat(y, x)) >= eps )
             {
                 // still not diagonal again
                 p--;
@@ -1320,12 +1328,9 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
     std::vector<Matrix<double>> vRightV;
 
     // svd step
-    bool goOn = true;
-    while( goOn )
+    size_t q = 0;
+    while( q != n )
     {
-        Matrix<double> b_before = b;
-        Decomposition::svdStepGolubKahan(b,uLeftV,vRightV);
-
         // go through the upper band and zero values close to zero
         size_t zeroCnt = 0;
         for(size_t r = 0; r < n-1; r++)
@@ -1337,51 +1342,42 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
             }
         }
 
+        std::cout << "Current b:" << std::endl << b << std::endl << std::endl;
 
+        size_t p;
+        svdCheckMatrixGolubKahan(b,p,q);
 
-        // check for reducing - last upper diagonal element
-        if( std::abs(b(n-2,n-1)) <= eps * (std::abs(b(n-2,n-2)) + std::abs(b(n-1,n-1)) ) )
+        if( q < n )
         {
-            std::cout << "Before Reducing: " << b << std::endl;
-            std::cout << "Singular value found: " << b(n-1, n-1) << std::endl;
+            bool modified = false;
 
-            // reduce matrix by one order
-            b = b.subMatrix(0,0,n-1,n-1);
-            n = n - 1;
-            m = n;
-
-            std::cout << "After Reducing: " << b << std::endl;
-        }
-        else
-        {
-            // check for splitting
-            for(size_t r = 0; r < n-2; r++)
+            // check B22 (middle matrix) for zero diagonal element
+            for( size_t r = q; r < n - p; r++ )
             {
-                if(std::abs(b(r,r+1)) <= eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) ) )
+                // if any diagonal entry in B22 is zero, then zero the
+                // superdiagonal entry in the same row.
+                if( std::abs(b(r,r)) < eps )
                 {
-                    std::cout << "Do splitting" << std::endl;
-                    std::cout << "B1:" << std::endl << b.subMatrix(0,0,r+1,r+1) << std::endl;
-                    std::cout << "B2:" << std::endl << b.subMatrix(r+1,r+1,n-r-1,n-r-1) << std::endl;
+                    b(r, r + 1) = 0.0;
+                    modified = true;
                 }
             }
 
+            if( !modified )
+            {
+                // size_t subMatSize = n-q-p;
+                // Matrix<double> b22 = b.subMatrix(p,p,subMatSize,subMatSize);
+                // std::cout << "B22:" << std::endl << b22 << std::endl << std::endl;
+
+                //todo: continue here by adapting the size of b and padd returned V and U
+
+                Decomposition::SvdStepResult step = Decomposition::svdStepGolubKahan(b);
+
+                vRightV.push_back(step.v);
+                uLeftV.push_back(step.u);
+            }
         }
 
-        //
-
-        // check for splitting - last upper element
-        size_t q;
-        for( q = 1; q < n; q++ )
-        {
-            size_t idx = n-q;
-            if( b(idx,idx+1) != 0.0 )
-                break;
-        }
-
-
-        // stop when the whole upper diagonal is zero
-        if( zeroCnt >= n - 1 )
-            goOn = false;
     }
 
     Matrix<double> u_left_accum = Matrix<double>::identity(b.rows());
