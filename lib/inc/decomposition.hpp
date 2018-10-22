@@ -415,41 +415,73 @@ public:
         std::cout << std::endl;
     }
 
+    /*
+     *  Example matrix n = 5
+     *
+     *      d   0   0   0   0
+     *      0   d   f   0   0
+     *      0   0   d   0   0
+     *      0   0   0   d   0
+     *      0   0   0   0   d
+     *
+     *    |  p |       |  q   |
+     *
+     *
+     */
     static void svdCheckMatrixGolubKahan(const Matrix<double>& mat, size_t& p, size_t& q)
     {
         double eps = std::numeric_limits<double>::epsilon() * 10;
         size_t n = mat.cols();
 
-        std::cout << mat << std::endl;
-
         // find q - diagonality from back
-        q = 1;
-        for( size_t i = 0; i < n-1; i++ )
+        q = 0;
+        for( size_t i = 0; i < n; i++ )
         {
             size_t x = (n - 1) - i;
             size_t y = (n - 1) - i - 1;
 
-            double val = mat(y,x);
-
-            if( mat(y,x) < eps )
+            if( x == 0 )
+            {
+                // first diagonal entry  does not have an upper element
                 q++;
-            else
                 break;
+            }
+            else if( mat(y, x) < eps )
+            {
+                // still diagonal
+                q++;
+            }
+            else
+            {
+                // stop - not anymore diagonal, as upper diagonal element not zero.
+                break;
+            }
         }
 
         // find q - diagonality from back
         p = n - q;
-        for( size_t i = q; i < n-1; i++ )
+        for( size_t i = q; i < n; i++ )
         {
             size_t x = (n - 1) - i;
             size_t y = (n - 1) - i - 1;
 
-            double val = mat(y,x);
-
-            if( mat(y,x) >= eps )
+            if( x == 0 )
+            {
+                // first diagonal entry  does not have an upper element
                 p--;
-            else
                 break;
+            }
+            else if( mat(y, x) >= eps )
+            {
+                // still not diagonal again
+                p--;
+            }
+            else
+            {
+                // stop - upper element is 0. However, this belongs to B22 too
+                p--;
+                break;
+            }
         }
 
     }

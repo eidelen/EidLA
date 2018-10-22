@@ -957,5 +957,47 @@ TEST(Decomposition, SVDGolubKahanMatrixCheckLowerIdentUpperBiag)
     Decomposition::svdCheckMatrixGolubKahan(m,p,q);
 
     ASSERT_EQ(q,cols-3);
-    ASSERT_EQ(p,3);
+    ASSERT_EQ(p,0);
+}
+
+TEST(Decomposition, SVDGolubKahanMatrixCheckLowerIdentMiddleBiagUppestDiag)
+{
+    size_t cols = 6;
+    Matrix<double> m = Matrix<double>::identity(cols);
+    m(1,2) = 3;
+
+    size_t p, q;
+    Decomposition::svdCheckMatrixGolubKahan(m,p,q);
+
+    ASSERT_EQ(q,cols-3);
+    ASSERT_EQ(p,1);
+}
+
+TEST(Decomposition, SVDGolubKahanMatrixCheckAllBiag)
+{
+    size_t cols = 4;
+    Matrix<double> m = Matrix<double>::identity(cols);
+    m(0,1) = 3;
+    m(1,2) = 3;
+    m(2,3) = 3;
+
+    size_t p, q;
+    Decomposition::svdCheckMatrixGolubKahan(m,p,q);
+
+    ASSERT_EQ(q,0);
+    ASSERT_EQ(p,0);
+}
+
+TEST(Decomposition, SVDGolubKahanMatrixCheckUpDiag)
+{
+    size_t cols = 4;
+    Matrix<double> m = Matrix<double>::identity(cols);
+    m(1,2) = 3;
+    m(2,3) = 3;
+
+    size_t p, q;
+    Decomposition::svdCheckMatrixGolubKahan(m,p,q);
+
+    ASSERT_EQ(q,0);
+    ASSERT_EQ(p,1);
 }
