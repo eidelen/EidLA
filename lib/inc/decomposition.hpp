@@ -512,6 +512,55 @@ public:
         return padded;
     }
 
+
+
+    // Chapter 8, p. 490 -> If dk = 0 for some k < n, then premultiplication by a sequence of
+    //                      Givens transformations can zero fk.
+    static Matrix<double> svdZeroRow(Matrix<double>& b, size_t row)
+    {
+        size_t n = b.cols();
+
+        Matrix<double> u_left = Matrix<double>::identity(b.rows());
+        for( size_t i = row ; i < (n-1); i++ )
+        {
+            Matrix<double> uS = Decomposition::givensRotatioColumnDirection(b, i+1, i+1, row);
+            b = uS * b;
+            u_left = uS * u_left;
+        }
+
+        return u_left;
+    }
+
+    static SvdStepResult svdHandleZeroDiagonalEntries( Matrix<double>& b, size_t p, size_t q, bool& modified)
+    {
+        double eps = std::numeric_limits<double>::epsilon() * 10;
+        size_t n = b.cols();
+
+        for( size_t r = p; r < n - q && !modified; r++ )
+        {
+            // if any diagonal entry in B22 is zero, then zero the
+            // superdiagonal entry in the same row.
+            if( std::abs(b(r,r)) < eps )
+            {
+                if( r < (n-1) )
+                {
+                    Matrix<double> extraULeft = svdZeroRow(b, r);
+                }
+                else
+                {
+                    // special case: last diagonal element is zero
+                    // "If dn = 0, then the last column can be zeroed with a series of column rotations in planes
+                    //(n - 1 , n) , (n - 2, n) , . . . , ( 1 , n) . Thus, we can decouple if Ji · · · fn-1 = 0 or di · · · dn =
+                    //o."
+
+                }
+
+                modified = true;
+            }
+        }
+
+    };
+
     /**
      * Computes the given rotation based on a and b as input. See
      * the article https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
@@ -1308,9 +1357,6 @@ Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
 template <class T>
 Matrix<double> Decomposition::givensRotatioColumnDirection(const Matrix<T> &mat, size_t col, size_t a_row, size_t b_row)
 {
-    if (a_row >= b_row || a_row < col)
-        throw InvalidInputException();
-
     double b = mat(b_row, col);
     double a = mat(a_row, col);
 
@@ -1320,9 +1366,6 @@ Matrix<double> Decomposition::givensRotatioColumnDirection(const Matrix<T> &mat,
 template <class T>
 Matrix<double> Decomposition::givensRotationRowDirection(const Matrix<T> &mat, size_t row, size_t a_col, size_t b_col)
 {
-    if (a_col >= b_col || a_col < row)
-        throw InvalidInputException();
-
     double b = mat(row, b_col);
     double a = mat(row, a_col);
 
@@ -1370,16 +1413,7 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
             bool modified = false;
 
             // check B22 (middle matrix) for zero diagonal element
-            for( size_t r = q; r < n - p; r++ )
-            {
-                // if any diagonal entry in B22 is zero, then zero the
-                // superdiagonal entry in the same row.
-                if( std::abs(b(r,r)) < eps )
-                {
-                    b(r, r + 1) = 0.0;
-                    modified = true;
-                }
-            }
+            Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b,p,q, modified);
 
             if( !modified )
             {

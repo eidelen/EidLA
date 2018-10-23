@@ -836,6 +836,24 @@ TEST(Decomposition, GivensRotationMatrixBatchCol)
     }
 }
 
+TEST(Decomposition, GivensRotationMatrixZeroUpperRowElement)
+{
+    double data[] = {1,2,3,4,
+                     5,6,7,8,
+                     9,10,11,12,
+                     13,14,15,16};
+    Matrix<double> a = Matrix<double>(4,4,data);
+    Matrix<double> orig = Matrix<double>(4,4,data);
+
+    a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 0) * a;
+
+    ASSERT_NEAR( a(0,1), 0.0, 0.000001 );
+    a = Decomposition::givensRotatioColumnDirection(a, 2, 1, 0) * a;
+    ASSERT_NEAR( a(0,2), 0.0, 0.000001 );
+    a = Decomposition::givensRotatioColumnDirection(a, 3, 1, 0) * a;
+    ASSERT_NEAR( a(0,3), 0.0, 0.000001 );
+}
+
 TEST(Decomposition, GivensRotationMatrixCol)
 {
     double data[] = {1,2,3, 4,5,6, 7,8,3};
@@ -1048,4 +1066,23 @@ TEST(Decomposition, SVDGolubKahanPaddingMat)
     Matrix<double> padded = Decomposition::svdPaddingRotation(mat, 1 , 2);
 
     ASSERT_TRUE( padded.compare(should) );
+}
+
+TEST(Decomposition, SVDGolubKahanZeroRow)
+{
+    double matData[] =    {1.0, 3.2, 0.0, 0.0, 0.0,
+                           0.0, 2.0, 1.8, 0.0, 0.0,
+                           0.0, 0.0, 0.0, 1.2, 0.0,
+                           0.0, 0.0, 0.0, 1.0, 1.4,
+                           0.0, 0.0, 0.0, 0.0, 1.0};
+
+    Matrix<double> mat = Matrix<double>(5,5,matData);
+    Matrix<double> orig = mat;
+    Matrix<double> givens = Decomposition::svdZeroRow(mat,2);
+
+    // check that the 3rd row is zero
+    for( size_t i = 0; i < 5; i++ )
+        ASSERT_FLOAT_EQ( mat(2,i), 0.0 );
+
+    ASSERT_TRUE( mat.compare(givens * orig, true, 0.000001) );
 }
