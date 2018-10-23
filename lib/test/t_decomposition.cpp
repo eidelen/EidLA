@@ -1011,3 +1011,41 @@ TEST(Decomposition, SVDGolubKahanMatrixCheckUpDiag)
     ASSERT_EQ(q,0);
     ASSERT_EQ(p,1);
 }
+
+
+TEST(Decomposition, SVDGolubKahanPaddingGeneral)
+{
+    for( size_t p = 0; p < 5; p++ )
+    {
+        for( size_t q = 0; q < 5; q++ )
+        {
+            for( size_t n = 1; n < 5; n++ )
+            {
+                Matrix<double> mat = Matrix<double>::identity(n);
+                Matrix<double> pad = Decomposition::svdPaddingRotation(mat,p,q);
+                Matrix<double> should = Matrix<double>::identity(n+q+p);
+
+                ASSERT_TRUE( pad.compare(should) );
+            }
+        }
+    }
+}
+
+TEST(Decomposition, SVDGolubKahanPaddingMat)
+{
+    double shouldData[] = {1.0, 0.0, 0.0, 0.0, 0.0,
+                           0.0, 1.5, 2.0, 0.0, 0.0,
+                           0.0, 3.0, 4.0, 0.0, 0.0,
+                           0.0, 0.0, 0.0, 1.0, 0.0,
+                           0.0, 0.0, 0.0, 0.0, 1.0};
+
+    double matData[] = { 1.5, 2.0,
+                         3.0, 4.0};
+
+    Matrix<double> should = Matrix<double>(5,5,shouldData);
+    Matrix<double> mat = Matrix<double>(2,2,matData);
+
+    Matrix<double> padded = Decomposition::svdPaddingRotation(mat, 1 , 2);
+
+    ASSERT_TRUE( padded.compare(should) );
+}

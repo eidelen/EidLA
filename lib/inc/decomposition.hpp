@@ -494,6 +494,24 @@ public:
 
     }
 
+    /*
+    *  Example matrix n = 5 (p=2,q=1)
+    *
+    *      1   0   0   0   0
+    *      0   1   0   0   0
+    *      0   0   m   m   0
+    *      0   0   m   m   0
+    *      0   0   0   0   1
+    *
+    *    |   p   |       | q |
+    */
+    static Matrix<double> svdPaddingRotation(const Matrix<double>& mat, size_t p, size_t q)
+    {
+        Matrix<double> padded = Matrix<double>::identity( mat.cols() + p + q );
+        padded.setSubMatrix(p,p,mat);
+        return padded;
+    }
+
     /**
      * Computes the given rotation based on a and b as input. See
      * the article https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
