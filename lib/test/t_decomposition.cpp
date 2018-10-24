@@ -952,6 +952,22 @@ TEST(Decomposition, SVDGolubKahanWithNullSingularValue)
     ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.1 ) );
 }
 
+TEST(Decomposition, SVDGolubKahanBatch)
+{
+    size_t rows = 5;
+
+    for( int k = 0; k < 500; k++ )
+    {
+        auto a = Matrix<double>::random(rows, rows, -1.0, 1.0);
+
+        Decomposition::SVDResult res = Decomposition::svdGolubKahan(a);
+
+        ASSERT_TRUE( res.U.isOrthogonal(0.00001) );
+        ASSERT_TRUE( res.V.isOrthogonal(0.00001) );
+        ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
+    }
+}
+
 TEST(Decomposition, SVDGolubKahanMatrixCheckIdentity)
 {
     size_t cols = 5;
@@ -1085,4 +1101,23 @@ TEST(Decomposition, SVDGolubKahanZeroRow)
         ASSERT_FLOAT_EQ( mat(2,i), 0.0 );
 
     ASSERT_TRUE( mat.compare(givens * orig, true, 0.000001) );
+}
+
+TEST(Decomposition, SVDGolubKahanZeroColumn)
+{
+    double matData[] =    {1.0, 3.2, 0.0, 0.0, 0.0,
+                           0.0, 2.0, 1.8, 0.0, 0.0,
+                           0.0, 0.0, 0.0, 1.2, 0.0,
+                           0.0, 0.0, 0.0, 1.0, 1.4,
+                           0.0, 0.0, 0.0, 0.0, 0.0};
+
+    Matrix<double> mat = Matrix<double>(5,5,matData);
+    Matrix<double> orig = mat;
+    Matrix<double> givens = Decomposition::svdZeroLastColumn(mat);
+
+    // check that the 5th column is zero
+    for( size_t i = 0; i < 5; i++ )
+        ASSERT_FLOAT_EQ( mat(i,4), 0.0 );
+
+    ASSERT_TRUE( mat.compare( orig * givens, true, 0.000001) );
 }

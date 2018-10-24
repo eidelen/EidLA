@@ -531,10 +531,32 @@ public:
         return u_left;
     }
 
+    // Chapter 8, p. 490 -> If dn = 0, then the last column can be zeroed with a series of column rotations in planes
+    //                      (n - 1 , n) , (n - 2, n) , . . . , ( 1 , n) .
+    static Matrix<double> svdZeroLastColumn(Matrix<double>& b)
+    {
+        size_t n = b.cols();
+
+        Matrix<double> v_right = Matrix<double>::identity(n);
+        for( size_t i = 0 ; i < (n-1); i++ )
+        {
+            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, n-2-i, n-2-i, n-1);
+            b =  b * vS;
+            v_right = v_right * vS;
+        }
+
+        return v_right;
+    }
+
+
     static SvdStepResult svdHandleZeroDiagonalEntries( Matrix<double>& b, size_t p, size_t q, bool& modified)
     {
         double eps = std::numeric_limits<double>::epsilon() * 10;
         size_t n = b.cols();
+
+        SvdStepResult ret;
+        ret.v = Matrix<double>::identity(b.cols());
+        ret.u = Matrix<double>::identity(b.rows());
 
         for( size_t r = p; r < n - q && !modified; r++ )
         {
@@ -544,21 +566,19 @@ public:
             {
                 if( r < (n-1) )
                 {
-                    Matrix<double> extraULeft = svdZeroRow(b, r);
+                    ret.u = svdZeroRow(b, r);
                 }
                 else
                 {
                     // special case: last diagonal element is zero
-                    // "If dn = 0, then the last column can be zeroed with a series of column rotations in planes
-                    //(n - 1 , n) , (n - 2, n) , . . . , ( 1 , n) . Thus, we can decouple if Ji · · · fn-1 = 0 or di · · · dn =
-                    //o."
-
+                    ret.v = svdZeroLastColumn(b);
                 }
 
                 modified = true;
             }
         }
 
+        return ret;
     };
 
     /**
@@ -1377,7 +1397,7 @@ template <class T>
 Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 {
     // U*S*V
-    double eps = std::numeric_limits<double>::epsilon() * 10;
+    double eps = std::numeric_limits<double>::epsilon() * 100;
 
     Decomposition::DiagonalizationResult diag = Decomposition::bidiagonalization(mat);
     Matrix<double> b = diag.D;
@@ -1390,20 +1410,19 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 
     // svd step
     size_t q = 0;
-    while( q != n )
+    int maxIter = 100000;
+    while( q != n && maxIter > 0)
     {
+        maxIter--;
+
         // go through the upper band and zero values close to zero
-        size_t zeroCnt = 0;
         for(size_t r = 0; r < n-1; r++)
         {
             if(std::abs(b(r,r+1)) <= eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) ) )
             {
                 b(r,r+1) = 0.0;
-                zeroCnt++;
             }
         }
-
-        std::cout << "Current b:" << std::endl << b << std::endl << std::endl;
 
         size_t p;
         svdCheckMatrixGolubKahan(b,p,q);
@@ -1414,19 +1433,26 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 
             // check B22 (middle matrix) for zero diagonal element
             Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b,p,q, modified);
-
-            if( !modified )
+            if( modified )
             {
-                // size_t subMatSize = n-q-p;
-                // Matrix<double> b22 = b.subMatrix(p,p,subMatSize,subMatSize);
-                // std::cout << "B22:" << std::endl << b22 << std::endl << std::endl;
+                vRightV.push_back(extraRotations.v);
+                uLeftV.push_back(extraRotations.u);
+            }
+            else
+            {
+                size_t subMatSize = n-q-p;
+                Matrix<double> b22 = b.subMatrix(p,p,subMatSize,subMatSize);
 
-                //todo: continue here by adapting the size of b and padd returned V and U
+                Decomposition::SvdStepResult step = Decomposition::svdStepGolubKahan(b22);
 
-                Decomposition::SvdStepResult step = Decomposition::svdStepGolubKahan(b);
+                Matrix<double> paddedV = Decomposition::svdPaddingRotation(step.v,p,q);
+                Matrix<double> paddedU = Decomposition::svdPaddingRotation(step.u,p,q); // adapt here for non quadratic matrix
 
-                vRightV.push_back(step.v);
-                uLeftV.push_back(step.u);
+                // copy b22 back into b
+                b.setSubMatrix(p,p,b22);
+
+                vRightV.push_back(paddedV);
+                uLeftV.push_back(paddedU);
             }
         }
 
