@@ -533,14 +533,14 @@ public:
 
     // Chapter 8, p. 490 -> If dn = 0, then the last column can be zeroed with a series of column rotations in planes
     //                      (n - 1 , n) , (n - 2, n) , . . . , ( 1 , n) .
-    static Matrix<double> svdZeroLastColumn(Matrix<double>& b)
+    static Matrix<double> svdZeroColumn(Matrix<double> &b, size_t column)
     {
         size_t n = b.cols();
 
         Matrix<double> v_right = Matrix<double>::identity(n);
         for( size_t i = 0 ; i < (n-1); i++ )
         {
-            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, n-2-i, n-2-i, n-1);
+            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, n-2-i, n-2-i, column);
             b =  b * vS;
             v_right = v_right * vS;
         }
@@ -564,14 +564,14 @@ public:
             // superdiagonal entry in the same row.
             if( std::abs(b(r,r)) < eps )
             {
-                if( r < (n-1) )
+                if( r < (n-1-q) )
                 {
                     ret.u = svdZeroRow(b, r);
                 }
                 else
                 {
-                    // special case: last diagonal element is zero
-                    ret.v = svdZeroLastColumn(b);
+                    // special case: last diagonal element of b22
+                    ret.v = svdZeroColumn(b, r );
                 }
 
                 modified = true;
@@ -580,6 +580,87 @@ public:
 
         return ret;
     };
+
+    static Decomposition::SVDResult svdGolubKahanBidiagonal(Matrix<double>& b)
+    {
+        double eps = std::numeric_limits<double>::epsilon() * 100;
+
+        size_t m = b.rows();
+        size_t n = b.cols();
+
+        std::vector<Matrix<double>> uLeftV;
+        std::vector<Matrix<double>> vRightV;
+
+        // svd step
+        size_t q = 0;
+        int maxIter = 100000;
+        while( q != n && maxIter > 0)
+        {
+            maxIter--;
+
+            // go through the upper band and zero values close to zero
+            for(size_t r = 0; r < n-1; r++)
+            {
+                if(std::abs(b(r,r+1)) <= eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) ) )
+                {
+                    b(r,r+1) = 0.0;
+                }
+            }
+
+            size_t p;
+            svdCheckMatrixGolubKahan(b,p,q);
+
+            std::cout << "b:" << std::endl << b << std::endl;
+            std::cout << "p: " << p << ", q: " << q << std::endl << std::endl;
+
+            if( q < n )
+            {
+                bool modified = false;
+
+                // check B22 (middle matrix) for zero diagonal element
+                Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b,p,q, modified);
+                if( modified )
+                {
+                    vRightV.push_back(extraRotations.v);
+                    uLeftV.push_back(extraRotations.u);
+                }
+                else
+                {
+                    size_t subMatSize = n-q-p;
+                    Matrix<double> b22 = b.subMatrix(p,p,subMatSize,subMatSize);
+                    std::cout << "b22:" << std::endl << b22 << std::endl;
+
+                    Decomposition::SvdStepResult step = Decomposition::svdStepGolubKahan(b22);
+
+                    Matrix<double> paddedV = Decomposition::svdPaddingRotation(step.v,p,q);
+                    Matrix<double> paddedU = Decomposition::svdPaddingRotation(step.u,p,q); // adapt here for non quadratic matrix
+
+                    // copy b22 back into b
+                    b.setSubMatrix(p,p,b22);
+
+                    vRightV.push_back(paddedV);
+                    uLeftV.push_back(paddedU);
+                }
+            }
+
+        }
+
+        std::cout << "b:" << std::endl << b << std::endl;
+
+        Matrix<double> u_left_accum = Matrix<double>::identity(b.rows());
+        Matrix<double> v_right_accum = Matrix<double>::identity(b.cols());
+        for( size_t k = 0; k < uLeftV.size(); k++ )
+        {
+            v_right_accum = v_right_accum * vRightV.at(k);
+            u_left_accum = uLeftV.at(k) * u_left_accum;
+        }
+
+        Matrix<double> u = u_left_accum.transpose();
+        Matrix<double> v = v_right_accum;
+
+        return SVDResult(u,b,v);
+    }
+
 
     /**
      * Computes the given rotation based on a and b as input. See
@@ -1405,69 +1486,10 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
     size_t m = b.rows();
     size_t n = b.cols();
 
-    std::vector<Matrix<double>> uLeftV;
-    std::vector<Matrix<double>> vRightV;
+    SVDResult resBiDiag = Decomposition::svdGolubKahanBidiagonal(b);
 
-    // svd step
-    size_t q = 0;
-    int maxIter = 100000;
-    while( q != n && maxIter > 0)
-    {
-        maxIter--;
-
-        // go through the upper band and zero values close to zero
-        for(size_t r = 0; r < n-1; r++)
-        {
-            if(std::abs(b(r,r+1)) <= eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) ) )
-            {
-                b(r,r+1) = 0.0;
-            }
-        }
-
-        size_t p;
-        svdCheckMatrixGolubKahan(b,p,q);
-
-        if( q < n )
-        {
-            bool modified = false;
-
-            // check B22 (middle matrix) for zero diagonal element
-            Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b,p,q, modified);
-            if( modified )
-            {
-                vRightV.push_back(extraRotations.v);
-                uLeftV.push_back(extraRotations.u);
-            }
-            else
-            {
-                size_t subMatSize = n-q-p;
-                Matrix<double> b22 = b.subMatrix(p,p,subMatSize,subMatSize);
-
-                Decomposition::SvdStepResult step = Decomposition::svdStepGolubKahan(b22);
-
-                Matrix<double> paddedV = Decomposition::svdPaddingRotation(step.v,p,q);
-                Matrix<double> paddedU = Decomposition::svdPaddingRotation(step.u,p,q); // adapt here for non quadratic matrix
-
-                // copy b22 back into b
-                b.setSubMatrix(p,p,b22);
-
-                vRightV.push_back(paddedV);
-                uLeftV.push_back(paddedU);
-            }
-        }
-
-    }
-
-    Matrix<double> u_left_accum = Matrix<double>::identity(b.rows());
-    Matrix<double> v_right_accum = Matrix<double>::identity(b.cols());
-    for( size_t k = 0; k < uLeftV.size(); k++ )
-    {
-        v_right_accum = v_right_accum * vRightV.at(k);
-        u_left_accum = uLeftV.at(k) * u_left_accum;
-    }
-
-    Matrix<double> u = diag.U * u_left_accum.transpose();
-    Matrix<double> v = diag.V * v_right_accum;
+    Matrix<double> u = diag.U * resBiDiag.U;
+    Matrix<double> v = diag.V * resBiDiag.V;
 
     // Make singular values positive
     Matrix<double> sing(b.rows(), b.cols());
