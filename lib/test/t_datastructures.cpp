@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <inc/datastructures.hpp>
 #include "matrix.hpp"
+#include <thread>
 
 TEST(Heap, NodeConstructor)
 {
@@ -260,15 +261,33 @@ TEST(BST, Insert)
     delete bst;
 }
 
+auto searchFunctor = [] (const BST<int>* bst, const std::vector<int>& v, size_t rStart, size_t rEnd) {
+    for( size_t i = rStart; i < rEnd && i < v.size(); i++  )
+    {
+        ASSERT_TRUE( bst->find(v.at(i)) );
+    }
+};
+
+
 TEST(BST, Search)
 {
     auto bst = getTestBST();
-    int bstVals[] = {8,3,10,1,6,14,13,4,9,12,7};
+    std::vector<int> bstVals = {8,3,10,1,6,14,13,4,9,12,7};
 
-    for( const int& k : bstVals )
+    std::vector<std::thread> ths;
+    int nThreads = 4;
+    size_t pSize = bstVals.size() / nThreads;
+    for( int t = 0; t < nThreads; t++ )
     {
-        ASSERT_TRUE( bst->find(k) );
+        if( t == (nThreads - 1 )) // last
+            ths.push_back( std::thread( searchFunctor, bst, std::ref(bstVals), t*pSize, bstVals.size() ) );
+        else
+            ths.push_back( std::thread( searchFunctor, bst, std::ref(bstVals), t*pSize, (t+1)*pSize ) );
     }
+
+    for( std::thread& thr : ths )
+        thr.join();
+
 
     ASSERT_FALSE( bst->find(20) );
     ASSERT_FALSE( bst->find(0) );
@@ -381,14 +400,21 @@ TEST(BST, Size)
     delete bst;
 }
 
+auto searchFunctor2 = [] (const BST<int>* bst, const Matrix<int>& v, size_t rStart, size_t rEnd) {
+    for( size_t i = rStart; i < rEnd && i < v.rows(); i++  )
+    {
+        ASSERT_TRUE( bst->find(v(i,0)) );
+    }
+};
+
 
 TEST(BST, SpeedCheck)
 {
     // Compare lookup time between binary heap and tree
-    size_t nbrOfElementsToInsert = 10000;
+    size_t nbrOfElementsToInsert = 1000000;
     Matrix<int> data = Matrix<int>::random(nbrOfElementsToInsert, 1, 0, 1000000);
 
-
+/*
     std::chrono::steady_clock::time_point t_begin = std::chrono::steady_clock::now();
     Heap<int, 2>* binaryHeap = new Heap<int, 2>();
     for (size_t i = 0; i < data.getNbrOfElements(); i++)
@@ -401,13 +427,13 @@ TEST(BST, SpeedCheck)
         ASSERT_NE(binaryHeap->find(data.data()[i]), nullptr);
     t_end = std::chrono::steady_clock::now();
     std::cout << "Search binary heap: " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << std::endl;
+*/
 
-
-    t_begin = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point t_begin = std::chrono::steady_clock::now();
     BST<int>* bst = new BST<int>();
     for (size_t i = 0; i < data.getNbrOfElements(); i++)
         bst->insert(data.data()[i]);
-    t_end = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point t_end = std::chrono::steady_clock::now();
     std::cout << "Insert binary search tree: " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << std::endl;
 
     t_begin = std::chrono::steady_clock::now();
@@ -416,7 +442,28 @@ TEST(BST, SpeedCheck)
     t_end = std::chrono::steady_clock::now();
     std::cout << "Search binary search tree: " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << std::endl;
 
-    delete binaryHeap;
+
+
+    t_begin = std::chrono::steady_clock::now();
+    std::vector<std::thread> ths;
+    int nThreads = 6;
+    size_t pSize = nbrOfElementsToInsert / nThreads;
+    for( int t = 0; t < nThreads; t++ )
+    {
+        if( t == (nThreads - 1 )) // last
+            ths.push_back( std::thread( searchFunctor2, bst, std::ref(data), t*pSize, nbrOfElementsToInsert ) );
+        else
+            ths.push_back( std::thread( searchFunctor2, bst, std::ref(data), t*pSize, (t+1)*pSize ) );
+    }
+
+    for( std::thread& thr : ths )
+        thr.join();
+
+    t_end = std::chrono::steady_clock::now();
+    std::cout << "Threaded search binary search tree: " << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_begin).count() << " ms" << std::endl;
+
+
+
     delete bst;
 }
 
