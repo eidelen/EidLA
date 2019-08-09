@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/eidelen/EidLA.svg?branch=master
+    :target: https://travis-ci.org/eidelen/EidLA
+
 Another linear algebra library
 ==============================
 
