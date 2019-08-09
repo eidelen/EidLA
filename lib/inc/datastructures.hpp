@@ -29,6 +29,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 template <typename T, size_t C>
 class HeapNode
