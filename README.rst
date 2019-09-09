@@ -14,7 +14,7 @@ Google's gtest was used as a testing library.
 Attention
 ---------
 
-As there were coloners... the Eigen value / vector computation works only for symmetric matrices and the singular value decomposition (SVD) is numerically unstable. Do not use this library in self driving cars or rockets :)
+As there were cloners... the Eigen value / vector computation works only for symmetric matrices and the singular value decomposition (SVD) is numerically unstable. Do not use this library in self driving cars or rockets :)
 
 Usage
 -----
