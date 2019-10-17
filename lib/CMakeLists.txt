@@ -5,7 +5,7 @@ PROJECT(eidlalib)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -Wpedantic -msse4")
 
-INCLUDE_DIRECTORIES(inc)
+INCLUDE_DIRECTORIES(inc inc/pattern)
 FILE(GLOB_RECURSE  MYLINALG_INCLUDES        inc/*.hpp)
 FILE(GLOB_RECURSE  MYLINALG_INCLUDES        inc/*.h)
 
