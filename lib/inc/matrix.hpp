@@ -742,8 +742,7 @@ template <class T>
 void Matrix<T>::fill(T val)
 {
     T* dataPtr = data();
-    for (size_t i = 0; i < m_nbrOfElements; i++)
-        dataPtr[i] = val;
+    std::fill(dataPtr, dataPtr+m_nbrOfElements, val);
 }
 
 template <class T>
@@ -810,10 +809,10 @@ Matrix<T> Matrix<T>::random(size_t m, size_t n, T lower, T upper)
     std::uniform_real_distribution<> dis(lower, upper);
 
     Matrix<T> rand = Matrix<T>(m, n);
-    for (size_t i = 0; i < rand.getNbrOfElements(); i++)
-    {
-        rand.data()[i] = static_cast<T>(dis(gen));
-    }
+
+    std::for_each(rand.data(), rand.data()+rand.getNbrOfElements(), [&gen, &dis] (T& a) {
+        a = static_cast<T>(dis(gen));
+    });
 
     return rand;
 }
@@ -826,10 +825,9 @@ inline Matrix<int> Matrix<int>::random(size_t m, size_t n, int lower, int upper)
     std::uniform_int_distribution<> dis(lower, upper);
 
     Matrix<int> rand = Matrix<int>(m, n);
-    for (size_t i = 0; i < rand.getNbrOfElements(); i++)
-    {
-        rand.data()[i] = dis(gen);
-    }
+    std::for_each(rand.data(), rand.data()+rand.getNbrOfElements(), [&gen, &dis] (int& a) {
+        a = dis(gen);
+    });
 
     return rand;
 }
