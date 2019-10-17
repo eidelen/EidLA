@@ -888,14 +888,9 @@ Matrix<T> Matrix<T>::diagonal() const
 template <class T>
 T Matrix<T>::sum() const
 {
-    T ret = 0;
-
     const T* ptr   = data();
-    size_t   nElem = getNbrOfElements();
-    for (size_t i = 0; i < nElem; i++)
-        ret += ptr[i];
-
-    return ret;
+    size_t nElem = getNbrOfElements();
+    return std::accumulate(ptr, ptr+nElem, static_cast<T>(0.0));
 }
 
 template <class T>
@@ -934,8 +929,9 @@ Matrix<T> Matrix<T>::operator*(T scale) const
     Matrix<T> res(this->rows(), this->cols());
     T*        resD  = res.data();
     const T*  dataD = this->data();
-    for (size_t i = 0; i < this->getNbrOfElements(); i++)
-        resD[i] = dataD[i] * scale;
+    std::transform(dataD, dataD+getNbrOfElements(), resD, [scale] (T in) {
+        return in*scale;
+    });
 
     return res;
 }
@@ -1052,11 +1048,9 @@ Matrix<T> Matrix<T>::operator/(const Matrix<T>& mat) const
     }
 
     Matrix<T> res      = Matrix<T>(rows(), cols());
-    T*        resD     = res.data();
-    const T*  thisData = data();
-    const T*  matD     = mat.data();
-    for (size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i] = thisData[i] / matD[i];
+    std::transform(data(), data()+getNbrOfElements(), mat.data(), res.data(), [](T a, T b) {
+        return a / b;
+    });
 
     return res;
 }
@@ -1071,12 +1065,10 @@ Matrix<T> Matrix<T>::operator+(const Matrix<T>& mat) const
         std::exit(-1);
     }
 
-    Matrix<T> res      = Matrix<T>(rows(), cols());
-    T*        resD     = res.data();
-    const T*  thisData = data();
-    const T*  matD     = mat.data();
-    for (size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i] = thisData[i] + matD[i];
+    Matrix<T> res = Matrix<T>(rows(), cols());
+    std::transform(data(), data()+getNbrOfElements(), mat.data(), res.data(), [](T a, T b) {
+        return a + b;
+    });
 
     return res;
 }
@@ -1091,12 +1083,10 @@ Matrix<T> Matrix<T>::operator-(const Matrix<T>& mat) const
         std::exit(-1);
     }
 
-    Matrix<T> res      = Matrix<T>(rows(), cols());
-    T*        resD     = res.data();
-    const T*  thisData = data();
-    const T*  matD     = mat.data();
-    for (size_t i = 0; i < getNbrOfElements(); i++)
-        resD[i] = thisData[i] - matD[i];
+    Matrix<T> res = Matrix<T>(rows(), cols());
+    std::transform(data(), data()+getNbrOfElements(), mat.data(), res.data(), [](T a, T b) {
+        return a - b;
+    });
 
     return res;
 }
@@ -1164,11 +1154,7 @@ bool Matrix<T>::compare(const Matrix<T>& mat, bool useCustomTolerance, T customT
 template <class T>
 T Matrix<T>::elementwiseMultiplyAndSum(const T* arr1, const T* arr2, size_t length) const
 {
-    T accum = 0;
-    for (size_t a = 0; a < length; a++)
-        accum += arr1[a] * arr2[a];
-
-    return accum;
+    return std::inner_product(arr1, arr1+length, arr2, static_cast<T>(0.0));
 }
 
 template <>
@@ -1335,10 +1321,8 @@ void Matrix<T>::setRow(size_t rowIdx, const Matrix<T>& row)
         std::exit(-1);
     }
 
-    T*       dstPtr = getRowPtr(rowIdx);
-    const T* srcPtr = row.data();
-    for (size_t i = 0; i < row.cols(); i++)
-        dstPtr[i] = srcPtr[i];
+    T* dstPtr = getRowPtr(rowIdx);
+    std::copy(row.data(), row.data()+row.cols(), dstPtr);
 }
 
 template <class T>
@@ -1506,14 +1490,9 @@ Matrix<double> Matrix<T>::normalize(double& mean, double& scale) const
     }
 
     Matrix<double> ret(this->rows(), this->cols());
-
-    const T* src = this->data();
-    double*  dst = ret.data();
-
-    for (size_t i = 0; i < getNbrOfElements(); i++)
-    {
-        dst[i] = (src[i] - mean) * scale;
-    }
+    std::transform(data(), data()+getNbrOfElements(), ret.data(), [mean, scale] (T in) {
+        return (in - mean) * scale;
+    });
 
     return ret;
 }
@@ -1523,13 +1502,9 @@ Matrix<double> Matrix<T>::denormalize(double mean, double scale) const
 {
     Matrix<double> ret(this->rows(), this->cols());
 
-    const T* src = this->data();
-    double*  dst = ret.data();
-
-    for (size_t i = 0; i < getNbrOfElements(); i++)
-    {
-        dst[i] = src[i] / scale + mean;
-    }
+    std::transform( data(), data()+getNbrOfElements(), ret.data(), [mean, scale] (T in) {
+        return in / scale + mean;
+    });
 
     return ret;
 }
@@ -1890,12 +1865,9 @@ template <class T>
 Matrix<T> Matrix<T>::absolute() const
 {
     Matrix<T> ret(this->rows(), this->cols());
-    const T*  src = this->data();
-    T*        dst = ret.data();
-    for (size_t k = 0; k < ret.getNbrOfElements(); k++)
-    {
-        dst[k] = std::abs(src[k]);
-    }
+    std::transform(data(), data()+getNbrOfElements(), ret.data(), [] (T in) {
+        return std::abs(in);
+    } );
 
     return ret;
 }
