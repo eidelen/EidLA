@@ -35,6 +35,7 @@
 #include <fstream>
 #include <algorithm>
 #include <cstring>
+#include <vector>
 
 #include <smmintrin.h> // SSE4
 
@@ -80,6 +81,15 @@ public:
      * @param data Pointer to data
      */
     Matrix(size_t rows, size_t cols, const T* data);
+
+    /**
+     * Constructs a m x n matrix and assign the content
+     * of the given vector.
+     * @param rows number of rows
+     * @param cols number of columns
+     * @param data A same type vector
+     */
+    Matrix(size_t rows, size_t cols, const std::vector<T>& data);
 
     /**
      * Constructs a matrix based on the specified
@@ -528,6 +538,14 @@ public:
      */
     void sortRows(size_t sortColumn, SortDirection direction);
 
+    /**
+     * Check if the dimensions of the two passed matrix are equal.
+     * @param m1 Mat 1
+     * @param m2 Mat 2
+     * @return True if equal dimension.
+     */
+    static bool equalDimension(const Matrix<T> m1, const Matrix<T> m2);
+
 #ifdef OPENCVEIDLA
     /**
      * Returns an OpenCV matrix of this
@@ -538,13 +556,6 @@ public:
 #endif // OPENCVEIDLA
 
 protected:
-    /**
-     * Check if the dimensions of the two passed matrix are equal.
-     * @param m1 Mat 1
-     * @param m2 Mat 2
-     * @return True if equal dimension.
-     */
-    static bool equalDimension(const Matrix<T> m1, const Matrix<T> m2);
 
     T elementwiseMultiplyAndSum(const T* arr1, const T* arr2, size_t length) const;
 
@@ -644,6 +655,13 @@ Matrix<T>::Matrix(size_t rows, size_t cols, const T* data)
 {
     T* dst = this->data();
     std::copy(data, data + this->getNbrOfElements(), dst);
+}
+
+template <class T>
+Matrix<T>::Matrix(size_t rows, size_t cols, const std::vector<T>& data)
+: Matrix<T>(rows, cols)
+{
+    std::copy(data.begin(), data.end(), this->data());
 }
 
 template <class T>
