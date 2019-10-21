@@ -68,11 +68,28 @@ public:
 
 typedef std::shared_ptr<Sample> SamplePtr;
 
+
+/**
+ * This class requires an implementation.
+ */
 class SampleGenerator
 {
 public:
+
+    /**
+     * Constructor
+     * @param label Sample label
+     */
     SampleGenerator(int label) : m_label(label), m_type(Sample::Labeled) {}
+
+    /**
+     * Constructor for unlabeled sample.
+     */
     SampleGenerator() : m_type(Sample::Unlabeled) {}
+
+    /**
+     * Destructor
+     */
     virtual ~SampleGenerator() {}
 
     /**
@@ -94,6 +111,7 @@ public:
         return sampleVect;
     }
 
+
 protected:
 
     SamplePtr makeSample(const Matrix<double>& data) const
@@ -110,6 +128,9 @@ private:
 };
 
 
+/**
+ * This class requires an implementation.
+ */
 class DistributionSampleGenerator: public SampleGenerator
 {
 public:
