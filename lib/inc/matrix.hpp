@@ -245,6 +245,12 @@ public:
     Matrix<T> operator+(const Matrix<T>& mat) const;
 
     /**
+     * Inplace elementwise addition of the matrix mat.
+     * @param mat Matrix to add.
+     */
+    void add(const Matrix<T>& mat);
+
+    /**
      * Elementwise subtraction of two matrix.
      * @param mat
      * @return Resulting matrix.
@@ -1089,6 +1095,15 @@ Matrix<T> Matrix<T>::operator+(const Matrix<T>& mat) const
     });
 
     return res;
+}
+
+template <class T>
+void Matrix<T>::add(const Matrix<T>& mat)
+{
+    // this is an abuse of transform, in as much as the output iterator points to the input :)
+    std::transform(data(), data()+getNbrOfElements(), mat.data(), data(), [](T a, T b) {
+        return a + b;
+    });
 }
 
 template <class T>

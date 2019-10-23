@@ -28,6 +28,7 @@
 #include "exceptions.hpp"
 
 #include <vector>
+#include <algorithm>
 
 
 /**
@@ -36,10 +37,24 @@
 class SampleStatistic
 {
 public:
+
+    /**
+     * Compute the sample mean.
+     * @param samples Vector of samples.
+     * @return Sample mean.
+     */
     static Matrix<double> mean(const std::vector<SamplePtr>& samples)
     {
-        // to continue
-        return samples.at(0)->m_data;
+        size_t n = samples.size();
+        if(n == 0)
+            throw EmptyContainerException();
+
+        Matrix<double> accum = samples.at(0)->m_data;
+        std::for_each(samples.begin()+1, samples.end(), [&accum](const SamplePtr& s){
+            accum.add(s->m_data);
+        });
+
+        return accum * (1.0 / n);
     }
 
 
