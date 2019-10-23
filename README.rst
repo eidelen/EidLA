@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/eidelen/EidLA.svg?branch=master
+    :target: https://travis-ci.org/eidelen/EidLA
+
 Another linear algebra library
 ==============================
 
@@ -8,6 +11,10 @@ At a certain stage, I might be able to use my own implementation instead of incl
 Each library function has corresponding unit tests.
 Google's gtest was used as a testing library.
 
+Attention
+---------
+
+As there were cloners... the Eigen value / vector computation works only for symmetric matrices and the singular value decomposition (SVD) is numerically unstable. Do not use this library in self driving cars or rockets :)
 
 Usage
 -----

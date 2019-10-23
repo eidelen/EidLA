@@ -21,6 +21,14 @@ TEST(Matrix, Addition)
     for (size_t m = 0; m < nRows; m++)
         for (size_t n = 0; n < nCols; n++)
             ASSERT_EQ(res2(m, n), 6);
+
+
+    // inplace addition
+    m1.add(m2);
+    for (size_t m = 0; m < nRows; m++)
+        for (size_t n = 0; n < nCols; n++)
+            ASSERT_EQ(m1(m, n), 6);
+
 }
 
 TEST(Matrix, Subtraction)

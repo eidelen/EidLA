@@ -25,6 +25,15 @@ TEST(Matrix, ConstructorWithData)
     ASSERT_EQ(mat(1, 1), 4);
 }
 
+TEST(Matrix, ConstructFromVector)
+{
+    auto mat = Matrix<int>(2, 2, {1, 2, 3, 4});
+    ASSERT_EQ(mat(0, 0), 1);
+    ASSERT_EQ(mat(0, 1), 2);
+    ASSERT_EQ(mat(1, 0), 3);
+    ASSERT_EQ(mat(1, 1), 4);
+}
+
 TEST(Matrix, CopyConstructor)
 {
     auto orig = Matrix<int>(2, 2);
