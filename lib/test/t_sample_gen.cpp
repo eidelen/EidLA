@@ -212,3 +212,22 @@ TEST(SampleGen, NormalOneVariation)
         std::cout << std::string(d/5, '*') << std::endl;
     }
 }
+
+
+TEST(SampleGen, GetVector)
+{
+    Matrix<double> mean(2, 1, {3.0, 1.0});
+    std::vector<std::pair<double, Matrix<double>>> var;
+
+    // no variation
+    SampleGenerator *varDist = new NormalSampleGenerator(mean, var, 111);
+    auto sampleVec = varDist->getN(100);
+
+    ASSERT_EQ(sampleVec.size(), 100);
+    std::for_each( sampleVec.begin(), sampleVec.end(), [=](SamplePtr s) {
+        ASSERT_TRUE(s->m_data.compare(mean, true, 0.00001));
+        ASSERT_EQ(s->m_label, 111);
+    });
+
+    delete varDist;
+}
