@@ -617,8 +617,13 @@ public:
             {
                 bool modified = false;
 
+
+                // Todo: Follow exactly the description!!! Below code is wrong.
+
                 // check B22 (middle matrix) for zero diagonal element
-                Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b,p,q, modified);
+                Matrix<double> b222 = b.subMatrix(p,p,n-q-p,n-q-p);
+                std::cout << "b222:" << std::endl << b222 << std::endl;
+                Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b222,p,q, modified);
                 if( modified )
                 {
                     vRightV.push_back(extraRotations.v);
@@ -637,6 +642,12 @@ public:
 
                     // copy b22 back into b
                     b.setSubMatrix(p,p,b22);
+
+                    // is equal to b.setSubMatrix(p,p,b22);
+                    Matrix<double> k = paddedU * b * paddedV;
+
+                    std::cout << "k inter" << std::endl << k << std::endl << std::endl;
+                    std::cout << "b inter" << std::endl << b << std::endl << std::endl;
 
                     vRightV.push_back(paddedV);
                     uLeftV.push_back(paddedU);
