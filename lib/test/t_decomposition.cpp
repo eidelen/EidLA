@@ -952,18 +952,51 @@ TEST(Decomposition, SVDGolubKahanWithNullSingularValue)
     ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.1 ) );
 }
 
-/* Still failing
 TEST(Decomposition, SVDGolubKahanMultipleNullSingularValues)
 {
-    Matrix<double> m = Matrix<double>(4, 4);
-    m.fill(2);
+    Matrix<double> m = Matrix<double>(3, 3);
+    m.fill(1);
 
     Decomposition::SVDResult res = Decomposition::svdGolubKahan(m);
+
+    std::cout << "Computed Results" << std::endl << std::endl;
+
+
+    std::cout << "Singualar values " << std::endl;
+    std::cout << res.S << std::endl << std::endl;
+
+    std::cout << "U (left) " << std::endl;
+    std::cout << res.U << std::endl << std::endl;
+
+    std::cout << "V (right) " << std::endl;
+    std::cout << res.V << std::endl << std::endl;
 
     ASSERT_TRUE( res.U.isOrthogonal(0.00001) );
     ASSERT_TRUE( res.V.isOrthogonal(0.00001) );
     ASSERT_TRUE( m.compare(res.U * res.S * res.V.transpose(), true, 0.00001 ) );
-} */
+
+
+
+    /* From octave
+U =
+    -0.57735      0.8165  -8.7561e-17
+    -0.57735    -0.40825    -0.70711
+    -0.57735    -0.40825     0.70711
+
+S =
+
+           3           0           0
+           0   1.338e-16           0
+           0           0  1.3194e-49
+
+V =
+    -0.57735      0.8165          -0
+    -0.57735    -0.40825     0.70711
+    -0.57735    -0.40825    -0.70711
+     */
+
+
+}
 
 /* Still failing
 TEST(Decomposition, SVDGolubKahanBatch)
