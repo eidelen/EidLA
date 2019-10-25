@@ -531,18 +531,43 @@ public:
         return u_left;
     }
 
-    // Chapter 8, p. 490 -> If dn = 0, then the last column can be zeroed with a series of column rotations in planes
-    //                      (n - 1 , n) , (n - 2, n) , . . . , ( 1 , n) .
+
     static Matrix<double> svdZeroColumn(Matrix<double> &b, size_t column)
     {
         size_t n = b.cols();
 
-        Matrix<double> v_right = Matrix<double>::identity(n);
-        for( size_t i = 0 ; i < (n-1); i++ )
-        {
-            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, n-2-i, n-2-i, column);
+        // TODO: Here is something wrong!!!!!
+
+        /**
+     * Generates a Givens rotation matrix for the passed matrix
+     * mat, the row  and the two column indices. The Givens rotation rotates the
+     * element mat(row,b_col) to zero, by mat*G. Note: a_col < b_col || a_col >= row
+     * @param mat Input matrix
+     * @param row Plane index
+     * @param a_col Plane a index
+     * @param b_col Plane b index, which will be set to zero.
+     * @return
+     */
+     //   template <class T>
+     //   static Matrix<double> givensRotationRowDirection(const Matrix<T> &mat, size_t row, size_t a_col, size_t b_col);
+
+     /*
+     // thats works!!
+            // debug: expect b 3x3 -> col 1
+            Matrix<double> v_right = Matrix<double>::identity(n);
+            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, 0,  0, 1);
             b =  b * vS;
             v_right = v_right * vS;
+*/
+
+        Matrix<double> v_right = Matrix<double>::identity(n);
+        for( size_t i = 1 ; i < (n-1); i++ )
+        {
+            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, column-i, column-i, column);
+            b =  b * vS;
+            v_right = v_right * vS;
+
+            std::cout << "svdZeroColumn" << std::endl << b << std::endl;
         }
 
         return v_right;
@@ -576,6 +601,8 @@ public:
 
                 modified = true;
             }
+
+            std::cout << "zero line b:" << std::endl << b << std::endl;
         }
 
         return ret;
@@ -590,6 +617,8 @@ public:
 
         std::vector<Matrix<double>> uLeftV;
         std::vector<Matrix<double>> vRightV;
+
+        std::cout << "initial b: " << std::endl << b << std::endl;
 
         // svd step
         size_t q = 0;
@@ -610,8 +639,29 @@ public:
             size_t p;
             svdCheckMatrixGolubKahan(b,p,q);
 
+            // debug
+
+            std::cout << "n: " << n << ", p: " << p << ", q: " << q << std::endl << std::endl;
+
             std::cout << "b:" << std::endl << b << std::endl;
-            std::cout << "p: " << p << ", q: " << q << std::endl << std::endl;
+
+            if( p > 0 )
+            {
+                Matrix<double> b11 = b.subMatrix(0, 0, p, p);
+                std::cout << "b11:" << std::endl << b11 << std::endl;
+            }
+
+            if( n-q-p > 0 )
+            {
+                Matrix<double> b22 = b.subMatrix(p, p,  n-q-p,  n-q-p);
+                std::cout << "b22:" << std::endl << b22 << std::endl;
+            }
+
+            if( q > 0 )
+            {
+                Matrix<double> b33 = b.subMatrix(n-q-p, n-q-p,  q,  q);
+                std::cout << "b33:" << std::endl << b33 << std::endl;
+            }
 
             if( q < n )
             {
@@ -621,9 +671,7 @@ public:
                 // Todo: Follow exactly the description!!! Below code is wrong.
 
                 // check B22 (middle matrix) for zero diagonal element
-                Matrix<double> b222 = b.subMatrix(p,p,n-q-p,n-q-p);
-                std::cout << "b222:" << std::endl << b222 << std::endl;
-                Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b222,p,q, modified);
+                Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b,p,q, modified);
                 if( modified )
                 {
                     vRightV.push_back(extraRotations.v);

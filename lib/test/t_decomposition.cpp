@@ -1147,15 +1147,17 @@ TEST(Decomposition, SVDGolubKahanZeroRow)
         ASSERT_FLOAT_EQ( mat(2,i), 0.0 );
 
     ASSERT_TRUE( mat.compare(givens * orig, true, 0.000001) );
+
+    std::cout << "SVDGolubKahanZeroRow" << std::endl << mat << std::endl;
 }
 
-TEST(Decomposition, SVDGolubKahanZeroColumn)
+TEST(Decomposition, SVDGolubKahanZeroColumnLast)
 {
     double matData[] =    {1.0, 3.2, 0.0, 0.0, 0.0,
                            0.0, 2.0, 1.8, 0.0, 0.0,
                            0.0, 0.0, 0.0, 1.2, 0.0,
                            0.0, 0.0, 0.0, 1.0, 1.4,
-                           0.0, 0.0, 0.0, 0.0, 0.0};
+                           0.0, 0.0, 0.0, 0.0, 0.0};  // <<<<
 
     Matrix<double> mat = Matrix<double>(5,5,matData);
     Matrix<double> orig = mat;
@@ -1166,4 +1168,6 @@ TEST(Decomposition, SVDGolubKahanZeroColumn)
         ASSERT_FLOAT_EQ( mat(i,4), 0.0 );
 
     ASSERT_TRUE( mat.compare( orig * givens, true, 0.000001) );
+
+    std::cout << "SVDGolubKahanZeroColumnLast" << std::endl << mat << std::endl;
 }
