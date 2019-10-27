@@ -410,18 +410,6 @@ public:
         res.v = vR;
         res.u = uL;
 
-        // print out diagonal elements and their upper diagonal element
-        /*
-        for(size_t k = 0; k < n; k++ )
-        {
-            if( k < n-1 )
-                std::cout << b(k,k) << "  ( " << b(k,k+1) << " )" << std::endl;
-            else
-                std::cout << b(k,k) << "  ( - )" << std::endl;
-        }
-
-        std::cout << std::endl;*/
-
         return res;
     }
 
@@ -540,8 +528,6 @@ public:
             Matrix<double> vS = Decomposition::givensRotationRowDirection(b, column-i, column-i, column);
             b =  b * vS;
             v_right = v_right * vS;
-
-            std::cout << "svdZeroColumn" << std::endl << b << std::endl;
         }
 
         return v_right;
@@ -574,8 +560,6 @@ public:
 
                 modified = true;
             }
-
-            std::cout << "zero line b:" << std::endl << b << std::endl;
         }
 
         return ret;
@@ -590,8 +574,6 @@ public:
 
         std::vector<Matrix<double>> uLeftV;
         std::vector<Matrix<double>> vRightV;
-
-        std::cout << "initial b: " << std::endl << b << std::endl;
 
         // svd step
         size_t q = 0;
@@ -612,30 +594,6 @@ public:
             size_t p;
             svdCheckMatrixGolubKahan(b,p,q);
 
-            // debug
-
-            std::cout << "n: " << n << ", p: " << p << ", q: " << q << std::endl << std::endl;
-
-            std::cout << "b:" << std::endl << b << std::endl;
-
-            if( p > 0 )
-            {
-                Matrix<double> b11 = b.subMatrix(0, 0, p, p);
-                std::cout << "b11:" << std::endl << b11 << std::endl;
-            }
-
-            if( n-q-p > 0 )
-            {
-                Matrix<double> b22 = b.subMatrix(p, p,  n-q-p,  n-q-p);
-                std::cout << "b22:" << std::endl << b22 << std::endl;
-            }
-
-            if( q > 0 )
-            {
-                Matrix<double> b33 = b.subMatrix(n-q-p, n-q-p,  q,  q);
-                std::cout << "b33:" << std::endl << b33 << std::endl;
-            }
-
             if( q < n )
             {
                 bool modified = false;
@@ -654,8 +612,6 @@ public:
                 {
                     size_t subMatSize = n-q-p;
                     Matrix<double> b22 = b.subMatrix(p,p,subMatSize,subMatSize);
-                    std::cout << "b22:" << std::endl << b22 << std::endl;
-
                     Decomposition::SvdStepResult step = Decomposition::svdStepGolubKahan(b22);
 
                     Matrix<double> paddedV = Decomposition::svdPaddingRotation(step.v,p,q);
@@ -667,17 +623,12 @@ public:
                     // is equal to b.setSubMatrix(p,p,b22);
                     Matrix<double> k = paddedU * b * paddedV;
 
-                    std::cout << "k inter" << std::endl << k << std::endl << std::endl;
-                    std::cout << "b inter" << std::endl << b << std::endl << std::endl;
-
                     vRightV.push_back(paddedV);
                     uLeftV.push_back(paddedU);
                 }
             }
 
         }
-
-        std::cout << "b:" << std::endl << b << std::endl;
 
         Matrix<double> u_left_accum = Matrix<double>::identity(b.rows());
         Matrix<double> v_right_accum = Matrix<double>::identity(b.cols());
@@ -1043,8 +994,6 @@ Decomposition::EigenPair Decomposition::rayleighIteration(const Matrix<T>& mat, 
         e_vec_unscaled = (matD - (ident * e_val)).adjugate() * e_vec;
         e_vec          = e_vec_unscaled.normalizeColumns();
         e_val          = rayleighQuotient(matD, e_vec);
-
-        //std::cout << "Iteration: " << nbrOfIterations << std::endl << e_vec << std::endl << e_val << "--------------" << std::endl;
 
         // check stopping criteria of Rayleigh iteration
         if (std::abs(e_val - e_val_before) < precision * std::abs(e_val + e_val_before))
