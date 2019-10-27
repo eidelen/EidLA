@@ -583,6 +583,9 @@ TEST(Decomposition, SVD)
     ASSERT_TRUE( res.U.isOrthogonal(0.001) );
     ASSERT_TRUE( res.V.isOrthogonal(0.001) );
 
+    std::cout << res.S << std::endl;
+    std::cout << s_soll << std::endl;
+
     ASSERT_TRUE( s_soll.compare(res.S, true, 0.001) );
 
     ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );

@@ -340,6 +340,16 @@ public:
 
     /**
      * Performs a singular value decomposition of the
+     * passed matrix mat. The standard method
+     * with Eigen decomposition is used.
+     * @param mat Passed matrix.
+     * @return SVD decomposition
+     */
+    template <class T>
+    static SVDResult svdEigen(const Matrix<T>& mat);
+
+    /**
+     * Performs a singular value decomposition of the
      * passed matrix mat. The method applied is the
      * Golub and Kahan algorithm.
      * @param mat Passed matrix.
@@ -1358,6 +1368,13 @@ Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const 
 template <class T>
 Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
 {
+    return Decomposition::svdGolubKahan(mat);
+}
+
+template <class T>
+Decomposition::SVDResult Decomposition::svdEigen(const Matrix<T>& mat)
+{
+
     // U*S*V
     Matrix<double> aTa = mat.transpose() * mat;
 
