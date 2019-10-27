@@ -534,34 +534,8 @@ public:
 
     static Matrix<double> svdZeroColumn(Matrix<double> &b, size_t column)
     {
-        size_t n = b.cols();
-
-        // TODO: Here is something wrong!!!!!
-
-        /**
-     * Generates a Givens rotation matrix for the passed matrix
-     * mat, the row  and the two column indices. The Givens rotation rotates the
-     * element mat(row,b_col) to zero, by mat*G. Note: a_col < b_col || a_col >= row
-     * @param mat Input matrix
-     * @param row Plane index
-     * @param a_col Plane a index
-     * @param b_col Plane b index, which will be set to zero.
-     * @return
-     */
-     //   template <class T>
-     //   static Matrix<double> givensRotationRowDirection(const Matrix<T> &mat, size_t row, size_t a_col, size_t b_col);
-
-     /*
-     // thats works!!
-            // debug: expect b 3x3 -> col 1
-            Matrix<double> v_right = Matrix<double>::identity(n);
-            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, 0,  0, 1);
-            b =  b * vS;
-            v_right = v_right * vS;
-*/
-
-        Matrix<double> v_right = Matrix<double>::identity(n);
-        for( size_t i = 1 ; i < (n-1); i++ )
+        Matrix<double> v_right = Matrix<double>::identity(b.cols());
+        for( size_t i = 1; i <= column; i++ )
         {
             Matrix<double> vS = Decomposition::givensRotationRowDirection(b, column-i, column-i, column);
             b =  b * vS;
@@ -572,7 +546,6 @@ public:
 
         return v_right;
     }
-
 
     static SvdStepResult svdHandleZeroDiagonalEntries( Matrix<double>& b, size_t p, size_t q, bool& modified)
     {

@@ -1151,21 +1151,47 @@ TEST(Decomposition, SVDGolubKahanZeroRow)
     std::cout << "SVDGolubKahanZeroRow" << std::endl << mat << std::endl;
 }
 
+TEST(Decomposition, SVDGolubKahanZeroColumnStepByStep)
+{
+    Matrix<double> mat = Matrix<double>(4,4, {1.0, 1.0, 0.0, 0.0,
+                                              0.0, 1.0, 1.0, 0.0,
+                                              0.0, 0.0, 1.0, 1.0,
+                                              0.0, 0.0, 0.0, 0.0}); //<<<<<
+    Matrix<double> original = mat;
+
+    auto g0 = Decomposition::givensRotationRowDirection(mat, 2,  2, 3); // sets element 2,3 to zero
+    mat = mat * g0;
+
+    auto g1 = Decomposition::givensRotationRowDirection(mat, 1,  1, 3); // sets element 1,3 to zero
+    mat = mat * g1;
+
+    auto g2 = Decomposition::givensRotationRowDirection(mat, 0,  0, 3); // sets element 0,3 to zero
+    mat = mat * g2;
+
+    // assure last row and last column are zero
+    for(size_t k = 0; k < 4; k++)
+    {
+        ASSERT_NEAR(mat(3,k), 0.0, 0.00001);
+        ASSERT_NEAR(mat(k,3), 0.0, 0.00001);
+    }
+}
+
 TEST(Decomposition, SVDGolubKahanZeroColumnLast)
 {
-    double matData[] =    {1.0, 3.2, 0.0, 0.0, 0.0,
-                           0.0, 2.0, 1.8, 0.0, 0.0,
-                           0.0, 0.0, 0.0, 1.2, 0.0,
-                           0.0, 0.0, 0.0, 1.0, 1.4,
-                           0.0, 0.0, 0.0, 0.0, 0.0};  // <<<<
+    Matrix<double> mat = Matrix<double>(4,4, {1.0, 1.0, 0.0, 0.0,
+                                              0.0, 1.0, 1.0, 0.0,
+                                              0.0, 0.0, 1.0, 1.0,
+                                              0.0, 0.0, 0.0, 0.0}); //<<<<<
 
-    Matrix<double> mat = Matrix<double>(5,5,matData);
     Matrix<double> orig = mat;
-    Matrix<double> givens = Decomposition::svdZeroColumn(mat,4);
+    Matrix<double> givens = Decomposition::svdZeroColumn(mat,3);
 
-    // check that the 5th column is zero
-    for( size_t i = 0; i < 5; i++ )
-        ASSERT_FLOAT_EQ( mat(i,4), 0.0 );
+    // assure last row and last column are zero
+    for(size_t k = 0; k < 4; k++)
+    {
+        ASSERT_NEAR(mat(3,k), 0.0, 0.00001);
+        ASSERT_NEAR(mat(k,3), 0.0, 0.00001);
+    }
 
     ASSERT_TRUE( mat.compare( orig * givens, true, 0.000001) );
 
