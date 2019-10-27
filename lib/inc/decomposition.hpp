@@ -410,18 +410,6 @@ public:
         res.v = vR;
         res.u = uL;
 
-        // print out diagonal elements and their upper diagonal element
-        /*
-        for(size_t k = 0; k < n; k++ )
-        {
-            if( k < n-1 )
-                std::cout << b(k,k) << "  ( " << b(k,k+1) << " )" << std::endl;
-            else
-                std::cout << b(k,k) << "  ( - )" << std::endl;
-        }
-
-        std::cout << std::endl;*/
-
         return res;
     }
 
@@ -531,23 +519,19 @@ public:
         return u_left;
     }
 
-    // Chapter 8, p. 490 -> If dn = 0, then the last column can be zeroed with a series of column rotations in planes
-    //                      (n - 1 , n) , (n - 2, n) , . . . , ( 1 , n) .
+
     static Matrix<double> svdZeroColumn(Matrix<double> &b, size_t column)
     {
-        size_t n = b.cols();
-
-        Matrix<double> v_right = Matrix<double>::identity(n);
-        for( size_t i = 0 ; i < (n-1); i++ )
+        Matrix<double> v_right = Matrix<double>::identity(b.cols());
+        for( size_t i = 1; i <= column; i++ )
         {
-            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, n-2-i, n-2-i, column);
+            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, column-i, column-i, column);
             b =  b * vS;
             v_right = v_right * vS;
         }
 
         return v_right;
     }
-
 
     static SvdStepResult svdHandleZeroDiagonalEntries( Matrix<double>& b, size_t p, size_t q, bool& modified)
     {
@@ -610,12 +594,12 @@ public:
             size_t p;
             svdCheckMatrixGolubKahan(b,p,q);
 
-            std::cout << "b:" << std::endl << b << std::endl;
-            std::cout << "p: " << p << ", q: " << q << std::endl << std::endl;
-
             if( q < n )
             {
                 bool modified = false;
+
+
+                // Todo: Follow exactly the description!!! Below code is wrong.
 
                 // check B22 (middle matrix) for zero diagonal element
                 Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b,p,q, modified);
@@ -628,8 +612,6 @@ public:
                 {
                     size_t subMatSize = n-q-p;
                     Matrix<double> b22 = b.subMatrix(p,p,subMatSize,subMatSize);
-                    std::cout << "b22:" << std::endl << b22 << std::endl;
-
                     Decomposition::SvdStepResult step = Decomposition::svdStepGolubKahan(b22);
 
                     Matrix<double> paddedV = Decomposition::svdPaddingRotation(step.v,p,q);
@@ -638,14 +620,15 @@ public:
                     // copy b22 back into b
                     b.setSubMatrix(p,p,b22);
 
+                    // is equal to b.setSubMatrix(p,p,b22);
+                    Matrix<double> k = paddedU * b * paddedV;
+
                     vRightV.push_back(paddedV);
                     uLeftV.push_back(paddedU);
                 }
             }
 
         }
-
-        std::cout << "b:" << std::endl << b << std::endl;
 
         Matrix<double> u_left_accum = Matrix<double>::identity(b.rows());
         Matrix<double> v_right_accum = Matrix<double>::identity(b.cols());
@@ -1011,8 +994,6 @@ Decomposition::EigenPair Decomposition::rayleighIteration(const Matrix<T>& mat, 
         e_vec_unscaled = (matD - (ident * e_val)).adjugate() * e_vec;
         e_vec          = e_vec_unscaled.normalizeColumns();
         e_val          = rayleighQuotient(matD, e_vec);
-
-        //std::cout << "Iteration: " << nbrOfIterations << std::endl << e_vec << std::endl << e_val << "--------------" << std::endl;
 
         // check stopping criteria of Rayleigh iteration
         if (std::abs(e_val - e_val_before) < precision * std::abs(e_val + e_val_before))

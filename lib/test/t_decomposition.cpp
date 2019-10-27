@@ -952,18 +952,51 @@ TEST(Decomposition, SVDGolubKahanWithNullSingularValue)
     ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.1 ) );
 }
 
-/* Still failing
 TEST(Decomposition, SVDGolubKahanMultipleNullSingularValues)
 {
-    Matrix<double> m = Matrix<double>(4, 4);
-    m.fill(2);
+    Matrix<double> m = Matrix<double>(3, 3);
+    m.fill(1);
 
     Decomposition::SVDResult res = Decomposition::svdGolubKahan(m);
+
+    std::cout << "Computed Results" << std::endl << std::endl;
+
+
+    std::cout << "Singualar values " << std::endl;
+    std::cout << res.S << std::endl << std::endl;
+
+    std::cout << "U (left) " << std::endl;
+    std::cout << res.U << std::endl << std::endl;
+
+    std::cout << "V (right) " << std::endl;
+    std::cout << res.V << std::endl << std::endl;
 
     ASSERT_TRUE( res.U.isOrthogonal(0.00001) );
     ASSERT_TRUE( res.V.isOrthogonal(0.00001) );
     ASSERT_TRUE( m.compare(res.U * res.S * res.V.transpose(), true, 0.00001 ) );
-} */
+
+
+
+    /* From octave
+U =
+    -0.57735      0.8165  -8.7561e-17
+    -0.57735    -0.40825    -0.70711
+    -0.57735    -0.40825     0.70711
+
+S =
+
+           3           0           0
+           0   1.338e-16           0
+           0           0  1.3194e-49
+
+V =
+    -0.57735      0.8165          -0
+    -0.57735    -0.40825     0.70711
+    -0.57735    -0.40825    -0.70711
+     */
+
+
+}
 
 /* Still failing
 TEST(Decomposition, SVDGolubKahanBatch)
@@ -1114,23 +1147,53 @@ TEST(Decomposition, SVDGolubKahanZeroRow)
         ASSERT_FLOAT_EQ( mat(2,i), 0.0 );
 
     ASSERT_TRUE( mat.compare(givens * orig, true, 0.000001) );
+
+    std::cout << "SVDGolubKahanZeroRow" << std::endl << mat << std::endl;
 }
 
-TEST(Decomposition, SVDGolubKahanZeroColumn)
+TEST(Decomposition, SVDGolubKahanZeroColumnStepByStep)
 {
-    double matData[] =    {1.0, 3.2, 0.0, 0.0, 0.0,
-                           0.0, 2.0, 1.8, 0.0, 0.0,
-                           0.0, 0.0, 0.0, 1.2, 0.0,
-                           0.0, 0.0, 0.0, 1.0, 1.4,
-                           0.0, 0.0, 0.0, 0.0, 0.0};
+    Matrix<double> mat = Matrix<double>(4,4, {1.0, 1.0, 0.0, 0.0,
+                                              0.0, 1.0, 1.0, 0.0,
+                                              0.0, 0.0, 1.0, 1.0,
+                                              0.0, 0.0, 0.0, 0.0}); //<<<<<
+    Matrix<double> original = mat;
 
-    Matrix<double> mat = Matrix<double>(5,5,matData);
+    auto g0 = Decomposition::givensRotationRowDirection(mat, 2,  2, 3); // sets element 2,3 to zero
+    mat = mat * g0;
+
+    auto g1 = Decomposition::givensRotationRowDirection(mat, 1,  1, 3); // sets element 1,3 to zero
+    mat = mat * g1;
+
+    auto g2 = Decomposition::givensRotationRowDirection(mat, 0,  0, 3); // sets element 0,3 to zero
+    mat = mat * g2;
+
+    // assure last row and last column are zero
+    for(size_t k = 0; k < 4; k++)
+    {
+        ASSERT_NEAR(mat(3,k), 0.0, 0.00001);
+        ASSERT_NEAR(mat(k,3), 0.0, 0.00001);
+    }
+}
+
+TEST(Decomposition, SVDGolubKahanZeroColumnLast)
+{
+    Matrix<double> mat = Matrix<double>(4,4, {1.0, 1.0, 0.0, 0.0,
+                                              0.0, 1.0, 1.0, 0.0,
+                                              0.0, 0.0, 1.0, 1.0,
+                                              0.0, 0.0, 0.0, 0.0}); //<<<<<
+
     Matrix<double> orig = mat;
-    Matrix<double> givens = Decomposition::svdZeroColumn(mat,4);
+    Matrix<double> givens = Decomposition::svdZeroColumn(mat,3);
 
-    // check that the 5th column is zero
-    for( size_t i = 0; i < 5; i++ )
-        ASSERT_FLOAT_EQ( mat(i,4), 0.0 );
+    // assure last row and last column are zero
+    for(size_t k = 0; k < 4; k++)
+    {
+        ASSERT_NEAR(mat(3,k), 0.0, 0.00001);
+        ASSERT_NEAR(mat(k,3), 0.0, 0.00001);
+    }
 
     ASSERT_TRUE( mat.compare( orig * givens, true, 0.000001) );
+
+    std::cout << "SVDGolubKahanZeroColumnLast" << std::endl << mat << std::endl;
 }
