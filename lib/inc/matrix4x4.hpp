@@ -330,7 +330,7 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
     for (size_t k = 0; k < n; k++)
         h = h + (qA.column(k) * qB.column(k).transpose());
 
-    Decomposition::SVDResult dec = Decomposition::svd(h);
+    Decomposition::SVDResult dec = Decomposition::svdGolubKahan(h);
 
     Matrix<double> rotation = dec.V * dec.U.transpose();
 
@@ -367,7 +367,7 @@ Matrix4x4 Matrix4x4::findRigidTransformation(const Matrix<R>& setA, const Matrix
     error = computeTransformationError(dA, dB, res);
 
     return res;
-};
+}
 
 template <typename R, typename Q>
 double Matrix4x4::computeTransformationError(const Matrix<R>& setA, const Matrix<Q>& setB, const Matrix4x4& t)

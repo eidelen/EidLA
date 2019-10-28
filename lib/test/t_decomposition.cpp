@@ -637,7 +637,7 @@ TEST(Decomposition, SVDBatch)
     {
         auto a = Matrix<double>::random(rows, rows, -1.0, 1.0);
 
-        Decomposition::SVDResult res = Decomposition::svd(a);
+        Decomposition::SVDResult res = Decomposition::svdEigen(a);
 
         ASSERT_TRUE( res.U.isOrthogonal(0.05) );
         ASSERT_TRUE( res.V.isOrthogonal(0.05) );
@@ -979,7 +979,6 @@ TEST(Decomposition, SVDGolubKahanMultipleNullSingularValues)
     ASSERT_TRUE( m.compare(res.U * res.S * res.V.transpose(), true, 0.00001 ) );
 
 
-
     /* From octave
 U =
     -0.57735      0.8165  -8.7561e-17
@@ -997,16 +996,13 @@ V =
     -0.57735    -0.40825     0.70711
     -0.57735    -0.40825    -0.70711
      */
-
-
 }
 
-/* Still failing
 TEST(Decomposition, SVDGolubKahanBatch)
 {
     size_t rows = 5;
 
-    for( int k = 0; k < 100; k++ )
+    for( int k = 0; k < 10000; k++ )
     {
         auto a = Matrix<double>::random(rows, rows, -1.0, 1.0);
 
@@ -1016,7 +1012,7 @@ TEST(Decomposition, SVDGolubKahanBatch)
         ASSERT_TRUE( res.V.isOrthogonal(0.00001) );
         ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
     }
-}*/
+}
 
 TEST(Decomposition, SVDGolubKahanMatrixCheckIdentity)
 {
@@ -1199,4 +1195,58 @@ TEST(Decomposition, SVDGolubKahanZeroColumnLast)
     ASSERT_TRUE( mat.compare( orig * givens, true, 0.000001) );
 
     std::cout << "SVDGolubKahanZeroColumnLast" << std::endl << mat << std::endl;
+}
+
+TEST(Decomposition, SVDSort)
+{
+    Matrix<double> s_unsorted =  Matrix<double>(4,4, {1.0, 0.0, 0.0, 0.0,
+                                                      0.0, 2.0, 0.0, 0.0,
+                                                      0.0, 0.0, 3.0, 0.0,
+                                                      0.0, 0.0, 0.0, 0.5});
+
+    Matrix<double> u_unsorted = Matrix<double>::identity(4);
+    Matrix<double> v_unsorted = Matrix<double>::identity(4);
+
+    Decomposition::SVDResult unsorted(u_unsorted, s_unsorted, v_unsorted);
+
+    Decomposition::SVDResult sorted = Decomposition::sortSingularValues(unsorted);
+
+
+    std::cout << "Singualar values " << std::endl;
+    std::cout << sorted.S << std::endl << std::endl;
+
+    std::cout << "U (left) " << std::endl;
+    std::cout << sorted.U << std::endl << std::endl;
+
+    std::cout << "V (right) " << std::endl;
+    std::cout << sorted.V << std::endl << std::endl;
+
+    Matrix<double> a_unsorted = unsorted.U * unsorted.S * unsorted.V.transpose();
+    Matrix<double> a_sorted = sorted.U * sorted.S * sorted.V.transpose();
+    ASSERT_TRUE(a_unsorted.compare(a_sorted, true, 0.00001));
+
+    ASSERT_TRUE( sorted.U.isOrthogonal(0.00001) );
+    ASSERT_TRUE( sorted.V.isOrthogonal(0.00001) );
+
+    // check ascending s
+    double s = 4.0; // biggest value is 3
+    for(size_t k = 0; k < 4; k++)
+    {
+        ASSERT_GE(s, sorted.S(k,k));
+        s = sorted.S(k,k);
+    }
+}
+
+TEST(Decomposition, SVDGolubKahanInaccurateMat)
+{
+
+    Matrix<double> m = Matrix<double>(3, 3, {-2.475433256908851, 11.27935193034196, 58.02418315337823,
+                                             -10.26634698738639, -61.18911793178113, -41.71595456077604,
+                                             4.062410066001319, 31.94746584946286, 36.73532106866977});
+
+    auto eigen = Decomposition::svdEigen(m);
+    auto golub = Decomposition::svdGolubKahan(m);
+
+    std::cout << "Eigen SVD: " << std::endl << eigen.U << std::endl << eigen.S << std::endl<< eigen.V << std::endl;
+    std::cout << "Golub SVD: " << std::endl << golub.U << std::endl << golub.S << std::endl << golub.V << std::endl;
 }

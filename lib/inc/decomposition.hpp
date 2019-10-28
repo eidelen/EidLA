@@ -545,7 +545,7 @@ public:
 
     static SvdStepResult svdHandleZeroDiagonalEntries( Matrix<double>& b, size_t p, size_t q, bool& modified)
     {
-        double eps = std::numeric_limits<double>::epsilon() * 10;
+        double eps = 10.0 * std::numeric_limits<double>::epsilon();
         size_t n = b.cols();
 
         SvdStepResult ret;
@@ -577,7 +577,7 @@ public:
 
     static Decomposition::SVDResult svdGolubKahanBidiagonal(Matrix<double>& b)
     {
-        double eps = std::numeric_limits<double>::epsilon() * 100;
+        double eps = 10.0 * std::numeric_limits<double>::epsilon() ;
 
         size_t m = b.rows();
         size_t n = b.cols();
@@ -652,6 +652,41 @@ public:
         Matrix<double> v = v_right_accum;
 
         return SVDResult(u,b,v);
+    }
+
+    static Decomposition::SVDResult sortSingularValues(const Decomposition::SVDResult& svdRes)
+    {
+        Matrix<double> u = svdRes.U;
+        Matrix<double> s = svdRes.S;
+        Matrix<double> v = svdRes.V;
+
+        size_t m = s.rows();
+
+        // perform bubble sort on s
+        bool altered = true;
+        while(altered)
+        {
+            altered = false;
+            for(size_t k = 0; k < m-1; k++)
+            {
+                if( s(k, k) < s(k+1, k+1) )
+                {
+                    // swap k and k+1
+                    altered = true;
+
+                    double sk = s(k, k);
+                    s(k, k) = s(k+1, k+1);
+                    s(k+1, k+1) = sk;
+
+                    u.swapCols(k, k+1);
+                    v.swapCols(k, k+1);
+                }
+            }
+
+        }
+
+        Decomposition::SVDResult sortedRes(u, s, v);
+        return sortedRes;
     }
 
 
@@ -1476,7 +1511,6 @@ template <class T>
 Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 {
     // U*S*V
-    double eps = std::numeric_limits<double>::epsilon() * 100;
 
     Decomposition::DiagonalizationResult diag = Decomposition::bidiagonalization(mat);
     Matrix<double> b = diag.D;
@@ -1493,6 +1527,7 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
     Matrix<double> sing(b.rows(), b.cols());
     sing.fill(0.0);
 
+    // negative singular values to positive
     for( size_t k = 0; k < b.cols(); k++ )
     {
         double s = b(k,k);
@@ -1508,7 +1543,8 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
         sing(k,k) = s;
     }
 
-    return SVDResult(u,sing,v);
+    Decomposition::SVDResult sorted = Decomposition::sortSingularValues(SVDResult(u,sing,v));
+    return sorted;
 }
 
 #endif //MY_DECOMPOSITION_H

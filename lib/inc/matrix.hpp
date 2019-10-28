@@ -334,10 +334,17 @@ public:
 
     /**
      * Swap rows m1 and m2
-     * @param m1
-     * @param m2
+     * @param m1 Row A
+     * @param m2 Row B
      */
     void swapRows(size_t m1, size_t m2);
+
+    /**
+     * Swap columns n1 and n2.
+     * @param n1 Column A
+     * @param n2 Column B
+     */
+    void swapCols(size_t n1, size_t n2);
 
     /**
      * Sets the row rowIdx to values from row.
@@ -1336,6 +1343,22 @@ void Matrix<T>::swapRows(size_t m1, size_t m2)
     for (size_t i = 0; i < cols(); i++)
     {
         std::swap(row1[i], row2[i]);
+    }
+}
+
+template <class T>
+void Matrix<T>::swapCols(size_t n1, size_t n2)
+{
+    if (std::max(n1, n2) >= cols())
+    {
+        std::cout << "Column index exceeds matrix size";
+        std::exit(-1);
+    }
+
+    for( size_t m = 0; m < rows(); m++ )
+    {
+        T* rowOffset = getRowPtr(m);
+        std::swap(rowOffset[n1], rowOffset[n2]);
     }
 }
 
