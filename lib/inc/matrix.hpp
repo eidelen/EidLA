@@ -568,6 +568,12 @@ public:
     cv::Mat toOpenCVMatrix() const;
 #endif // OPENCVEIDLA
 
+
+    /**
+     * Print the matrix in Matlab style.
+     */
+    void toMatlab() const;
+
 protected:
 
     T elementwiseMultiplyAndSum(const T* arr1, const T* arr2, size_t length) const;
@@ -1994,6 +2000,33 @@ void Matrix<T>::sortRows(size_t sortColumn, SortDirection direction)
             }
         }
     }
+}
+
+
+template <class T>
+void Matrix<T>::toMatlab() const
+{
+    std::cout.precision(20);
+    std::cout << "[";
+
+    for(size_t m = 0; m < rows(); m++)
+    {
+        std::cout << "[";
+        for(size_t n = 0; n < cols(); n++)
+        {
+            std::cout << getValue(m,n);
+
+            if(n+1 < cols())
+                std::cout << ",";
+        }
+        std::cout << "]";
+
+        if(m+1 < rows())
+            std::cout << ";";
+    }
+
+    std::cout << "]" << std::endl;
+
 }
 
 #ifdef OPENCVEIDLA
