@@ -545,7 +545,7 @@ public:
 
     static SvdStepResult svdHandleZeroDiagonalEntries( Matrix<double>& b, size_t p, size_t q, bool& modified)
     {
-        double eps = 10.0 * std::numeric_limits<double>::epsilon();
+        double eps = 100.0 * std::numeric_limits<double>::epsilon();
         size_t n = b.cols();
 
         SvdStepResult ret;
@@ -577,7 +577,7 @@ public:
 
     static Decomposition::SVDResult svdGolubKahanBidiagonal(Matrix<double>& b)
     {
-        double eps = 10.0 * std::numeric_limits<double>::epsilon() ;
+        double eps = 1.0 * std::numeric_limits<double>::epsilon() ;
 
         size_t m = b.rows();
         size_t n = b.cols();
@@ -587,7 +587,7 @@ public:
 
         // svd step
         size_t q = 0;
-        int maxIter = 100000;
+        int maxIter = 100;
         while( q != n && maxIter > 0)
         {
             maxIter--;
