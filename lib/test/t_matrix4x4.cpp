@@ -335,11 +335,15 @@ TEST(Matrix4x4, FindAffineTransformation_Batch)
         if( error > 0.05 )
             std::cout << "Error exceeded 0.05: " << error << std::endl;
 
-        if( ! t.compare(t_res, true, 0.01) )
-            std::cout << "T differs by more than 0.01 " << std::endl;
+        if( ! t.compare(t_res, true, 0.02) )
+        {
+            std::cout << "T differs by more than 0.02 " << std::endl;
+            std::cout << t << std::endl << t_res << std::endl;
+        }
 
 
         // todo: This values need to be lower! -> Decrease after implementing a new SVD
+
         ASSERT_TRUE( t.compare(t_res, true, 0.02) );
         ASSERT_LT( error, 0.05 );
 

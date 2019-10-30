@@ -142,7 +142,7 @@ TEST(Matrix, Column)
     ASSERT_TRUE(s3.compare(r3));
 }
 
-TEST(Matrix, Swap)
+TEST(Matrix, SwapRow)
 {
     auto mat = Matrix<int>::identity(3);
     mat.swapRows(1, 2);
@@ -166,6 +166,18 @@ TEST(Matrix, SetRow)
     mat.setRow(2, r1);
 
     ASSERT_TRUE(soll.compare(mat));
+}
+
+TEST(Matrix, SwapColumn)
+{
+    auto mat = Matrix<int>::identity(3);
+    auto soll = Matrix<int>(3, 3, {0,0,1, 0,1,0, 1,0,0});
+
+    mat.swapCols(0, 2);
+    ASSERT_TRUE(mat.compare(soll));
+
+    mat.swapCols(0, 2);
+    ASSERT_TRUE(mat.compare(Matrix<int>::identity(3)));
 }
 
 TEST(Matrix, SetColumn)

@@ -583,6 +583,9 @@ TEST(Decomposition, SVD)
     ASSERT_TRUE( res.U.isOrthogonal(0.001) );
     ASSERT_TRUE( res.V.isOrthogonal(0.001) );
 
+    std::cout << res.S << std::endl;
+    std::cout << s_soll << std::endl;
+
     ASSERT_TRUE( s_soll.compare(res.S, true, 0.001) );
 
     ASSERT_TRUE( mat.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
@@ -634,7 +637,7 @@ TEST(Decomposition, SVDBatch)
     {
         auto a = Matrix<double>::random(rows, rows, -1.0, 1.0);
 
-        Decomposition::SVDResult res = Decomposition::svd(a);
+        Decomposition::SVDResult res = Decomposition::svdEigen(a);
 
         ASSERT_TRUE( res.U.isOrthogonal(0.05) );
         ASSERT_TRUE( res.V.isOrthogonal(0.05) );
@@ -976,7 +979,6 @@ TEST(Decomposition, SVDGolubKahanMultipleNullSingularValues)
     ASSERT_TRUE( m.compare(res.U * res.S * res.V.transpose(), true, 0.00001 ) );
 
 
-
     /* From octave
 U =
     -0.57735      0.8165  -8.7561e-17
@@ -994,26 +996,38 @@ V =
     -0.57735    -0.40825     0.70711
     -0.57735    -0.40825    -0.70711
      */
-
-
 }
 
-/* Still failing
 TEST(Decomposition, SVDGolubKahanBatch)
 {
     size_t rows = 5;
+    size_t n_test = 10000;
 
-    for( int k = 0; k < 100; k++ )
+    for( size_t k = 0; k < n_test; k++ )
     {
-        auto a = Matrix<double>::random(rows, rows, -1.0, 1.0);
+        auto a = Matrix<double>::random(rows, rows, -100.0, 100.0);
 
         Decomposition::SVDResult res = Decomposition::svdGolubKahan(a);
 
-        ASSERT_TRUE( res.U.isOrthogonal(0.00001) );
-        ASSERT_TRUE( res.V.isOrthogonal(0.00001) );
-        ASSERT_TRUE( a.compare(res.U * res.S * res.V.transpose(), true, 0.001 ) );
+
+        ASSERT_TRUE( res.U.isOrthogonal(0.0000001) );
+        ASSERT_TRUE( res.V.isOrthogonal(0.0000001) );
+
+        bool isAccurate = a.compare(res.U * res.S * res.V.transpose(), true, 0.00001 );
+
+        if(!isAccurate)
+        {
+            a.toMatlab();
+            std::cout << std::endl;
+        }
+
+
+        ASSERT_TRUE( isAccurate );
+
+        if(k % 1000 == 0 )
+            std::cout << "SVD Batch testing: " << (double)(k) / n_test * 100.0 << " %" << std::endl;
     }
-}*/
+}
 
 TEST(Decomposition, SVDGolubKahanMatrixCheckIdentity)
 {
@@ -1196,4 +1210,98 @@ TEST(Decomposition, SVDGolubKahanZeroColumnLast)
     ASSERT_TRUE( mat.compare( orig * givens, true, 0.000001) );
 
     std::cout << "SVDGolubKahanZeroColumnLast" << std::endl << mat << std::endl;
+}
+
+TEST(Decomposition, SVDSort)
+{
+    Matrix<double> s_unsorted =  Matrix<double>(4,4, {1.0, 0.0, 0.0, 0.0,
+                                                      0.0, 2.0, 0.0, 0.0,
+                                                      0.0, 0.0, 3.0, 0.0,
+                                                      0.0, 0.0, 0.0, 0.5});
+
+    Matrix<double> u_unsorted = Matrix<double>::identity(4);
+    Matrix<double> v_unsorted = Matrix<double>::identity(4);
+
+    Decomposition::SVDResult unsorted(u_unsorted, s_unsorted, v_unsorted);
+
+    Decomposition::SVDResult sorted = Decomposition::sortSingularValues(unsorted);
+
+
+    std::cout << "Singualar values " << std::endl;
+    std::cout << sorted.S << std::endl << std::endl;
+
+    std::cout << "U (left) " << std::endl;
+    std::cout << sorted.U << std::endl << std::endl;
+
+    std::cout << "V (right) " << std::endl;
+    std::cout << sorted.V << std::endl << std::endl;
+
+    Matrix<double> a_unsorted = unsorted.U * unsorted.S * unsorted.V.transpose();
+    Matrix<double> a_sorted = sorted.U * sorted.S * sorted.V.transpose();
+    ASSERT_TRUE(a_unsorted.compare(a_sorted, true, 0.00001));
+
+    ASSERT_TRUE( sorted.U.isOrthogonal(0.00001) );
+    ASSERT_TRUE( sorted.V.isOrthogonal(0.00001) );
+
+    // check ascending s
+    double s = 4.0; // biggest value is 3
+    for(size_t k = 0; k < 4; k++)
+    {
+        ASSERT_GE(s, sorted.S(k,k));
+        s = sorted.S(k,k);
+    }
+}
+
+TEST(Decomposition, SVDGolubKahanInaccurateMat)
+{
+    // Golub Kahan method shows accuracy problems with this very matrix
+
+    /* Octave
+
+ a =
+
+  -0.102025  -0.723523   0.891811   0.481759  -0.633212
+  -0.348421   0.711962   0.531478   0.935420  -0.097372
+  -0.018528  -0.464990   0.812909  -0.601147  -0.149676
+  -0.195534   0.625486   0.594395  -0.914214   0.648131
+  -0.042660   0.641828  -0.261626  -0.363415   0.391454
+
+>>
+>> [U, S, V] = svd (a)
+U =
+
+  -0.683046   0.311696   0.171736   0.049374   0.635895
+  -0.195915  -0.334253   0.870418  -0.137152  -0.271025
+  -0.138227   0.706147   0.015195  -0.521594  -0.458212
+   0.525910   0.534706   0.443223   0.468542   0.146728
+   0.446517  -0.081030   0.127288  -0.697968   0.539161
+
+S =
+
+Diagonal Matrix
+
+   1.895558          0          0          0          0
+          0   1.544089          0          0          0
+          0          0   1.354855          0          0
+          0          0          0   0.107890          0
+          0          0          0          0   0.014395
+
+V =
+
+   0.0098270  -0.0191181  -0.3049551  -0.0873793  -0.9481061
+   0.5457635  -0.3299046   0.6253882  -0.4239857  -0.1497695
+  -0.3322823   0.6563000   0.6334728   0.0763477  -0.2274687
+  -0.5656895  -0.6776752   0.3220629   0.3183853  -0.1251318
+   0.5211809   0.0287058   0.1043058   0.8398827  -0.1061316
+
+     */
+
+    Matrix<double> m = Matrix<double>(5, 5, {-0.10202521252727214662,-0.72352319888331184661,0.89181119050052326536,0.48175927978607036017,-0.63321242927972276604,-0.34842097643748359825,0.71196246658029571641,0.53147834081151068553,0.93542036356107161055,-0.097372463543626719407,-0.018527628599318224367,-0.46498953560260436468,0.81290852214630815453,-0.60114650914488110267,-0.14967587343376720366,-0.19553402337527159283,0.62548581871254160802,0.59439451823066846714,-0.91421383569353364962,0.64813108152028542364,-0.042660400203598625168,0.64182817888695598008,-0.26162605672833538772,-0.36341526642480959097,0.39145355245384694243});
+
+
+    auto eigen = Decomposition::svdEigen(m);
+    auto golub = Decomposition::svdGolubKahan(m);
+
+    std::cout << "Eigen SVD: " << std::endl << eigen.U << std::endl << eigen.S << std::endl<< eigen.V << std::endl;
+    std::cout << "Golub SVD: " << std::endl << golub.U << std::endl << golub.S << std::endl << golub.V << std::endl;
 }

@@ -334,10 +334,17 @@ public:
 
     /**
      * Swap rows m1 and m2
-     * @param m1
-     * @param m2
+     * @param m1 Row A
+     * @param m2 Row B
      */
     void swapRows(size_t m1, size_t m2);
+
+    /**
+     * Swap columns n1 and n2.
+     * @param n1 Column A
+     * @param n2 Column B
+     */
+    void swapCols(size_t n1, size_t n2);
 
     /**
      * Sets the row rowIdx to values from row.
@@ -560,6 +567,12 @@ public:
      */
     cv::Mat toOpenCVMatrix() const;
 #endif // OPENCVEIDLA
+
+
+    /**
+     * Print the matrix in Matlab style.
+     */
+    void toMatlab() const;
 
 protected:
 
@@ -1340,6 +1353,22 @@ void Matrix<T>::swapRows(size_t m1, size_t m2)
 }
 
 template <class T>
+void Matrix<T>::swapCols(size_t n1, size_t n2)
+{
+    if (std::max(n1, n2) >= cols())
+    {
+        std::cout << "Column index exceeds matrix size";
+        std::exit(-1);
+    }
+
+    for( size_t m = 0; m < rows(); m++ )
+    {
+        T* rowOffset = getRowPtr(m);
+        std::swap(rowOffset[n1], rowOffset[n2]);
+    }
+}
+
+template <class T>
 void Matrix<T>::setRow(size_t rowIdx, const Matrix<T>& row)
 {
     if (rowIdx >= rows())
@@ -1971,6 +2000,33 @@ void Matrix<T>::sortRows(size_t sortColumn, SortDirection direction)
             }
         }
     }
+}
+
+
+template <class T>
+void Matrix<T>::toMatlab() const
+{
+    std::cout.precision(20);
+    std::cout << "[";
+
+    for(size_t m = 0; m < rows(); m++)
+    {
+        std::cout << "[";
+        for(size_t n = 0; n < cols(); n++)
+        {
+            std::cout << getValue(m,n);
+
+            if(n+1 < cols())
+                std::cout << ",";
+        }
+        std::cout << "]";
+
+        if(m+1 < rows())
+            std::cout << ";";
+    }
+
+    std::cout << "]" << std::endl;
+
 }
 
 #ifdef OPENCVEIDLA

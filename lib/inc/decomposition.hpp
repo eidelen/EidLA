@@ -340,6 +340,16 @@ public:
 
     /**
      * Performs a singular value decomposition of the
+     * passed matrix mat. The standard method
+     * with Eigen decomposition is used.
+     * @param mat Passed matrix.
+     * @return SVD decomposition
+     */
+    template <class T>
+    static SVDResult svdEigen(const Matrix<T>& mat);
+
+    /**
+     * Performs a singular value decomposition of the
      * passed matrix mat. The method applied is the
      * Golub and Kahan algorithm.
      * @param mat Passed matrix.
@@ -426,7 +436,7 @@ public:
      */
     static void svdCheckMatrixGolubKahan(const Matrix<double>& mat, size_t& p, size_t& q)
     {
-        double eps = std::numeric_limits<double>::epsilon() * 10;
+        double tol = 100.0 * std::numeric_limits<double>::epsilon();
         size_t n = mat.cols();
 
         // find q - diagonality from back
@@ -442,7 +452,7 @@ public:
                 q++;
                 break;
             }
-            else if( std::abs(mat(y, x)) < eps )
+            else if( std::abs(mat(y,x)) < std::numeric_limits<double>::epsilon() ) // small upper band values were already set to 0.0
             {
                 // still diagonal
                 q++;
@@ -454,7 +464,6 @@ public:
             }
         }
 
-        // find q - diagonality from back
         p = n - q;
         for( size_t i = q; i < n; i++ )
         {
@@ -467,7 +476,7 @@ public:
                 p--;
                 break;
             }
-            else if( std::abs(mat(y, x)) >= eps )
+            else if( std::abs(mat(y, x)) > 0.0 )
             {
                 // still not diagonal again
                 p--;
@@ -535,7 +544,8 @@ public:
 
     static SvdStepResult svdHandleZeroDiagonalEntries( Matrix<double>& b, size_t p, size_t q, bool& modified)
     {
-        double eps = std::numeric_limits<double>::epsilon() * 10;
+        double bNorm = b.normInf();
+        double tol = bNorm * std::numeric_limits<double>::epsilon();
         size_t n = b.cols();
 
         SvdStepResult ret;
@@ -546,7 +556,7 @@ public:
         {
             // if any diagonal entry in B22 is zero, then zero the
             // superdiagonal entry in the same row.
-            if( std::abs(b(r,r)) < eps )
+            if( std::abs(b(r,r)) < tol )
             {
                 if( r < (n-1-q) )
                 {
@@ -555,7 +565,7 @@ public:
                 else
                 {
                     // special case: last diagonal element of b22
-                    ret.v = svdZeroColumn(b, r );
+                    ret.v = svdZeroColumn(b, r);
                 }
 
                 modified = true;
@@ -567,7 +577,7 @@ public:
 
     static Decomposition::SVDResult svdGolubKahanBidiagonal(Matrix<double>& b)
     {
-        double eps = std::numeric_limits<double>::epsilon() * 100;
+        double eps = std::numeric_limits<double>::epsilon() ;
 
         size_t m = b.rows();
         size_t n = b.cols();
@@ -585,21 +595,29 @@ public:
             // go through the upper band and zero values close to zero
             for(size_t r = 0; r < n-1; r++)
             {
-                if(std::abs(b(r,r+1)) <= eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) ) )
+                // close to zero -> consider the magnitude of the two diagonal elements
+                //                  or the magnitude of the upper band element itself.
+                // Note: The second check is very important -> having a lower value than
+                //       10000 does often not work. This is quite ugly!
+                double mag_bandelement = std::abs(b(r,r+1));
+                if(mag_bandelement < 10.0 * eps * (std::abs(b(r,r)) + std::abs(b(r+1,r+1)) )  ||
+                   mag_bandelement < 10000.0 * eps)
                 {
                     b(r,r+1) = 0.0;
                 }
             }
 
             size_t p;
-            svdCheckMatrixGolubKahan(b,p,q);
+            svdCheckMatrixGolubKahan(b, p, q);
+
+            //Debug
+            //std::cout << "b" << std::endl << b << std::endl;
+            //std::cout << "p=" << p << "   ,  q=" << q << std::endl;
+
 
             if( q < n )
             {
                 bool modified = false;
-
-
-                // Todo: Follow exactly the description!!! Below code is wrong.
 
                 // check B22 (middle matrix) for zero diagonal element
                 Decomposition::SvdStepResult extraRotations = Decomposition::svdHandleZeroDiagonalEntries(b,p,q, modified);
@@ -642,6 +660,41 @@ public:
         Matrix<double> v = v_right_accum;
 
         return SVDResult(u,b,v);
+    }
+
+    static Decomposition::SVDResult sortSingularValues(const Decomposition::SVDResult& svdRes)
+    {
+        Matrix<double> u = svdRes.U;
+        Matrix<double> s = svdRes.S;
+        Matrix<double> v = svdRes.V;
+
+        size_t m = s.rows();
+
+        // perform bubble sort on s
+        bool altered = true;
+        while(altered)
+        {
+            altered = false;
+            for(size_t k = 0; k < m-1; k++)
+            {
+                if( s(k, k) < s(k+1, k+1) )
+                {
+                    // swap k and k+1
+                    altered = true;
+
+                    double sk = s(k, k);
+                    s(k, k) = s(k+1, k+1);
+                    s(k+1, k+1) = sk;
+
+                    u.swapCols(k, k+1);
+                    v.swapCols(k, k+1);
+                }
+            }
+
+        }
+
+        Decomposition::SVDResult sortedRes(u, s, v);
+        return sortedRes;
     }
 
 
@@ -1358,6 +1411,13 @@ Decomposition::QRResult Decomposition::qrSignModifier(const Matrix<T>& q, const 
 template <class T>
 Decomposition::SVDResult Decomposition::svd(const Matrix<T>& mat)
 {
+    return Decomposition::svdGolubKahan(mat);
+}
+
+template <class T>
+Decomposition::SVDResult Decomposition::svdEigen(const Matrix<T>& mat)
+{
+
     // U*S*V
     Matrix<double> aTa = mat.transpose() * mat;
 
@@ -1459,7 +1519,6 @@ template <class T>
 Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
 {
     // U*S*V
-    double eps = std::numeric_limits<double>::epsilon() * 100;
 
     Decomposition::DiagonalizationResult diag = Decomposition::bidiagonalization(mat);
     Matrix<double> b = diag.D;
@@ -1476,6 +1535,7 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
     Matrix<double> sing(b.rows(), b.cols());
     sing.fill(0.0);
 
+    // negative singular values to positive
     for( size_t k = 0; k < b.cols(); k++ )
     {
         double s = b(k,k);
@@ -1491,7 +1551,8 @@ Decomposition::SVDResult Decomposition::svdGolubKahan(const Matrix<T>& mat)
         sing(k,k) = s;
     }
 
-    return SVDResult(u,sing,v);
+    Decomposition::SVDResult sorted = Decomposition::sortSingularValues(SVDResult(u,sing,v));
+    return sorted;
 }
 
 #endif //MY_DECOMPOSITION_H
