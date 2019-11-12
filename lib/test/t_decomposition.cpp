@@ -3,6 +3,9 @@
 #include "matrix.hpp"
 
 #include <algorithm>
+#include <thread>
+#include <atomic>
+#include <chrono>
 
 TEST(Decomposition, LUNoPivoting)
 {
@@ -1014,9 +1017,9 @@ TEST(Decomposition, SVDGolubKahanMultipleNullSingularValues)
     std::cout << "V (right) " << std::endl;
     std::cout << res.V << std::endl << std::endl;
 
-    ASSERT_TRUE( res.U.isOrthogonal(0.00001) );
-    ASSERT_TRUE( res.V.isOrthogonal(0.00001) );
-    ASSERT_TRUE( m.compare(res.U * res.S * res.V.transpose(), true, 0.00001 ) );
+    ASSERT_TRUE( res.U.isOrthogonal(0.000001) );
+    ASSERT_TRUE( res.V.isOrthogonal(0.000001) );
+    ASSERT_TRUE( m.compare(res.U * res.S * res.V.transpose(), true, 0.000001 ) );
 
 
     /* From octave
@@ -1038,22 +1041,18 @@ V =
      */
 }
 
-TEST(Decomposition, SVDGolubKahanBatch)
+void svdBatchTesting(size_t nTests, size_t matSize, std::atomic<size_t>& cnt)
 {
-    // 4.2 -> 3.3 secs
-    size_t rows = 5;
-    size_t n_test = 3000;
-
-    for( size_t k = 0; k < n_test; k++ )
+    for( size_t k = 0; k < nTests; k++ )
     {
-        auto a = Matrix<double>::random(rows, rows, -100.0, 100.0);
+        auto a = Matrix<double>::random(matSize, matSize, -10.0, 10.0);
 
         Decomposition::SVDResult res = Decomposition::svdGolubKahan(a);
 
-        ASSERT_TRUE( res.U.isOrthogonal(0.000001) );
-        ASSERT_TRUE( res.V.isOrthogonal(0.000001) );
+        ASSERT_TRUE( res.U.isOrthogonal(0.0000001) );
+        ASSERT_TRUE( res.V.isOrthogonal(0.0000001) );
 
-        bool isAccurate = a.compare(res.U * res.S * res.V.transpose(), true, 0.00001 );
+        bool isAccurate = a.compare(res.U * res.S * res.V.transpose(), true, 0.000001 );
 
         if(!isAccurate)
         {
@@ -1061,13 +1060,40 @@ TEST(Decomposition, SVDGolubKahanBatch)
             std::cout << std::endl;
         }
 
-
         ASSERT_TRUE( isAccurate );
 
-        if(k % 1000 == 0 )
-            std::cout << "SVD Batch testing: " << (double)(k) / n_test * 100.0 << " %" << std::endl;
+        cnt++;
     }
 }
+
+TEST(Decomposition, SVDGolubKahanBatch)
+{
+    std::vector<size_t> sizes = {2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 15, 20, 25, 30};
+    std::vector< std::thread> thr;
+    std::atomic<size_t> cnt(0);
+    size_t total = 0;
+    std::for_each(sizes.begin(), sizes.end(), [&total, &thr, &cnt](size_t s) mutable {
+        size_t nT = 600000/(std::pow(s,3));
+        total += nT;
+        std::cout << "Start SVD batch test with matrix size " << s << " and number " << nT << std::endl;
+        thr.push_back( std::thread(svdBatchTesting, nT, s, std::ref(cnt)) );
+    });
+
+    while(true)
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        double progress = (double)(cnt) / total;
+        std::cout << "SVD Batch testing: " << progress * 100.0 << " %" << std::endl;
+        if(progress > 0.9999)
+            break;
+    }
+
+    std::for_each(thr.begin(), thr.end(), [](std::thread& t) mutable {
+        t.join();
+    });
+}
+
+
 
 TEST(Decomposition, SVDGolubKahanMatrixCheckIdentity)
 {
