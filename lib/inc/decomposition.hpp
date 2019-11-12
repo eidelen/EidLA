@@ -371,10 +371,17 @@ public:
         size_t m = b.rows();
         size_t n = b.cols();
 
-        // lower right 2x2 submatrix - eigen decomposition
-        Matrix<double> t = b.transpose() * b; // todo: speed up by forming t_minor directly
-        Matrix<double> t_minor = t.subMatrix(t.rows() - 2, t.cols() - 2, 2, 2);
+        // lower right 2x2 submatrix - eigen decomposition   -> special case when 2x2 mat
+        double d11 = std::pow(b(m-2, m-2), 2.0);
+        if( m > 2 )
+            d11 += std::pow(b(m-3, m-2), 2.0);
 
+        double od = b(m-2, m-2) * b(m-2, m-1);
+        double d22 = std::pow(b(m-1, m-1), 2.0) + std::pow(b(m-2, m-1), 2.0);
+
+        Matrix<double> t_minor(2,2);
+        t_minor(0, 0) = d11; t_minor(0, 1) = od;
+        t_minor(1, 0) = od;  t_minor(1, 1) = d22;
         std::vector<Decomposition::EigenPair> eig = Decomposition::eigen(t_minor);
 
         // choose eigen value closer to tnn
@@ -388,24 +395,21 @@ public:
             l = l2;
 
         // use eigenvalue to perform the first Givens rotation
-        double y = t(0, 0) - l;
-        double z = t(0, 1);
+        double y = std::pow(b(0, 0), 2.0) - l;
+        double z = b(0, 0) * b(0, 1);
 
         Matrix<double> vR = Matrix<double>::identity(n);
         Matrix<double> uL = Matrix<double>::identity(m);
 
         for (size_t k = 0; k < n - 1; k++)
         {
-            Matrix<double> b_in = b;
-
-            Matrix<double> gr = givensRotationRowDirection(y, z, n, k, k, k + 1);
-            b = b * gr;
+            Matrix<double> gr = applyGivensRotationRowDirection(b, y, z, k, k, k + 1);
             vR = vR * gr;
 
             y = b(k, k);
             z = b(k + 1, k);
-            Matrix<double> gl = givensRotatioColumnDirection(y, z, m, k, k, k + 1);
-            b = gl * b;
+
+            Matrix<double> gl = applyGivensRotatioColumnDirection(b, y, z, k, k, k + 1);
             uL = gl * uL;
 
             if (k < n - 1)
@@ -520,8 +524,8 @@ public:
         Matrix<double> u_left = Matrix<double>::identity(b.rows());
         for( size_t i = row ; i < (n-1); i++ )
         {
-            Matrix<double> uS = Decomposition::givensRotatioColumnDirection(b, i+1, i+1, row);
-            b = uS * b;
+
+            Matrix<double> uS = Decomposition::applyGivensRotatioColumnDirection(b, i+1, i+1, row);
             u_left = uS * u_left;
         }
 
@@ -534,8 +538,7 @@ public:
         Matrix<double> v_right = Matrix<double>::identity(b.cols());
         for( size_t i = 1; i <= column; i++ )
         {
-            Matrix<double> vS = Decomposition::givensRotationRowDirection(b, column-i, column-i, column);
-            b =  b * vS;
+            Matrix<double> vS = Decomposition::applyGivensRotationRowDirection(b, column-i, column-i, column);
             v_right = v_right * vS;
         }
 
@@ -609,11 +612,6 @@ public:
 
             size_t p;
             svdCheckMatrixGolubKahan(b, p, q);
-
-            //Debug
-            //std::cout << "b" << std::endl << b << std::endl;
-            //std::cout << "p=" << p << "   ,  q=" << q << std::endl;
-
 
             if( q < n )
             {
@@ -767,6 +765,55 @@ public:
     static Matrix<double> givensRotatioColumnDirection(const Matrix<T> &mat, size_t col, size_t a_row, size_t b_row);
 
     /**
+     * Generates a Givens rotation matrix for the passed matrix
+     * mat and the two row indices. The Givens rotation rotates the
+     * element mat(b_row,col) to zero, by G*mat. Note: a_row < b_row || a_row >= col
+     * In addition to the function givensRotatioColumnDirection, here the matrix
+     * mat will be modified. This can be implemented faster than an ordinary
+     * matrix multiplication, as in terms of Givens rotations only two rows
+     * are affected
+     * @param mat Input/Output matrix -> will be modified
+     * @param col Plane index
+     * @param a_row Plane a index
+     * @param b_row Plane b index, which will be set to zero.
+     * @return
+     */
+    static Matrix<double> applyGivensRotatioColumnDirection(Matrix<double> &mat, size_t col, size_t a_row, size_t b_row)
+    {
+        double b = mat(b_row, col);
+        double a = mat(a_row, col);
+        return applyGivensRotatioColumnDirection(mat, a, b, col, a_row, b_row);
+    }
+
+    /**
+     * Generates a Givens rotation matrix for the passed matrix
+     * mat and the two row indices based on the passed a and b values. The rotation is
+     * used by G*mat. Note: a_row < b_row || a_row >= col
+     * @param mat Input/Output matrix -> will be modified
+     * @param a First number
+     * @param b Second number -> Givens Rotation will zero b!
+     * @param col Plane index
+     * @param a_row Plane a index
+     * @param b_row Plane b index, which will be set to zero.
+     * @return
+     */
+    static Matrix<double> applyGivensRotatioColumnDirection(Matrix<double> &mat, double a, double b,  size_t col, size_t a_row, size_t b_row)
+    {
+        Matrix<double> g = givensRotatioColumnDirection(a, b, mat.rows(), col, a_row, b_row);
+
+        for(size_t n = 0; n < mat.cols(); n++)
+        {
+            double e0 = g(a_row, a_row) * mat(a_row, n) + g(a_row, b_row) * mat(b_row, n);
+            double e1 = g(b_row, a_row) * mat(a_row, n) + g(b_row, b_row) * mat(b_row, n);
+
+            mat(a_row, n) = e0;
+            mat(b_row, n) = e1;
+        }
+
+        return g;
+    }
+
+    /**
      * Generates a Givens rotation matrix for the passed values a and b
      * and the two column indices.
      * @param a First number
@@ -802,6 +849,55 @@ public:
      */
     template <class T>
     static Matrix<double> givensRotationRowDirection(const Matrix<T> &mat, size_t row, size_t a_col, size_t b_col);
+
+    /**
+     * Generates a Givens rotation matrix for the passed matrix
+     * mat, the row  and the two column indices. The Givens rotation rotates the
+     * element mat(row,b_col) to zero, by mat*G. Note: a_col < b_col || a_col >= row
+     * In addition to the function givensRotationRowDirection, here the matrix
+     * mat will be modified. This can be implemented faster than an ordinary
+     * matrix multiplication, as in terms of Givens rotations only two columns
+     * in mat are affected
+     * @param mat Input matrix
+     * @param row Plane index
+     * @param a_col Plane a index
+     * @param b_col Plane b index, which will be set to zero.
+     * @return Givens rotation
+     */
+    static Matrix<double> applyGivensRotationRowDirection(Matrix<double> &mat, size_t row, size_t a_col, size_t b_col)
+    {
+        double b = mat(row, b_col);
+        double a = mat(row, a_col);
+        return applyGivensRotationRowDirection(mat, a, b, row, a_col, b_col);
+    }
+
+    /**
+     * Generates a Givens rotation matrix for the passed matrix
+     * mat, the row  and the two column indices based on the passed a and b.
+     * The rotation is also applied to mat directly.
+     * The rotation is used such as mat*G. Note: a_col < b_col || a_col >= row
+     * @param mat Input matrix
+     * @param a First number
+     * @param b Second number -> Givens Rotation will zero b!
+     * @param row Plane index
+     * @param a_col Plane a index
+     * @param b_col Plane b index, which will be set to zero.
+     * @return Givens rotation
+     */
+    static Matrix<double> applyGivensRotationRowDirection(Matrix<double> &mat, double a, double b, size_t row, size_t a_col, size_t b_col)
+    {
+        Matrix<double> g = givensRotationRowDirection(a, b, mat.rows(), row, a_col, b_col);
+
+        for(size_t m = 0; m < mat.rows(); m++)
+        {
+            double e1 = mat(m, a_col) * g(a_col, a_col) + mat(m, b_col) * g(b_col, a_col);
+            double e2 = mat(m, a_col) * g(a_col, b_col) + mat(m, b_col) * g(b_col, b_col);
+            mat(m, a_col) = e1;
+            mat(m, b_col) = e2;
+        }
+
+        return g;
+    }
 
 private:
     template <class T>

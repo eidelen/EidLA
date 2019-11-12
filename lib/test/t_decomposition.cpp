@@ -2,6 +2,8 @@
 #include <inc/matrix4x4.hpp>
 #include "matrix.hpp"
 
+#include <algorithm>
+
 TEST(Decomposition, LUNoPivoting)
 {
     // https://en.wikipedia.org/wiki/LU_decomposition
@@ -811,112 +813,150 @@ TEST(Decomposition, GivensRotationMatrix)
     ASSERT_TRUE( r.compare(a2,true,0.001) );
 }
 
+TEST(Decomposition, GivensRotationMatrixInplace)
+{
+    Matrix<double> mat = Matrix<double>(6,6);
+    double k = 0.0;
+    std::generate( mat.data(), mat.data()+mat.getNbrOfElements(), [k] () mutable {
+        k = k + 1.0;
+        return k; });
+
+    // -> zeros element 5, 1 will be zero, only rows 2 and 5 affected
+    Matrix<double> g = Decomposition::givensRotatioColumnDirection(mat, 1, 2, 5);
+    Matrix<double> mulRes = g * mat;
+    ASSERT_NEAR(0.0, mulRes(5,1), 0.00001);
+
+    Matrix<double> g_new = Decomposition::applyGivensRotatioColumnDirection(mat, 1, 2, 5);
+    // now mat is modified and should be equeal to mulRes
+    ASSERT_TRUE(g.compare(g_new, true, 0.000001));
+    ASSERT_TRUE(mat.compare(mulRes, true, 0.00001));
+}
+
 TEST(Decomposition, GivensRotationMatrixBatchCol)
 {
-    for(int k = 0; k < 1000; k++ )
-    {
-        // Make uper triangle matrix
+   for(int k = 0; k < 1000; k++ )
+   {
+       // Make uper triangle matrix
 
-        Matrix<double> a = Matrix<double>::random(4, 4, -2.0, 2.0);
+       Matrix<double> a = Matrix<double>::random(4, 4, -2.0, 2.0);
 
-        a = Decomposition::givensRotatioColumnDirection(a, 0, 2, 3) * a;
-        a = Decomposition::givensRotatioColumnDirection(a, 0, 1, 2) * a;
-        a = Decomposition::givensRotatioColumnDirection(a, 0, 0, 1) * a;
+       a = Decomposition::givensRotatioColumnDirection(a, 0, 2, 3) * a;
+       a = Decomposition::givensRotatioColumnDirection(a, 0, 1, 2) * a;
+       a = Decomposition::givensRotatioColumnDirection(a, 0, 0, 1) * a;
 
-        a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 2) * a;
-        a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 3) * a;
+       a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 2) * a;
+       a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 3) * a;
 
-        a = Decomposition::givensRotatioColumnDirection(a, 2, 2, 3) * a;
+       a = Decomposition::givensRotatioColumnDirection(a, 2, 2, 3) * a;
 
-        ASSERT_NEAR( a(1,0), 0.0, 0.000001 );
-        ASSERT_NEAR( a(2,0), 0.0, 0.000001 );
-        ASSERT_NEAR( a(3,0), 0.0, 0.000001 );
+       ASSERT_NEAR( a(1,0), 0.0, 0.000001 );
+       ASSERT_NEAR( a(2,0), 0.0, 0.000001 );
+       ASSERT_NEAR( a(3,0), 0.0, 0.000001 );
 
-        ASSERT_NEAR( a(2,1), 0.0, 0.000001 );
-        ASSERT_NEAR( a(3,1), 0.0, 0.000001 );
+       ASSERT_NEAR( a(2,1), 0.0, 0.000001 );
+       ASSERT_NEAR( a(3,1), 0.0, 0.000001 );
 
-        ASSERT_NEAR( a(3,2), 0.0, 0.000001 );
-    }
+       ASSERT_NEAR( a(3,2), 0.0, 0.000001 );
+   }
 }
 
 TEST(Decomposition, GivensRotationMatrixZeroUpperRowElement)
 {
-    double data[] = {1,2,3,4,
-                     5,6,7,8,
-                     9,10,11,12,
-                     13,14,15,16};
-    Matrix<double> a = Matrix<double>(4,4,data);
-    Matrix<double> orig = Matrix<double>(4,4,data);
+   double data[] = {1,2,3,4,
+                    5,6,7,8,
+                    9,10,11,12,
+                    13,14,15,16};
+   Matrix<double> a = Matrix<double>(4,4,data);
+   Matrix<double> orig = Matrix<double>(4,4,data);
 
-    a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 0) * a;
+   a = Decomposition::givensRotatioColumnDirection(a, 1, 1, 0) * a;
 
-    ASSERT_NEAR( a(0,1), 0.0, 0.000001 );
-    a = Decomposition::givensRotatioColumnDirection(a, 2, 1, 0) * a;
-    ASSERT_NEAR( a(0,2), 0.0, 0.000001 );
-    a = Decomposition::givensRotatioColumnDirection(a, 3, 1, 0) * a;
-    ASSERT_NEAR( a(0,3), 0.0, 0.000001 );
+   ASSERT_NEAR( a(0,1), 0.0, 0.000001 );
+   a = Decomposition::givensRotatioColumnDirection(a, 2, 1, 0) * a;
+   ASSERT_NEAR( a(0,2), 0.0, 0.000001 );
+   a = Decomposition::givensRotatioColumnDirection(a, 3, 1, 0) * a;
+   ASSERT_NEAR( a(0,3), 0.0, 0.000001 );
 }
 
 TEST(Decomposition, GivensRotationMatrixCol)
 {
-    double data[] = {1,2,3, 4,5,6, 7,8,3};
-    Matrix<double> mat(3,3,data);
+   double data[] = {1,2,3, 4,5,6, 7,8,3};
+   Matrix<double> mat(3,3,data);
 
-    Matrix<double> g1 = Decomposition::givensRotationRowDirection(mat, 0, 1, 2);
-    Matrix<double> a = mat * g1;
-    Matrix<double> g2 = Decomposition::givensRotationRowDirection(a, 0, 0, 1);
-    a = a * g2;
-    Matrix<double> g3 = Decomposition::givensRotationRowDirection(a, 1, 1, 2);
-    a = a * g3;
+   Matrix<double> g1 = Decomposition::givensRotationRowDirection(mat, 0, 1, 2);
+   Matrix<double> a = mat * g1;
+   Matrix<double> g2 = Decomposition::givensRotationRowDirection(a, 0, 0, 1);
+   a = a * g2;
+   Matrix<double> g3 = Decomposition::givensRotationRowDirection(a, 1, 1, 2);
+   a = a * g3;
 
-    ASSERT_NEAR( a(0,1), 0.0, 0.000001 );
-    ASSERT_NEAR( a(0,2), 0.0, 0.000001 );
-    ASSERT_NEAR( a(1,2), 0.0, 0.000001 );
+   ASSERT_NEAR( a(0,1), 0.0, 0.000001 );
+   ASSERT_NEAR( a(0,2), 0.0, 0.000001 );
+   ASSERT_NEAR( a(1,2), 0.0, 0.000001 );
 
-    ASSERT_TRUE( mat.compare( a * g3.inverted() * g2.inverted() * g1.inverted(), true, 0.00001) );
+   ASSERT_TRUE( mat.compare( a * g3.inverted() * g2.inverted() * g1.inverted(), true, 0.00001) );
+}
+
+TEST(Decomposition, GivensRotationMatrixColInplace)
+{
+    Matrix<double> mat = Matrix<double>(6,6);
+    double k = 0.0;
+    std::generate( mat.data(), mat.data()+mat.getNbrOfElements(), [k] () mutable {
+        k = k + 1.0;
+        return k; });
+
+    Matrix<double> g = Decomposition::givensRotationRowDirection(mat, 1, 2, 4);
+    Matrix<double> mulRes = mat * g;
+
+    ASSERT_NEAR(mulRes(1,4), 0.0, 0.00001);
+
+    // mat will be changed
+    Matrix<double> g_new = Decomposition::applyGivensRotationRowDirection(mat, 1, 2, 4);
+    ASSERT_TRUE(g_new.compare(g, true, 0.00001));
+    ASSERT_TRUE(mat.compare(mulRes, true, 0.00001));
 }
 
 TEST(Decomposition, GivensRotationMatrixRowBatch)
 {
-    for(int k = 0; k < 1000; k++ )
-    {
-        Matrix<double> a = Matrix<double>::random(3, 3, -2.0, 2.0);
+   for(int k = 0; k < 1000; k++ )
+   {
+       Matrix<double> a = Matrix<double>::random(3, 3, -2.0, 2.0);
 
-        // Make lower triangle matrix
-        a = a * Decomposition::givensRotationRowDirection(a, 0, 1, 2);
-        a = a * Decomposition::givensRotationRowDirection(a, 0, 0, 1);
-        a = a * Decomposition::givensRotationRowDirection(a, 1, 1, 2);
+       // Make lower triangle matrix
+       a = a * Decomposition::givensRotationRowDirection(a, 0, 1, 2);
+       a = a * Decomposition::givensRotationRowDirection(a, 0, 0, 1);
+       a = a * Decomposition::givensRotationRowDirection(a, 1, 1, 2);
 
-        ASSERT_NEAR(a(0, 1), 0.0, 0.000001);
-        ASSERT_NEAR(a(0, 2), 0.0, 0.000001);
-        ASSERT_NEAR(a(1, 2), 0.0, 0.000001);
-    }
+       ASSERT_NEAR(a(0, 1), 0.0, 0.000001);
+       ASSERT_NEAR(a(0, 2), 0.0, 0.000001);
+       ASSERT_NEAR(a(1, 2), 0.0, 0.000001);
+   }
 }
 
 TEST(Decomposition, SVDGolubKahan)
 { /*
-    >> a = [1,2,1; -1,1,2; 4, 2, 2]
-    >> [u,s,v] = svd(a)
-    u =
+   >> a = [1,2,1; -1,1,2; 4, 2, 2]
+   >> [u,s,v] = svd(a)
+   u =
 
-        -0.41178  -0.28554  -0.86539
-        -0.13290  -0.92067   0.36702
-        -0.90154   0.26614   0.34116
+       -0.41178  -0.28554  -0.86539
+       -0.13290  -0.92067   0.36702
+       -0.90154   0.26614   0.34116
 
-    s =
+   s =
 
-        Diagonal Matrix
+       Diagonal Matrix
 
-    5.37236         0         0
-    0   2.52038         0
-    0         0   0.88624
+   5.37236         0         0
+   0   2.52038         0
+   0         0   0.88624
 
-    v =
+   v =
 
-        -0.72315   0.67438   0.14920
-        -0.51365  -0.38069  -0.76892
-        -0.46174  -0.63268   0.62169
-    */
+       -0.72315   0.67438   0.14920
+       -0.51365  -0.38069  -0.76892
+       -0.46174  -0.63268   0.62169
+   */
 
     double matData[] = {1,2,1, -1,1,2, 4, 2, 2};
     auto mat = Matrix<double>(3, 3, matData);
@@ -1000,8 +1040,9 @@ V =
 
 TEST(Decomposition, SVDGolubKahanBatch)
 {
+    // 4.2 -> 3.3 secs
     size_t rows = 5;
-    size_t n_test = 10000;
+    size_t n_test = 3000;
 
     for( size_t k = 0; k < n_test; k++ )
     {
@@ -1009,9 +1050,8 @@ TEST(Decomposition, SVDGolubKahanBatch)
 
         Decomposition::SVDResult res = Decomposition::svdGolubKahan(a);
 
-
-        ASSERT_TRUE( res.U.isOrthogonal(0.0000001) );
-        ASSERT_TRUE( res.V.isOrthogonal(0.0000001) );
+        ASSERT_TRUE( res.U.isOrthogonal(0.000001) );
+        ASSERT_TRUE( res.V.isOrthogonal(0.000001) );
 
         bool isAccurate = a.compare(res.U * res.S * res.V.transpose(), true, 0.00001 );
 
