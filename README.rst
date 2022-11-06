@@ -1,5 +1,4 @@
-.. image:: https://travis-ci.org/eidelen/EidLA.svg?branch=master
-    :target: https://travis-ci.org/eidelen/EidLA
+.. image:: https://github.com/eidelen/EidLA/actions/workflows/cppBuild.yml/badge.svg
 
 Another linear algebra library
 ==============================
