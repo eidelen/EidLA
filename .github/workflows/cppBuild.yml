@@ -14,4 +14,4 @@ jobs:
     - name: Build
       run: cd build && make
     - name: Run Tests
-      run: ./build/lib/runTests && 
+      run: ./build/lib/runTests 
