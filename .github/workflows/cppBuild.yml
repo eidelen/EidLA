@@ -1,0 +1,17 @@
+name: C++ CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install packages 
+      run: sudo apt-get install -y cmake build-essential
+    - name: configure
+      run:  mkdir build && cd build && cmake -DTESTMYLINALG=ON ..
+    - name: Build
+      run: cd build && make
+    - name: Run Tests
+      run: ./build/lib/runLTests && 
