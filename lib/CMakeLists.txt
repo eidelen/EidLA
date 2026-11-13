@@ -1,9 +1,12 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.28)
 
 PROJECT(eidlalib)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -Wpedantic -msse4")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread -Wpedantic -msse4")
 
 INCLUDE_DIRECTORIES(inc inc/pattern)
 FILE(GLOB_RECURSE  MYLINALG_INCLUDES        inc/*.hpp)
@@ -27,8 +30,8 @@ IF(${TESTMYLINALG})
     include(FetchContent)
     FetchContent_Declare(
         googletest
-        # Specify the commit you depend on and update it regularly.
-        URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+        # Pin the latest release and update it regularly (requires C++17).
+        URL https://github.com/google/googletest/archive/refs/tags/v1.18.0.zip
     )
     # For Windows: Prevent overriding the parent project's compiler/linker settings
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -39,7 +42,7 @@ IF(${TESTMYLINALG})
 
     add_executable(runTests ${MYLINALG_TESTS_INC} ${MYLINALG_TESTS_SRC})
     target_link_libraries(runTests ${eidlalibs} gtest_main )
-    target_compile_features( runTests PRIVATE cxx_range_for )
+    target_compile_features( runTests PRIVATE cxx_std_17 )
     target_compile_options( runTests PRIVATE "-Wpedantic" )
 ENDIF()
 

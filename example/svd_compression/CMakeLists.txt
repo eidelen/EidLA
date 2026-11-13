@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.28)
 
 PROJECT(svd_compression)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(EidLA PATHS ../..)
 if(NOT EIDLA_FOUND)
@@ -13,4 +16,4 @@ add_definitions(-DOPENCVEIDLA) # to tell eidla to activate opencv export and imp
 include_directories(${EIDLA_INCLUDE_DIR})
 add_executable(svd_compression main.cpp)
 target_link_libraries(svd_compression ${OpenCV_LIBS})
-target_compile_features(svd_compression PRIVATE cxx_range_for)
+target_compile_features(svd_compression PRIVATE cxx_std_17)
