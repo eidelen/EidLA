@@ -40,7 +40,8 @@ IF(${TESTMYLINALG})
     FILE(GLOB_RECURSE  MYLINALG_TESTS_INC       test/*.hpp)
     FILE(GLOB_RECURSE  MYLINALG_TESTS_SRC       test/*.cpp)
 
-    add_executable(runTests ${MYLINALG_TESTS_INC} ${MYLINALG_TESTS_SRC})
+    add_executable(runTests ${MYLINALG_TESTS_INC} ${MYLINALG_TESTS_SRC}
+            test/t_numerical_accuracy.cpp)
     target_link_libraries(runTests ${eidlalibs} gtest_main )
     target_compile_features( runTests PRIVATE cxx_std_17 )
     target_compile_options( runTests PRIVATE "-Wpedantic" )

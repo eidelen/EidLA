@@ -705,26 +705,24 @@ public:
      */
     static GivensRotation givensRotation(double a, double b)
     {
-        // based on https://en.wikipedia.org/wiki/Givens_rotation#Stable_calculation
-
-        GivensRotation res;
-        if (std::abs(b) > std::numeric_limits<double>::epsilon())
+        if (b == 0.0)
         {
-            double h = std::hypot(a, b); // no precession problem
-            double d = 1.0 / h;
-
-            res.C = std::abs(a) * d;
-            res.S = -(std::copysign(d, a) * b);
-            res.R = std::copysign(1.0, a) * h;
-        }
-        else
-        {
-            res.S = 0.0;
-            res.C = 1.0;
-            res.R = a;
+            return GivensRotation(0.0, 1.0, a);
         }
 
-        return res;
+        // Normalize before computing the coefficients: an absolute epsilon
+        // cutoff loses small rotations, and 1 / hypot(a, b) can overflow for
+        // subnormal inputs. Scaling also keeps the coefficients finite when
+        // the unscaled norm is too large to represent.
+        const double scale = std::max(std::abs(a), std::abs(b));
+        const double scaledA = a / scale;
+        const double scaledB = b / scale;
+        const double h = std::hypot(scaledA, scaledB);
+        const double sign = std::copysign(1.0, a);
+
+        return GivensRotation(-sign * (scaledB / h),
+                              std::abs(scaledA) / h,
+                              sign * (scale * h));
     }
 
     /**
